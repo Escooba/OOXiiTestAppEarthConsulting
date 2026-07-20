@@ -138,6 +138,7 @@ export function BottomBar({
   backLabel = 'Back',
   nextDisabled = false,
   hideBack = false,
+  hideNext = false,
 }: {
   onNext?: () => void;
   onBack?: () => void;
@@ -145,6 +146,7 @@ export function BottomBar({
   backLabel?: string;
   nextDisabled?: boolean;
   hideBack?: boolean;
+  hideNext?: boolean;
 }) {
   const { mode } = useTheme();
   const grad =
@@ -167,17 +169,19 @@ export function BottomBar({
             {backLabel}
           </button>
         )}
-        <button
-          onClick={onNext}
-          disabled={nextDisabled}
-          className={`flex-[2] h-14 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg ${
-            nextDisabled
-              ? 'bg-[#3A3059] text-[#6A608A] cursor-not-allowed'
-              : 'bg-[#00D1C1] text-[#150F26] hover:brightness-110 shadow-[#00D1C1]/20'
-          }`}
-        >
-          {nextLabel}
-        </button>
+        {!hideNext && (
+          <button
+            onClick={onNext}
+            disabled={nextDisabled}
+            className={`flex-[2] h-14 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg ${
+              nextDisabled
+                ? 'bg-[#3A3059] text-[#6A608A] cursor-not-allowed'
+                : 'bg-[#00D1C1] text-[#150F26] hover:brightness-110 shadow-[#00D1C1]/20'
+            }`}
+          >
+            {nextLabel}
+          </button>
+        )}
       </div>
     </div>
   );

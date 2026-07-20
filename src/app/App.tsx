@@ -10,9 +10,17 @@ import { FirstLoginGuide } from './screens/FirstLoginGuide';
 import { Home } from './screens/Home';
 import { ClientInfo } from './screens/ClientInfo';
 import { QuestionScreen } from './screens/QuestionScreen';
-import { LineTestScreen } from './screens/LineTestScreen';
-import { DistanceLeftEye } from './screens/DistanceLeftEye';
-import { WheelPDScreen, WheelLensScreen, WheelRightDistanceScreen } from './screens/WheelScreens';
+import { VisionLineSelectionScreen } from './screens/VisionLineSelectionScreen';
+import { VisionLettersScreen } from './screens/VisionLettersScreen';
+import { VisionResultScreen } from './screens/VisionResultScreen';
+import { WheelPDScreen } from './screens/WheelPDScreen';
+import { WheelDirectionScreen } from './screens/WheelDirectionScreen';
+import { WheelPowerScreen } from './screens/WheelPowerScreen';
+import { WheelTwoColourScreen } from './screens/WheelTwoColourScreen';
+import { WheelLine9Screen } from './screens/WheelLine9Screen';
+import { WheelDistanceImprovedScreen } from './screens/WheelDistanceImprovedScreen';
+import { WheelResultScreen } from './screens/WheelResultScreen';
+import { getNextClinicalRoute, getPreviousClinicalRoute, getProgressForRoute } from './lib/clinicalFlow';
 import { FinalSummary } from './screens/FinalSummary';
 import { Profile } from './screens/Profile';
 import { Garden } from './screens/Garden';
@@ -38,26 +46,30 @@ import { useData } from '../data/DataProvider';
 import type { SectionType } from '../data/models';
 
 const CLINICAL_SCREENS: ScreenId[] = [
-  'glasses-question', 'distance-right', 'distance-left', 'distance-both-glasses',
-  'near-no-glasses', 'reading-glasses-question', 'near-own-glasses',
-  'wheel-pd', 'wheel-right-lens', 'wheel-right-distance', 'wheel-left-lens',
-  'sunglasses-question', 'sunglasses-selection', 'dispensed-review',
-  'final-checklist', 'additional-details',
+  'glasses-question', 'distance-right-line', 'distance-right-letters', 'distance-right-result',
+  'distance-left-line', 'distance-left-letters', 'distance-left-result', 'distance-both-glasses-line',
+  'distance-both-glasses-letters', 'distance-both-glasses-result', 'near-no-glasses-line', 'near-no-glasses-result',
+  'reading-glasses-question', 'near-own-glasses-line', 'near-own-glasses-result', 'wheel-pd',
+  'wheel-right-direction', 'wheel-right-power', 'wheel-right-two-colour', 'wheel-right-line-nine',
+  'wheel-right-result', 'wheel-right-distance-improved', 'wheel-right-distance-line',
+  'wheel-right-distance-letters', 'wheel-right-distance-result', 'wheel-left-direction',
+  'wheel-left-power', 'wheel-left-two-colour', 'wheel-left-line-nine', 'wheel-left-result',
+  'sunglasses-question', 'sunglasses-selection', 'dispensed-review', 'final-checklist', 'additional-details',
 ];
 
 function screenStepLabel(s: ScreenId): string {
+  if (s.startsWith('distance-right')) return 'Distance vision — Right eye';
+  if (s.startsWith('distance-left')) return 'Distance vision — Left eye';
+  if (s.startsWith('distance-both')) return 'Distance vision — Both eyes';
+  if (s.startsWith('near-no-glasses')) return 'Near vision — No glasses';
+  if (s.startsWith('near-own-glasses')) return 'Near vision — Own glasses';
+  if (s === 'wheel-pd') return 'Wheel test — PD';
+  if (s.startsWith('wheel-right-distance')) return 'Right distance vision at wheel';
+  if (s.startsWith('wheel-right')) return 'Wheel test — Right eye';
+  if (s.startsWith('wheel-left')) return 'Wheel test — Left eye';
   const map: Partial<Record<ScreenId, string>> = {
     'glasses-question': 'Glasses question',
-    'distance-right': 'Distance vision — Right eye',
-    'distance-left': 'Distance vision — Left eye',
-    'distance-both-glasses': 'Distance vision — Both eyes with glasses',
-    'near-no-glasses': 'Near vision — No glasses',
     'reading-glasses-question': 'Reading glasses question',
-    'near-own-glasses': 'Near vision — Own glasses',
-    'wheel-pd': 'Wheel test — PD',
-    'wheel-right-lens': 'Wheel test — Right eye',
-    'wheel-right-distance': 'Right distance vision at wheel',
-    'wheel-left-lens': 'Wheel test — Left eye',
     'sunglasses-question': 'Sunglasses dispensed?',
     'sunglasses-selection': 'Sunglasses selection',
     'dispensed-review': 'Glasses Dispensed Review',
@@ -153,11 +165,17 @@ function AppInner() {
   useEffect(() => {
     const isLoggedIn = localStorage.getItem('ooxii_logged_in') === 'true';
     if (isLoggedIn && activeSession && activeSession.currentRoute) {
-      // In a full implementation we'd also load the sections into `results`
-      // For this prototype we'll just restore the routing state
       setScreen(activeSession.currentRoute as ScreenId);
+      // Load all previous sections to hydrate `results`
+      workflowService.sessionRepo.getAllSections(activeSession.localId).then(sections => {
+        let loaded: Record<string, any> = {};
+        sections.forEach(s => {
+          loaded = { ...loaded, ...s.payload };
+        });
+        setResults(loaded);
+      }).catch(err => console.error('Failed to load session sections', err));
     }
-  }, [activeSession]);
+  }, [activeSession, workflowService]);
 
   // Load client data if we have an active session but no client state
   useEffect(() => {
@@ -177,13 +195,16 @@ function AppInner() {
   }, [activeSession, client, clientRepo]);
 
   const setResult = async (key: string, value: any, sectionType: SectionType = 'main_test') => {
-    const updatedResults = { ...results, [key]: value };
-    setResults(updatedResults);
+    let finalResults = {};
+    setResults(prev => {
+      finalResults = { ...prev, [key]: value };
+      return finalResults;
+    });
     
     // Save to SQLite
     if (activeSession) {
       try {
-        await workflowService.saveSection(activeSession.localId, sectionType, updatedResults);
+        await workflowService.saveSection(activeSession.localId, sectionType, finalResults);
       } catch (err) {
         console.error('Failed to save section:', err);
       }
@@ -229,6 +250,15 @@ function AppInner() {
     if (activeSession?.currentRoute) {
       setScreen(activeSession.currentRoute as ScreenId);
     }
+  };
+
+  const handleClinicalNext = () => {
+    const next = getNextClinicalRoute(screen, results);
+    nav(next);
+  };
+  const handleClinicalBack = () => {
+    const prev = getPreviousClinicalRoute(screen, results);
+    nav(prev);
   };
 
   const content = renderScreen();
@@ -360,147 +390,426 @@ function AppInner() {
       case 'glasses-question':
         return (
           <QuestionScreen
-            progress={8}
+            progress={getProgressForRoute(screen)}
             title="Glasses"
             question="Does the client currently have a pair of distance glasses?"
             options={['Yes', 'No']}
-            onBack={() => setScreen('client-info')}
-            onNext={(v) => { setResult('hasDistanceGlasses', v, 'pretest'); nav('distance-right'); }}
+            initialValue={results.hasDistanceGlasses}
+            onBack={handleClinicalBack}
+            onNext={(v) => { setResult('hasDistanceGlasses', v, 'pretest'); handleClinicalNext(); }}
           />
         );
 
-      case 'distance-right':
+      case 'distance-right-line':
         return (
-          <LineTestScreen
-            progress={10}
+          <VisionLineSelectionScreen
+            progress={getProgressForRoute(screen)}
             title="Distance vision"
             subtitle="Right eye"
             instruction="No glasses, ask the person to cover their left eye with the palm of their hand."
             imageCaption="Client covers left eye"
-            snellenLabel="Right eye distance vision no glasses — Snellen (metres)"
-            onBack={() => setScreen('glasses-question')}
-            onNext={(v) => { setResult('rightDistanceNoGlasses', v.snellen, 'pretest'); nav('distance-left'); }}
+            initialValue={results.distanceRightLine}
+            onBack={handleClinicalBack}
+            onNext={(v) => { setResult('distanceRightLine', v, 'pretest'); handleClinicalNext(); }}
           />
         );
 
-      case 'distance-left':
+      case 'distance-right-letters':
         return (
-          <DistanceLeftEye
-            onBack={() => setScreen('distance-right')}
-            onNext={(d) => {
-              setResult('leftDistanceNoGlasses', calcSnellen(d.line, d.letters), 'pretest');
-              nav('distance-both-glasses');
+          <VisionLettersScreen
+            progress={getProgressForRoute(screen)}
+            title="Distance vision"
+            subtitle="Right eye"
+            initialValue={results.distanceRightLetters}
+            onBack={handleClinicalBack}
+            onNext={(v) => {
+              setResult('distanceRightLetters', v, 'pretest');
+              setResult('rightDistanceNoGlasses', calcSnellen(results.distanceRightLine, v), 'pretest');
+              handleClinicalNext();
             }}
           />
         );
 
-      case 'distance-both-glasses':
+      case 'distance-right-result':
         return (
-          <LineTestScreen
-            progress={11}
+          <VisionResultScreen
+            progress={getProgressForRoute(screen)}
+            title="Distance vision"
+            subtitle="Right eye"
+            snellenLabel="Right eye distance vision no glasses — Snellen (metres)"
+            snellen={results.rightDistanceNoGlasses}
+            onBack={handleClinicalBack}
+            onNext={handleClinicalNext}
+          />
+        );
+
+      case 'distance-left-line':
+        return (
+          <VisionLineSelectionScreen
+            progress={getProgressForRoute(screen)}
+            title="Distance vision"
+            subtitle="Left eye"
+            instruction="No glasses, ask the person to cover their right eye with the palm of their hand."
+            imageCaption="Client covers right eye"
+            initialValue={results.distanceLeftLine}
+            onBack={handleClinicalBack}
+            onNext={(v) => { setResult('distanceLeftLine', v, 'pretest'); handleClinicalNext(); }}
+          />
+        );
+
+      case 'distance-left-letters':
+        return (
+          <VisionLettersScreen
+            progress={getProgressForRoute(screen)}
+            title="Distance vision"
+            subtitle="Left eye"
+            initialValue={results.distanceLeftLetters}
+            onBack={handleClinicalBack}
+            onNext={(v) => {
+              setResult('distanceLeftLetters', v, 'pretest');
+              setResult('leftDistanceNoGlasses', calcSnellen(results.distanceLeftLine, v), 'pretest');
+              handleClinicalNext();
+            }}
+          />
+        );
+
+      case 'distance-left-result':
+        return (
+          <VisionResultScreen
+            progress={getProgressForRoute(screen)}
+            title="Distance vision"
+            subtitle="Left eye"
+            snellenLabel="Left eye distance vision no glasses — Snellen (metres)"
+            snellen={results.leftDistanceNoGlasses}
+            onBack={handleClinicalBack}
+            onNext={handleClinicalNext}
+          />
+        );
+
+      case 'distance-both-glasses-line':
+        return (
+          <VisionLineSelectionScreen
+            progress={getProgressForRoute(screen)}
             title="Distance vision"
             subtitle="Own glasses, both eyes open"
             instruction="With own glasses, ask the person to use both eyes open."
             imageCaption="Client wearing glasses, both eyes open"
-            snellenLabel="Both eyes distance vision with glasses — Snellen (metres)"
-            onBack={() => setScreen('distance-left')}
-            onNext={(v) => { setResult('bothEyesDistanceWithGlasses', v.snellen, 'pretest'); nav('near-no-glasses'); }}
+            initialValue={results.distanceBothGlassesLine}
+            onBack={handleClinicalBack}
+            onNext={(v) => { setResult('distanceBothGlassesLine', v, 'pretest'); handleClinicalNext(); }}
           />
         );
 
-      case 'near-no-glasses':
+      case 'distance-both-glasses-letters':
         return (
-          <LineTestScreen
-            progress={13}
+          <VisionLettersScreen
+            progress={getProgressForRoute(screen)}
+            title="Distance vision"
+            subtitle="Own glasses, both eyes open"
+            initialValue={results.distanceBothGlassesLetters}
+            onBack={handleClinicalBack}
+            onNext={(v) => {
+              setResult('distanceBothGlassesLetters', v, 'pretest');
+              setResult('bothEyesDistanceWithGlasses', calcSnellen(results.distanceBothGlassesLine, v), 'pretest');
+              handleClinicalNext();
+            }}
+          />
+        );
+
+      case 'distance-both-glasses-result':
+        return (
+          <VisionResultScreen
+            progress={getProgressForRoute(screen)}
+            title="Distance vision"
+            subtitle="Own glasses, both eyes open"
+            snellenLabel="Both eyes distance vision with glasses — Snellen (metres)"
+            snellen={results.bothEyesDistanceWithGlasses}
+            onBack={handleClinicalBack}
+            onNext={handleClinicalNext}
+          />
+        );
+
+      case 'near-no-glasses-line':
+        return (
+          <VisionLineSelectionScreen
+            progress={getProgressForRoute(screen)}
             title="Near vision"
             subtitle="No glasses"
             instruction="Ask the person to use both eyes."
             imageCaption="Client holding near vision card"
             imageMarker="40cm"
+            initialValue={results.nearNoGlassesLine}
+            onBack={handleClinicalBack}
+            onNext={(v) => {
+              setResult('nearNoGlassesLine', v, 'pretest');
+              setResult('nearNoGlasses', calcSnellen(v, '0'), 'pretest');
+              handleClinicalNext();
+            }}
+          />
+        );
+
+      case 'near-no-glasses-result':
+        return (
+          <VisionResultScreen
+            progress={getProgressForRoute(screen)}
+            title="Near vision"
+            subtitle="No glasses"
             snellenLabel="Both eyes near vision no glasses — Snellen (metres)"
-            showLetters={false}
-            onBack={() => setScreen('distance-both-glasses')}
-            onNext={(v) => { setResult('nearNoGlasses', v.snellen, 'pretest'); nav('reading-glasses-question'); }}
+            snellen={results.nearNoGlasses}
+            onBack={handleClinicalBack}
+            onNext={handleClinicalNext}
           />
         );
 
       case 'reading-glasses-question':
         return (
           <QuestionScreen
-            progress={15}
+            progress={getProgressForRoute(screen)}
             title="Near vision"
             subtitle="Reading glasses"
             question="Does the client currently have a pair of reading glasses?"
             options={['Yes', 'No']}
-            onBack={() => setScreen('near-no-glasses')}
-            onNext={(v) => { setResult('hasReadingGlasses', v, 'pretest'); nav('near-own-glasses'); }}
+            initialValue={results.hasReadingGlasses}
+            onBack={handleClinicalBack}
+            onNext={(v) => { setResult('hasReadingGlasses', v, 'pretest'); handleClinicalNext(); }}
           />
         );
 
-      case 'near-own-glasses':
+      case 'near-own-glasses-line':
         return (
-          <LineTestScreen
-            progress={18}
+          <VisionLineSelectionScreen
+            progress={getProgressForRoute(screen)}
             title="Near vision"
             subtitle="Own glasses"
             instruction="With own glasses, ask the person to use both eyes."
             imageCaption="Client wearing glasses, holding near card"
             imageMarker="40cm"
+            initialValue={results.nearOwnGlassesLine}
+            onBack={handleClinicalBack}
+            onNext={(v) => {
+              setResult('nearOwnGlassesLine', v, 'pretest');
+              setResult('nearWithGlasses', calcSnellen(v, '0'), 'pretest');
+              handleClinicalNext();
+            }}
+          />
+        );
+
+      case 'near-own-glasses-result':
+        return (
+          <VisionResultScreen
+            progress={getProgressForRoute(screen)}
+            title="Near vision"
+            subtitle="Own glasses"
             snellenLabel="Both eyes near vision with glasses — Snellen (metres)"
-            showLetters={false}
-            onBack={() => setScreen('reading-glasses-question')}
-            onNext={(v) => { setResult('nearWithGlasses', v.snellen, 'pretest'); nav('wheel-pd'); }}
+            snellen={results.nearWithGlasses}
+            onBack={handleClinicalBack}
+            onNext={handleClinicalNext}
           />
         );
 
       case 'wheel-pd':
         return (
           <WheelPDScreen
-            onBack={() => setScreen('near-own-glasses')}
-            onNext={(pd) => { setResult('pd', pd, 'main_test'); nav('wheel-right-lens'); }}
+            progress={getProgressForRoute(screen)}
+            initialValue={results.pd?.toString()}
+            onBack={handleClinicalBack}
+            onNext={(pd) => { setResult('pd', pd, 'main_test'); handleClinicalNext(); }}
           />
         );
 
-      case 'wheel-right-lens':
+      case 'wheel-right-direction':
         return (
-          <WheelLensScreen
+          <WheelDirectionScreen
             side="right"
-            progress={29}
-            onBack={() => setScreen('wheel-pd')}
-            onNext={(d) => { setResult('wheelRightEye', d.lens || d.lensDirection, 'main_test'); nav('wheel-right-distance'); }}
+            progress={getProgressForRoute(screen)}
+            initialValue={results.wheelRightDirection}
+            onBack={handleClinicalBack}
+            onNext={(v) => { setResult('wheelRightDirection', v, 'main_test'); handleClinicalNext(); }}
           />
         );
 
-      case 'wheel-right-distance':
+      case 'wheel-right-power':
         return (
-          <WheelRightDistanceScreen
-            onBack={() => setScreen('wheel-right-lens')}
-            onNext={(d) => { setResult('wheelRightDistance', d.snellen || d.improved, 'post_test'); nav('wheel-left-lens'); }}
+          <WheelPowerScreen
+            side="right"
+            direction={results.wheelRightDirection}
+            progress={getProgressForRoute(screen)}
+            initialValue={results.wheelRightPower}
+            onBack={handleClinicalBack}
+            onNext={(v) => { setResult('wheelRightPower', v, 'main_test'); handleClinicalNext(); }}
           />
         );
 
-      case 'wheel-left-lens':
+      case 'wheel-right-two-colour':
         return (
-          <WheelLensScreen
+          <WheelTwoColourScreen
+            side="right"
+            progress={getProgressForRoute(screen)}
+            initialValue={results.wheelRightTwoColour}
+            onBack={handleClinicalBack}
+            onNext={(v) => { setResult('wheelRightTwoColour', v, 'main_test'); handleClinicalNext(); }}
+          />
+        );
+
+      case 'wheel-right-line-nine':
+        return (
+          <WheelLine9Screen
+            side="right"
+            progress={getProgressForRoute(screen)}
+            initialValue={results.wheelRightLine9}
+            onBack={handleClinicalBack}
+            onNext={(v) => { setResult('wheelRightLine9', v, 'main_test'); handleClinicalNext(); }}
+          />
+        );
+
+      case 'wheel-right-result':
+        return (
+          <WheelResultScreen
+            side="right"
+            progress={getProgressForRoute(screen)}
+            direction={results.wheelRightDirection}
+            power={results.wheelRightPower}
+            twoColour={results.wheelRightTwoColour}
+            line9={results.wheelRightLine9}
+            onBack={handleClinicalBack}
+            onNext={() => {
+              const res = results.wheelRightDirection.startsWith('Neither') ? results.wheelRightDirection : `${results.wheelRightDirection} ${results.wheelRightPower}`;
+              setResult('wheelRightEye', res, 'main_test');
+              handleClinicalNext();
+            }}
+          />
+        );
+
+      case 'wheel-right-distance-improved':
+        return (
+          <WheelDistanceImprovedScreen
+            progress={getProgressForRoute(screen)}
+            initialValue={results.wheelRightDistanceImproved}
+            onBack={handleClinicalBack}
+            onNext={(v) => { setResult('wheelRightDistanceImproved', v, 'post_test'); handleClinicalNext(); }}
+          />
+        );
+
+      case 'wheel-right-distance-line':
+        return (
+          <VisionLineSelectionScreen
+            progress={getProgressForRoute(screen)}
+            title="Right distance vision at the wheel"
+            instruction="Ask the person to cover their left eye."
+            imageCaption="Client covers left eye at wheel"
+            initialValue={results.wheelRightDistanceLine}
+            onBack={handleClinicalBack}
+            onNext={(v) => { setResult('wheelRightDistanceLine', v, 'post_test'); handleClinicalNext(); }}
+          />
+        );
+
+      case 'wheel-right-distance-letters':
+        return (
+          <VisionLettersScreen
+            progress={getProgressForRoute(screen)}
+            title="Right distance vision at the wheel"
+            initialValue={results.wheelRightDistanceLetters}
+            onBack={handleClinicalBack}
+            onNext={(v) => {
+              setResult('wheelRightDistanceLetters', v, 'post_test');
+              setResult('wheelRightDistanceSnellen', calcSnellen(results.wheelRightDistanceLine, v), 'post_test');
+              handleClinicalNext();
+            }}
+          />
+        );
+
+      case 'wheel-right-distance-result':
+        return (
+          <VisionResultScreen
+            progress={getProgressForRoute(screen)}
+            title="Right distance vision at the wheel"
+            snellenLabel="Right eye distance vision at wheel — Snellen (metres)"
+            snellen={results.wheelRightDistanceImproved === 'Yes' ? results.wheelRightDistanceSnellen : 'N/A (Did not improve)'}
+            onBack={handleClinicalBack}
+            onNext={() => {
+              const val = results.wheelRightDistanceImproved === 'Yes' ? results.wheelRightDistanceSnellen : 'No';
+              setResult('wheelRightDistance', val, 'post_test');
+              handleClinicalNext();
+            }}
+          />
+        );
+
+      case 'wheel-left-direction':
+        return (
+          <WheelDirectionScreen
             side="left"
-            progress={37}
-            onBack={() => setScreen('wheel-right-distance')}
-            onNext={(d) => { setResult('wheelLeftEye', d.lens || d.lensDirection, 'main_test'); nav('sunglasses-question'); }}
+            progress={getProgressForRoute(screen)}
+            initialValue={results.wheelLeftDirection}
+            onBack={handleClinicalBack}
+            onNext={(v) => { setResult('wheelLeftDirection', v, 'main_test'); handleClinicalNext(); }}
+          />
+        );
+
+      case 'wheel-left-power':
+        return (
+          <WheelPowerScreen
+            side="left"
+            direction={results.wheelLeftDirection}
+            progress={getProgressForRoute(screen)}
+            initialValue={results.wheelLeftPower}
+            onBack={handleClinicalBack}
+            onNext={(v) => { setResult('wheelLeftPower', v, 'main_test'); handleClinicalNext(); }}
+          />
+        );
+
+      case 'wheel-left-two-colour':
+        return (
+          <WheelTwoColourScreen
+            side="left"
+            progress={getProgressForRoute(screen)}
+            initialValue={results.wheelLeftTwoColour}
+            onBack={handleClinicalBack}
+            onNext={(v) => { setResult('wheelLeftTwoColour', v, 'main_test'); handleClinicalNext(); }}
+          />
+        );
+
+      case 'wheel-left-line-nine':
+        return (
+          <WheelLine9Screen
+            side="left"
+            progress={getProgressForRoute(screen)}
+            initialValue={results.wheelLeftLine9}
+            onBack={handleClinicalBack}
+            onNext={(v) => { setResult('wheelLeftLine9', v, 'main_test'); handleClinicalNext(); }}
+          />
+        );
+
+      case 'wheel-left-result':
+        return (
+          <WheelResultScreen
+            side="left"
+            progress={getProgressForRoute(screen)}
+            direction={results.wheelLeftDirection}
+            power={results.wheelLeftPower}
+            twoColour={results.wheelLeftTwoColour}
+            line9={results.wheelLeftLine9}
+            onBack={handleClinicalBack}
+            onNext={() => {
+              const res = results.wheelLeftDirection.startsWith('Neither') ? results.wheelLeftDirection : `${results.wheelLeftDirection} ${results.wheelLeftPower}`;
+              setResult('wheelLeftEye', res, 'main_test');
+              handleClinicalNext();
+            }}
           />
         );
 
       case 'sunglasses-question':
         return (
           <QuestionScreen
-            progress={90}
+            progress={getProgressForRoute(screen)}
             title="Sunglasses"
             question="Were sunglasses dispensed to this client?"
             options={['Yes', 'No']}
             errorText="Select Yes or No before continuing."
-            onBack={() => setScreen('wheel-left-lens')}
+            initialValue={results.sunglassesDispensed === true ? 'Yes' : (results.sunglassesDispensed === false ? 'No' : undefined)}
+            onBack={handleClinicalBack}
             onNext={(v) => {
               setResult('sunglassesDispensed', v === 'Yes', 'dispensing');
-              nav(v === 'Yes' ? 'sunglasses-selection' : 'dispensed-review');
+              handleClinicalNext();
             }}
           />
         );
@@ -508,8 +817,8 @@ function AppInner() {
       case 'sunglasses-selection':
         return (
           <SunglassesSelection
-            onBack={() => setScreen('sunglasses-question')}
-            onNext={(t) => { setResult('sunglassesType', t, 'dispensing'); nav('dispensed-review'); }}
+            onBack={handleClinicalBack}
+            onNext={(t) => { setResult('sunglassesType', t, 'dispensing'); handleClinicalNext(); }}
           />
         );
 
@@ -517,23 +826,23 @@ function AppInner() {
         return (
           <GlassesDispensedReview
             sunglassesDispensed={!!results.sunglassesDispensed}
-            onBack={() => setScreen(results.sunglassesDispensed ? 'sunglasses-selection' : 'sunglasses-question')}
-            onNext={(price) => { setResult('totalPaid', price, 'completion'); nav('final-checklist'); }}
+            onBack={handleClinicalBack}
+            onNext={(price) => { setResult('totalPaid', price, 'completion'); handleClinicalNext(); }}
           />
         );
 
       case 'final-checklist':
         return (
           <FinalChecklist
-            onBack={() => setScreen('dispensed-review')}
-            onNext={(state) => { setResult('finalChecklist', state, 'completion'); nav('additional-details'); }}
+            onBack={handleClinicalBack}
+            onNext={(state) => { setResult('finalChecklist', state, 'completion'); handleClinicalNext(); }}
           />
         );
 
       case 'additional-details':
         return (
           <AdditionalDetails
-            onBack={() => setScreen('final-checklist')}
+            onBack={handleClinicalBack}
             onSubmit={async (d) => {
               setResult('additionalDetails', d, 'completion');
               
@@ -543,13 +852,13 @@ function AppInner() {
                   await completionService.completeTest(activeSession.localId, [
                     { type: 'completion', payload: { ...results, additionalDetails: d } }
                   ]);
-                  await refreshSession();
+                  await workflowService.sessionRepo.updateRoute(activeSession.localId, 'test-saved');
+                  // We bypass nav() to not call saveProgress manually again for completion since completeTest handles it.
+                  window.location.reload(); // Quick reset
                 } catch (err) {
                   console.error('Failed to complete test:', err);
                 }
               }
-              
-              setScreen('test-saved');
             }}
           />
         );

@@ -18,7 +18,7 @@ import {
 
 export class TestWorkflowService {
   constructor(
-    private sessionRepo: TestSessionRepository,
+    public sessionRepo: TestSessionRepository,
     private clientRepo: ClientRepository,
     private testerRepo: TesterRepository
   ) {}

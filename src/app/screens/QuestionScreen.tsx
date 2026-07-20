@@ -3,6 +3,7 @@ import { Shell, BottomBar } from '../components/Shell';
 import { RadioGroup, InlineError } from './common';
 import { RabbitBubble } from '../components/RabbitBubble';
 import { HelpButton } from '../components/HelpButton';
+import { useAutoAdvance } from '../hooks/useAutoAdvance';
 
 interface Props {
   title: string;
@@ -10,11 +11,13 @@ interface Props {
   question: string;
   options: string[];
   progress: number;
+  initialValue?: string;
   onNext: (value: string) => void;
   onBack: () => void;
   helpTitle?: string;
   helpBody?: string;
   errorText?: string;
+  autoAdvance?: boolean;
 }
 
 export function QuestionScreen({
@@ -23,14 +26,17 @@ export function QuestionScreen({
   question,
   options,
   progress,
+  initialValue = '',
   onNext,
   onBack,
   helpTitle,
   helpBody,
   errorText = 'Select Yes or No before continuing.',
+  autoAdvance = true,
 }: Props) {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState(initialValue);
   const [error, setError] = useState(false);
+  const { commitAndAdvance } = useAutoAdvance();
 
   const submit = () => {
     if (!value) {
@@ -53,7 +59,7 @@ export function QuestionScreen({
             error
               ? 'Finish this field first, then we can move forward.'
               : value
-              ? 'Nice. Press Next to continue.'
+              ? 'Nice. ' + (autoAdvance ? '' : 'Press Next to continue.')
               : "You're here. Complete this step to keep going."
           }
           type={error ? 'error' : value ? 'success' : 'default'}
@@ -69,14 +75,17 @@ export function QuestionScreen({
             onChange={(v) => {
               setValue(v);
               setError(false);
+              if (autoAdvance) {
+                commitAndAdvance(() => onNext(v));
+              }
             }}
             options={options}
-            err={error}
+            err={error && !value}
           />
-          {error && <InlineError text={errorText} />}
+          {error && !value && <InlineError text={errorText} />}
         </div>
       </div>
-      <BottomBar onNext={submit} onBack={onBack} />
+      <BottomBar onNext={submit} onBack={onBack} hideNext={autoAdvance} />
     </Shell>
   );
 }
