@@ -190,34 +190,48 @@ export function BottomBar({
 export function BottomNavigation({ current, onNav }: { current: 'home' | 'community-garden' | 'tester-profile', onNav: (s: import('../lib/theme').ScreenId) => void }) {
   const { t } = useTheme();
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-20 bg-[var(--header-bg)] border-t border-[var(--card-border)] z-40 flex justify-center pb-safe">
-      <div className="w-full max-w-[430px] flex justify-around items-center px-2 h-full">
+    <div className="fixed bottom-0 left-0 right-0 py-3 px-4 bg-[#250177]/95 backdrop-blur-md z-40 flex justify-center pb-safe border-t border-white/5">
+      <div className="w-full max-w-[430px] flex justify-between items-center gap-2.5">
         <button 
           type="button"
           aria-current={current === 'home' ? 'page' : undefined}
           onClick={() => onNav('home')}
-          className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-3 gap-1 transition-colors ${current === 'home' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
+          className={`flex-1 flex flex-col items-center justify-center h-16 py-2 px-3 rounded-2xl border transition-all ${
+            current === 'home'
+              ? 'bg-[#180054] border-[#3BE0D4]/60 shadow-[0_0_15px_rgba(59,224,212,0.2)]'
+              : 'bg-[#140047]/90 border-white/10 hover:bg-[#180054]'
+          }`}
         >
-          <HomeIcon size={24} strokeWidth={current === 'home' ? 2.5 : 2} />
-          <span className="text-[10px] font-medium">{t('ui.home')}</span>
+          <HomeIcon size={20} className={current === 'home' ? 'text-[#3BE0D4]' : 'text-[#3BE0D4]/75'} strokeWidth={2} />
+          <span className="text-xs font-medium text-white mt-1">{t('ui.home')}</span>
         </button>
-        <button 
-          type="button"
-          aria-current={current === 'community-garden' ? 'page' : undefined}
-          onClick={() => onNav('community-garden')}
-          className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-3 gap-1 transition-colors ${current === 'community-garden' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
-        >
-          <Sprout size={24} strokeWidth={current === 'community-garden' ? 2.5 : 2} />
-          <span className="text-[10px] font-medium">{t('ui.garden')}</span>
-        </button>
+
         <button 
           type="button"
           aria-current={current === 'tester-profile' ? 'page' : undefined}
           onClick={() => onNav('tester-profile')}
-          className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-3 gap-1 transition-colors ${current === 'tester-profile' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
+          className={`flex-1 flex flex-col items-center justify-center h-16 py-2 px-3 rounded-2xl border transition-all ${
+            current === 'tester-profile'
+              ? 'bg-[#180054] border-[#3BE0D4]/60 shadow-[0_0_15px_rgba(59,224,212,0.2)]'
+              : 'bg-[#140047]/90 border-white/10 hover:bg-[#180054]'
+          }`}
         >
-          <User size={24} strokeWidth={current === 'tester-profile' ? 2.5 : 2} />
-          <span className="text-[10px] font-medium">{t('ui.profile')}</span>
+          <User size={20} className={current === 'tester-profile' ? 'text-[#3BE0D4]' : 'text-[#3BE0D4]/75'} strokeWidth={2} />
+          <span className="text-xs font-medium text-white mt-1">{t('ui.profile')}</span>
+        </button>
+
+        <button 
+          type="button"
+          aria-current={current === 'community-garden' ? 'page' : undefined}
+          onClick={() => onNav('community-garden')}
+          className={`flex-1 flex flex-col items-center justify-center h-16 py-2 px-3 rounded-2xl border transition-all ${
+            current === 'community-garden'
+              ? 'bg-[#180054] border-[#3BE0D4]/60 shadow-[0_0_15px_rgba(59,224,212,0.2)]'
+              : 'bg-[#140047]/90 border-white/10 hover:bg-[#180054]'
+          }`}
+        >
+          <Flag size={20} className={current === 'community-garden' ? 'text-[#3BE0D4]' : 'text-[#3BE0D4]/75'} strokeWidth={2} />
+          <span className="text-xs font-medium text-white mt-1">{t('ui.garden')}</span>
         </button>
       </div>
     </div>
