@@ -6,19 +6,16 @@ import { useState, useEffect } from 'react';
 import { useData } from './DataProvider';
 import type { TesterProfile, Client, TestSession, TesterProgress, CommunityGardenCache, TesterBadge, BadgeDefinition } from './models';
 
+import { useAuthContext } from '../app/lib/AuthProvider';
+
 export function useAuth() {
   const { authService } = useData();
   return authService;
 }
 
 export function useTester() {
-  const { testerRepo } = useData();
-  const [tester, setTester] = useState<TesterProfile | null>(null);
-
-  const load = async () => setTester(await testerRepo.getCurrentTester());
-  useEffect(() => { load(); }, []);
-
-  return { tester, refresh: load };
+  const { tester } = useAuthContext();
+  return { tester, refresh: async () => {} };
 }
 
 export function useProgress() {

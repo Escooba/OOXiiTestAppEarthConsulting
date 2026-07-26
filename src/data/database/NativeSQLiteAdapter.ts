@@ -20,7 +20,9 @@ export class NativeSQLiteAdapter implements DatabaseAdapter {
     const SECRET_KEY = 'ooxii_db_passphrase';
     let secret = (await Preferences.get({ key: SECRET_KEY })).value;
     if (!secret) {
-      secret = 'ooxii_' + Date.now().toString(36) + Math.random().toString(36).substring(2);
+      const bytes = new Uint8Array(32);
+      crypto.getRandomValues(bytes);
+      secret = 'ooxii_sec_' + Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
       await Preferences.set({ key: SECRET_KEY, value: secret });
     }
 

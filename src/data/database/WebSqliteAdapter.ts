@@ -35,34 +35,32 @@ function openIDB(): Promise<IDBDatabase> {
 }
 
 async function loadFromIDB(): Promise<Uint8Array | null> {
-  try {
-    const db = await openIDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(IDB_STORE_NAME, 'readonly');
-      const store = tx.objectStore(IDB_STORE_NAME);
-      const req = store.get(IDB_KEY);
-      req.onsuccess = () => resolve(req.result as Uint8Array || null);
-      req.onerror = () => reject(req.error);
-    });
-  } catch (err) {
-    console.warn('[WebSqliteAdapter] IDB load error:', err);
-    return null;
-  }
+  if (typeof indexedDB === 'undefined') return null;
+  const db = await openIDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE_NAME, 'readonly');
+    const store = tx.objectStore(IDB_STORE_NAME);
+    const req = store.get(IDB_KEY);
+    req.onsuccess = () => {
+      const val = req.result;
+      if (!val) resolve(null);
+      else if (val instanceof Uint8Array) resolve(val);
+      else reject(new Error('Stored IndexedDB data is unreadable or corrupted'));
+    };
+    req.onerror = () => reject(req.error || new Error('Failed to read from IndexedDB'));
+  });
 }
 
 async function saveToIDB(data: Uint8Array): Promise<void> {
-  try {
-    const db = await openIDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(IDB_STORE_NAME, 'readwrite');
-      const store = tx.objectStore(IDB_STORE_NAME);
-      const req = store.put(data, IDB_KEY);
-      req.onsuccess = () => resolve();
-      req.onerror = () => reject(req.error);
-    });
-  } catch (err) {
-    console.warn('[WebSqliteAdapter] IDB save error:', err);
-  }
+  if (typeof indexedDB === 'undefined') return;
+  const db = await openIDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE_NAME, 'readwrite');
+    const store = tx.objectStore(IDB_STORE_NAME);
+    const req = store.put(data, IDB_KEY);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error || new Error('Failed to save to IndexedDB'));
+  });
 }
 
 export class WebSqliteAdapter implements DatabaseAdapter {
@@ -71,8 +69,9 @@ export class WebSqliteAdapter implements DatabaseAdapter {
   private inTransaction = false;
   readonly isNative = false;
   
-  private persistPromise: Promise<void> = Promise.resolve();
-  private pendingPersist = false;
+  private isDirty = false;
+  private isPersisting = false;
+  private persistPromiseChain: Promise<void> = Promise.resolve();
 
   async open(_dbName: string): Promise<void> {
     if (!this.SQL) {
@@ -93,17 +92,23 @@ export class WebSqliteAdapter implements DatabaseAdapter {
 
   async close(): Promise<void> {
     this.inTransaction = false;
-    await this.persistInternal();
+    await this.flush();
     if (this.db) {
       this.db.close();
       this.db = null;
     }
   }
 
+  async flush(): Promise<void> {
+    if (this.inTransaction || !this.db) return;
+    this.markDirty();
+    await this.persistPromiseChain;
+  }
+
   async execute(sql: string): Promise<void> {
     this.ensureOpen();
     this.db!.exec(sql);
-    this.persist();
+    this.markDirty();
   }
 
   async query(sql: string, params?: unknown[]): Promise<QueryResult> {
@@ -129,7 +134,7 @@ export class WebSqliteAdapter implements DatabaseAdapter {
       }
     }
 
-    this.persist();
+    this.markDirty();
     return { changes, lastInsertRowid };
   }
 
@@ -143,7 +148,7 @@ export class WebSqliteAdapter implements DatabaseAdapter {
     this.ensureOpen();
     this.db!.exec('COMMIT;');
     this.inTransaction = false;
-    this.persist();
+    this.markDirty();
   }
 
   async rollbackTransaction(): Promise<void> {
@@ -167,27 +172,34 @@ export class WebSqliteAdapter implements DatabaseAdapter {
     });
   }
 
-  private persist(): void {
+  private markDirty(): void {
     if (this.inTransaction || !this.db) return;
-    if (this.pendingPersist) return;
-    
-    this.pendingPersist = true;
-    this.persistPromise = this.persistPromise
-      .then(() => this.persistInternal())
-      .catch((err) => console.error('[WebSqliteAdapter] Background persist failed:', err))
-      .finally(() => {
-        this.pendingPersist = false;
-      });
+    this.isDirty = true;
+    this.schedulePersist();
   }
 
-  private async persistInternal(): Promise<void> {
-    if (!this.db) return;
-    try {
-      const data = this.db.export();
-      await saveToIDB(data);
-    } catch (err) {
-      console.error('[WebSqliteAdapter] Failed to export and save database:', err);
-    }
+  private schedulePersist(): void {
+    if (this.isPersisting) return;
+    this.isPersisting = true;
+    
+    this.persistPromiseChain = this.persistPromiseChain
+      .then(async () => {
+        while (this.isDirty && this.db) {
+          this.isDirty = false;
+          const data = this.db.export();
+          await saveToIDB(data);
+        }
+      })
+      .catch((err) => {
+        console.error('[WebSqliteAdapter] Persist error:', err);
+        throw err;
+      })
+      .finally(() => {
+        this.isPersisting = false;
+        if (this.isDirty) {
+          this.schedulePersist();
+        }
+      });
   }
 
   private ensureOpen(): void {

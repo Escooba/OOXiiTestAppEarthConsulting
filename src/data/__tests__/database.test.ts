@@ -9,6 +9,8 @@ import { SyncRepository } from '../repositories/SyncRepository';
 import { GamificationService } from '../services/GamificationService';
 import { TestWorkflowService } from '../services/TestWorkflowService';
 import { TestCompletionService } from '../services/TestCompletionService';
+import { AccountRepository } from '../repositories/AccountRepository';
+import { AuthService } from '../services/AuthService';
 import { generateLocalId } from '../models';
 
 // Setup mock localStorage for WebSqliteAdapter
@@ -26,9 +28,11 @@ describe('Database System Tests', () => {
   let sessionRepo: TestSessionRepository;
   let badgeRepo: BadgeRepository;
   let syncRepo: SyncRepository;
+  let accountRepo: AccountRepository;
   let gamification: GamificationService;
   let workflow: TestWorkflowService;
   let completion: TestCompletionService;
+  let authService: AuthService;
 
   beforeEach(async () => {
     const adapter = new WebSqliteAdapter();
@@ -40,10 +44,12 @@ describe('Database System Tests', () => {
     sessionRepo = new TestSessionRepository(db);
     badgeRepo = new BadgeRepository(db);
     syncRepo = new SyncRepository(db);
+    accountRepo = new AccountRepository(db);
 
     gamification = new GamificationService(db, badgeRepo, sessionRepo);
     workflow = new TestWorkflowService(sessionRepo, clientRepo, testerRepo);
     completion = new TestCompletionService(db, sessionRepo, syncRepo, gamification);
+    authService = new AuthService(db, accountRepo, testerRepo);
   });
 
   afterEach(async () => {
@@ -210,5 +216,42 @@ describe('Database System Tests', () => {
     const earnedBadges = await badgeRepo.getEarnedBadges(tester.localId);
     expect(earnedBadges.length).toBeGreaterThan(0);
     expect(earnedBadges.some(b => b.badgeCode === 'FIRST_VISION')).toBe(true);
+  });
+
+  it('should authenticate user and hash password securely', async () => {
+    const { account, tester } = await authService.signup('tester@example.com', 'SecurePass123!', {
+      firstName: 'Jane', lastName: 'Doe', gender: 'Female', role: 'Worker',
+      experienceLevel: 'Experienced', organisation: 'HealthOrg', country: 'AU',
+      stateProvince: 'NSW', city: 'Sydney', firstLoginGuideCompleted: true, remoteId: null
+    });
+
+    expect(account.emailNormalized).toBe('tester@example.com');
+    expect(tester.firstName).toBe('Jane');
+
+    // Test valid login
+    const loggedIn = await authService.login('tester@example.com', 'SecurePass123!');
+    expect(loggedIn.account.localId).toBe(account.localId);
+
+    // Test invalid password
+    await expect(authService.login('tester@example.com', 'WrongPassword')).rejects.toThrow('Incorrect email or password');
+  });
+
+  it('should patch clinical sections without destroying existing section data', async () => {
+    const tester = await testerRepo.createTester({
+      firstName: 'Test', lastName: 'User', role: 'Tester', gender: '', experienceLevel: '',
+      organisation: '', country: '', stateProvince: '', city: '', firstLoginGuideCompleted: true, remoteId: null
+    });
+    const client = await clientRepo.create({
+      ooxiiClientId: 'CLIENT_PATCH', yearOfBirth: 1990, gender: 'Female', cataractSurgery: 'No',
+      country: 'AU', stateProvince: 'NSW', city: 'Sydney', createdByTesterId: tester.localId
+    });
+
+    const session = await workflow.startNewTest(tester.localId, client.localId);
+
+    await workflow.saveSectionPatch(session.localId, 'main_test', { rightEye: '6/6' });
+    await workflow.saveSectionPatch(session.localId, 'main_test', { leftEye: '6/9' });
+
+    const sec = await sessionRepo.getSection(session.localId, 'main_test');
+    expect(sec?.payload).toEqual({ rightEye: '6/6', leftEye: '6/9' });
   });
 });

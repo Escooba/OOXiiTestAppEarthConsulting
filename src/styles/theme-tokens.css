@@ -1,18 +1,18 @@
 :root {
   /* OOXii Purple (Default) */
-  --bg: #2A0730;
-  --card: #22193B;
-  --card-active: #2A2049;
-  --card-border: rgba(255, 255, 255, 0.05);
+  --bg: #36013F;
+  --card: #2A0E35;
+  --card-active: #3C164A;
+  --card-border: rgba(255, 255, 255, 0.08);
   --text: #ffffff;
-  --text-muted: #9B93BA;
-  --input: #2A0730;
-  --input-border: rgba(255, 255, 255, 0.1);
-  --header-bg: #2A0730;
-  --overlay: rgba(42, 7, 48, 0.9);
-  --nav-pill-bg: #22193B;
-  --nav-pill-active-text: #2A0730;
-  --progress-track: #22193B;
+  --text-muted: #BCA9CC;
+  --input: #2A0E35;
+  --input-border: rgba(255, 255, 255, 0.15);
+  --header-bg: #36013F;
+  --overlay: rgba(54, 1, 63, 0.92);
+  --nav-pill-bg: #2A0E35;
+  --nav-pill-active-text: #36013F;
+  --progress-track: #2A0E35;
   --primary: #A984FF;
   --primary-hover: #BBA0FF;
 }

@@ -77,6 +77,13 @@ export class TesterRepository {
     return rows.length > 0 ? rowToTester(rows[0]) : null;
   }
 
+  async listAll(): Promise<TesterProfile[]> {
+    const rows = await this.db.query<TesterRow>(
+      'SELECT local_id, remote_id, first_name, last_name, gender, role, experience_level, organisation, country, state_province, city, first_login_guide_completed, created_at, updated_at, deleted_at, record_version, sync_state FROM tester_profiles WHERE deleted_at IS NULL ORDER BY created_at DESC'
+    );
+    return rows.map(rowToTester);
+  }
+
   async updateProfile(localId: string, data: Partial<Pick<TesterProfile, 'firstName' | 'lastName' | 'gender' | 'role' | 'experienceLevel' | 'organisation' | 'country' | 'stateProvince' | 'city'>>): Promise<void> {
     const sets: string[] = [];
     const params: unknown[] = [];

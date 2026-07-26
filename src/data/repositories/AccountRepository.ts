@@ -40,7 +40,31 @@ export class AccountRepository {
   }
 
   async getByEmail(emailNormalized: string): Promise<LocalAccount | null> {
-    const rows = await this.db.query<any>('SELECT * FROM local_accounts WHERE email_normalized = ?', [emailNormalized]);
+    const rows = await this.db.query<any>(
+      `SELECT local_id, tester_id, email_normalized, password_hash, password_salt, password_algorithm, password_iterations, created_at, updated_at, last_login_at, disabled
+       FROM local_accounts WHERE email_normalized = ?`,
+      [emailNormalized]
+    );
+    if (rows.length === 0) return null;
+    return this.mapRow(rows[0]);
+  }
+
+  async getById(localId: string): Promise<LocalAccount | null> {
+    const rows = await this.db.query<any>(
+      `SELECT local_id, tester_id, email_normalized, password_hash, password_salt, password_algorithm, password_iterations, created_at, updated_at, last_login_at, disabled
+       FROM local_accounts WHERE local_id = ?`,
+      [localId]
+    );
+    if (rows.length === 0) return null;
+    return this.mapRow(rows[0]);
+  }
+
+  async getByTesterId(testerId: string): Promise<LocalAccount | null> {
+    const rows = await this.db.query<any>(
+      `SELECT local_id, tester_id, email_normalized, password_hash, password_salt, password_algorithm, password_iterations, created_at, updated_at, last_login_at, disabled
+       FROM local_accounts WHERE tester_id = ?`,
+      [testerId]
+    );
     if (rows.length === 0) return null;
     return this.mapRow(rows[0]);
   }

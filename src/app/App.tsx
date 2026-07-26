@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ScreenId, calcSnellen } from './lib/theme';
 import { ThemeProvider } from './lib/ThemeContext';
-import { ShellNavProvider } from './components/Shell';
+import { AuthProvider, useAuthContext } from './lib/AuthProvider';
 import { Login } from './screens/Login';
 import { SignupEmail } from './screens/SignupEmail';
 import { TesterInfo } from './screens/TesterInfo';
@@ -41,7 +41,7 @@ import {
 } from './screens/ClientScreens';
 
 // Data Layer Imports
-import { useTester, useActiveSession, useAuth } from '../data/hooks';
+import { useActiveSession } from '../data/hooks';
 import { useData } from '../data/DataProvider';
 import type { SectionType } from '../data/models';
 
@@ -82,14 +82,16 @@ function screenStepLabel(s: ScreenId): string {
 export default function App() {
   return (
     <ThemeProvider>
-      <AppInner />
+      <AuthProvider>
+        <AppInner />
+      </AuthProvider>
     </ThemeProvider>
   );
 }
 
 function AppInner() {
-  const { testerRepo, clientRepo, workflowService, completionService, db } = useData();
-  const { tester, refresh: refreshTester } = useTester();
+  const { testerRepo, clientRepo, workflowService, completionService } = useData();
+  const { account, tester, isLoading: isAuthLoading, signup, linkAccount } = useAuthContext();
   const { session: activeSession, refresh: refreshSession } = useActiveSession();
 
   const [screen, setScreen] = useState<ScreenId>('login');
@@ -106,100 +108,67 @@ function AppInner() {
   const [results, setResults] = useState<Record<string, any>>({});
   const resultsRef = useRef<Record<string, any>>(results);
 
+  // Persistence Error / Saving State
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSubmittingPatch, setIsSubmittingPatch] = useState(false);
+
   // Client-search flow state
   const [viewingClient, setViewingClient] = useState<ClientRecord | null>(null);
   const [returnToAfterProfile, setReturnToAfterProfile] = useState<ScreenId>('home');
-
   const [signupState, setSignupState] = useState<any>({});
-  const authService = useAuth();
-  const [authChecked, setAuthChecked] = useState(false);
-  const [legacyTesterNeedsAccount, setLegacyTesterNeedsAccount] = useState(false);
 
+  // Route protection & auth synchronization
   useEffect(() => {
-    async function checkAuth() {
-      if (!authService || !testerRepo) return;
-      const t = await authService.getActiveTester();
-      if (t) {
-        // Authenticated user exists
-        if (['login', 'signup-email', 'signup-tester', 'signup-additional'].includes(screen)) {
-          setScreen('home');
-        }
-      } else {
-        // Not authenticated. Check if there's a legacy tester that needs an account
-        const legacy = await testerRepo.getCurrentTester();
-        if (legacy && legacy.firstName) {
-          setLegacyTesterNeedsAccount(true);
-        }
+    if (isAuthLoading) return;
+    if (account && tester) {
+      if (['login', 'signup-email', 'signup-tester', 'signup-additional'].includes(screen)) {
+        setScreen('home');
       }
-      setAuthChecked(true);
-    }
-    checkAuth();
-  }, [authService, testerRepo, screen]);
-
-  useEffect(() => {
-    async function seedJonHuh() {
-      if (!db || !testerRepo || !clientRepo || !workflowService || !completionService) return;
-      if (localStorage.getItem('jon_huh_300_fixed')) return;
-      try {
-        const testers = await db.query<any>("SELECT local_id, first_name, last_name, country, state_province, city FROM tester_profiles");
-        const jon = testers.find(t => String(t.first_name).toLowerCase() === 'jon' && String(t.last_name).toLowerCase() === 'huh');
-        if (jon) {
-          const jonId = jon.local_id;
-          
-          // Clean up the incorrectly seeded tests from previous attempt
-          await db.run("DELETE FROM test_sessions WHERE client_id = 'client_auto'");
-          
-          const check = await db.query<{count: number}>("SELECT COUNT(*) as count FROM test_sessions WHERE tester_id = ? AND status = 'completed'", [jonId]);
-          if (check[0] && Number(check[0].count) >= 300) {
-            localStorage.setItem('jon_huh_300_fixed', 'true');
-            return;
-          }
-          
-          console.log('Seeding 300 full tests. This might take a second...');
-          for (let i = 0; i < 300; i++) {
-            const client = await clientRepo.create({
-              ooxiiClientId: 'auto_client_' + i,
-              yearOfBirth: 1980,
-              gender: 'Female',
-              cataractSurgery: 'No',
-              country: jon.country || 'AU',
-              stateProvince: jon.state_province || 'NSW',
-              city: jon.city || 'Sydney',
-              createdByTesterId: jonId
-            });
-            const session = await workflowService.startNewTest(jonId, client.localId);
-            await completionService.completeTest(session.localId, []);
-          }
-          localStorage.setItem('jon_huh_300_fixed', 'true');
-          window.location.reload();
-        }
-      } catch (e) {
-        console.error(e);
+    } else {
+      if (!['login', 'signup-email', 'signup-tester', 'signup-additional'].includes(screen)) {
+        setScreen('login');
       }
     }
-    seedJonHuh();
-  }, [db, testerRepo, clientRepo, workflowService, completionService]);
+  }, [account, tester, isAuthLoading]);
 
-  // Sync state with active session on load
+  // Sync state with active session on load with deterministic section restoration
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem('ooxii_logged_in') === 'true';
-    if (isLoggedIn && activeSession && activeSession.currentRoute) {
-      setScreen(activeSession.currentRoute as ScreenId);
-      // Load all previous sections to hydrate `results`
+    if (account && activeSession && workflowService) {
       workflowService.sessionRepo.getAllSections(activeSession.localId).then(sections => {
-        let loaded: Record<string, any> = {};
-        sections.forEach(s => {
-          loaded = { ...loaded, ...s.payload };
+        const mergedResults: Record<string, any> = {};
+        const priority: Record<string, number> = {
+          pretest: 1,
+          main_test: 2,
+          post_test: 3,
+          dispensing: 4,
+          completion: 5,
+        };
+        const sorted = [...sections].sort((a, b) => {
+          const pa = priority[a.sectionType] || 99;
+          const pb = priority[b.sectionType] || 99;
+          if (pa !== pb) return pa - pb;
+          return a.updatedAt - b.updatedAt;
         });
-        setResults(loaded);
-        resultsRef.current = loaded;
-      }).catch(err => console.error('Failed to load session sections', err));
-    }
-  }, [activeSession, workflowService]);
 
-  // Load client data if we have an active session but no client state
+        for (const sec of sorted) {
+          if (sec.payload && typeof sec.payload === 'object') {
+            Object.assign(mergedResults, sec.payload);
+          }
+        }
+
+        resultsRef.current = mergedResults;
+        setResults(mergedResults);
+
+        if (activeSession.currentRoute && CLINICAL_SCREENS.includes(activeSession.currentRoute as ScreenId)) {
+          setScreen(activeSession.currentRoute as ScreenId);
+        }
+      }).catch(err => console.error('Failed to load session sections:', err));
+    }
+  }, [account, activeSession?.localId, workflowService]);
+
+  // Load client data if active session exists
   useEffect(() => {
-    if (activeSession && (!client || client.localId !== activeSession.clientId)) {
+    if (activeSession && clientRepo && (!client || client.localId !== activeSession.clientId)) {
       clientRepo.findByLocalId(activeSession.clientId).then(c => {
         if (c) {
           setClient({
@@ -214,37 +183,20 @@ function AppInner() {
     }
   }, [activeSession, client, clientRepo]);
 
-  const setResult = async (key: string, value: any, sectionType: SectionType = 'main_test') => {
-    const finalResults = { ...resultsRef.current, [key]: value };
-    resultsRef.current = finalResults;
-    setResults(finalResults);
-    
-    // Save to SQLite
-    if (activeSession) {
-      try {
-        await workflowService.saveSection(activeSession.localId, sectionType, finalResults);
-      } catch (err) {
-        console.error('Failed to save section:', err);
-      }
-    }
-  };
-
   const nav = async (target: ScreenId) => {
-    // If navigating inside a clinical flow, update the current route in SQLite
-    if (activeSession && CLINICAL_SCREENS.includes(target)) {
+    if (activeSession && CLINICAL_SCREENS.includes(target) && workflowService) {
       try {
         await workflowService.saveProgress(activeSession.localId, target);
-        refreshSession();
+        await refreshSession();
       } catch (err) {
         console.error('Failed to save progress:', err);
       }
     }
     
-    // Clear state if starting fresh
     if (target === 'client-info') {
       setResults({});
       resultsRef.current = {};
-      if (activeSession) {
+      if (activeSession && workflowService) {
         try {
           await workflowService.cancelTest(activeSession.localId);
           await refreshSession();
@@ -253,66 +205,103 @@ function AppInner() {
         }
       }
     }
-    
     setScreen(target);
   };
 
-  const submitAndNav = async (key: string, value: any, target: ScreenId, sectionType: SectionType = 'main_test') => {
-    if (key) {
-      await setResult(key, value, sectionType);
+  /**
+   * Primary clinical patch operation:
+   * Disables progression controls, saves section patch payload to SQLite,
+   * saves route to SQLite, and navigates only after both writes succeed.
+   * Remains on current screen if persistence fails with clear retry error.
+   */
+  const saveResultPatchAndNavigate = async ({
+    sectionType,
+    patch,
+    nextScreen,
+  }: {
+    sectionType: SectionType;
+    patch: Record<string, any>;
+    nextScreen: ScreenId;
+  }) => {
+    if (isSubmittingPatch) return;
+    setIsSubmittingPatch(true);
+    setSaveError(null);
+
+    const merged = { ...resultsRef.current, ...patch };
+    resultsRef.current = merged;
+    setResults(merged);
+
+    if (activeSession && workflowService) {
+      try {
+        await workflowService.saveSectionPatch(activeSession.localId, sectionType, patch);
+        await workflowService.saveProgress(activeSession.localId, nextScreen);
+        await refreshSession();
+        setScreen(nextScreen);
+      } catch (err: any) {
+        console.error('Persistence failed during clinical navigation:', err);
+        setSaveError('Failed to save test progress to local database. Please try again.');
+      } finally {
+        setIsSubmittingPatch(false);
+      }
+    } else {
+      setScreen(nextScreen);
+      setIsSubmittingPatch(false);
     }
-    await nav(target);
+  };
+
+  const handleClinicalBack = () => {
+    setSaveError(null);
+    const prev = getPreviousClinicalRoute(screen, resultsRef.current);
+    nav(prev);
+  };
+
+  const handleClinicalNext = () => {
+    setSaveError(null);
+    const next = getNextClinicalRoute(screen, resultsRef.current);
+    nav(next);
+  };
+
+  const resumeTest = () => {
+    if (activeSession && activeSession.currentRoute) {
+      setScreen(activeSession.currentRoute as ScreenId);
+    }
   };
 
   const inProgressCard = activeSession && activeSession.currentRoute
     ? {
         clientId: (client && client.localId === activeSession.clientId) ? client.ooxiiId : activeSession.clientId.slice(-5),
         step: screenStepLabel(activeSession.currentRoute as ScreenId),
-        screen: activeSession.currentRoute as ScreenId
+        screen: activeSession.currentRoute as ScreenId,
       }
     : null;
 
-  const resumeTest = () => {
-    if (activeSession?.currentRoute) {
-      setScreen(activeSession.currentRoute as ScreenId);
-    }
-  };
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-[#36013F] flex items-center justify-center text-white">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-white/20 border-t-[#A984FF] rounded-full animate-spin" />
+          <span className="text-sm font-medium text-[#BCA9CC]">Loading OOXii...</span>
+        </div>
+      </div>
+    );
+  }
 
-  const handleClinicalNext = () => {
-    const next = getNextClinicalRoute(screen, results);
-    nav(next);
-  };
-  const handleClinicalBack = () => {
-    const prev = getPreviousClinicalRoute(screen, results);
-    nav(prev);
-  };
-
-  const content = renderScreen();
-
-  return <ShellNavProvider onNav={nav}>{content}</ShellNavProvider>;
+  return (
+    <>
+      {saveError && (
+        <div className="fixed top-0 left-0 right-0 z-[200] bg-red-600 text-white px-4 py-3 text-center text-sm font-semibold shadow-lg flex justify-between items-center">
+          <span>{saveError}</span>
+          <button onClick={() => setSaveError(null)} className="ml-4 underline text-xs">Dismiss</button>
+        </div>
+      )}
+      {renderScreen()}
+    </>
+  );
 
   function renderScreen() {
     switch (screen) {
       case 'login':
-        return (
-          <Login
-            onLogin={async () => {
-              if (!tester && testerRepo) {
-                await testerRepo.createTester({
-                  firstName: 'John', lastName: 'Smith', gender: 'Male',
-                  country: 'Australia', stateProvince: 'New South Wales', city: 'Sydney',
-                  role: 'Community Health Worker', experienceLevel: 'Experienced tester',
-                  organisation: 'Lions Club',
-                  firstLoginGuideCompleted: true, remoteId: null,
-                });
-                await refreshTester();
-              }
-              localStorage.setItem('ooxii_logged_in', 'true');
-              setScreen('home');
-            }}
-            onCreateAccount={() => setScreen('signup-email')}
-          />
-        );
+        return <Login onLoginSuccess={() => setScreen('home')} onCreateAccount={() => setScreen('signup-email')} />;
 
       case 'signup-email':
         return (
@@ -341,9 +330,8 @@ function AppInner() {
           <AdditionalInfo
             onBack={() => setScreen('signup-tester')}
             onCreate={async (d) => {
-              if (!authService) return;
               try {
-                await authService.signup(signupState.email, signupState.pw, {
+                await signup(signupState.email, signupState.pw, {
                   firstName: signupState.firstName,
                   lastName: signupState.lastName,
                   gender: signupState.gender,
@@ -356,12 +344,10 @@ function AppInner() {
                   firstLoginGuideCompleted: d.experience !== 'New tester',
                   remoteId: null
                 });
-                await refreshTester();
-                localStorage.setItem('ooxii_logged_in', 'true');
                 setShowGuide(d.experience === 'New tester');
                 setScreen('home');
-              } catch (e) {
-                alert(e instanceof Error ? e.message : 'Signup failed');
+              } catch (e: any) {
+                alert(e.message || 'Signup failed');
               }
             }}
           />
@@ -386,7 +372,7 @@ function AppInner() {
             />
             {showGuide && <FirstLoginGuide onDone={async () => {
               setShowGuide(false);
-              if (tester) await testerRepo.updateGuideCompleted(tester.localId, true);
+              if (tester && testerRepo) await testerRepo.updateGuideCompleted(tester.localId, true);
             }} />}
           </>
         );
@@ -396,30 +382,27 @@ function AppInner() {
           <ClientInfo
             onCancel={() => nav('home')}
             onStart={async (d) => {
-              const activeTester = await testerRepo?.getCurrentTester();
-              if (!activeTester) return;
+              if (!tester || !testerRepo || !clientRepo || !workflowService) return;
               try {
-                // 1. Create client in SQLite
                 const newClient = await clientRepo.create({
                   ooxiiClientId: d.ooxiiId,
                   yearOfBirth: parseInt(d.yearOfBirth) || 0,
                   gender: d.gender,
                   cataractSurgery: d.cataract,
-                  country: activeTester.country,
-                  stateProvince: activeTester.stateProvince,
-                  city: activeTester.city,
-                  createdByTesterId: activeTester.localId,
+                  country: tester.country,
+                  stateProvince: tester.stateProvince,
+                  city: tester.city,
+                  createdByTesterId: tester.localId,
                 });
                 
-                // 2. Start Test Session
-                await workflowService.startNewTest(activeTester.localId, newClient.localId);
-                
+                await workflowService.startNewTest(tester.localId, newClient.localId);
                 setClient({ localId: newClient.localId, ...d });
                 setResults({});
                 await refreshSession();
                 nav('glasses-question');
               } catch (err) {
-                console.error('Failed to start test:', err);
+                console.error('Failed to start test session:', err);
+                alert('Could not start test session. Please try again.');
               }
             }}
           />
@@ -434,7 +417,13 @@ function AppInner() {
             options={['Yes', 'No']}
             initialValue={results.hasDistanceGlasses}
             onBack={handleClinicalBack}
-            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
+            onNext={(v) => {
+              saveResultPatchAndNavigate({
+                sectionType: 'pretest',
+                patch: { hasDistanceGlasses: v },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
+            }}
           />
         );
 
@@ -448,7 +437,13 @@ function AppInner() {
             imageCaption="Client covers left eye"
             initialValue={results.distanceRightLine}
             onBack={handleClinicalBack}
-            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
+            onNext={(v) => {
+              saveResultPatchAndNavigate({
+                sectionType: 'main_test',
+                patch: { distanceRightLine: v },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
+            }}
           />
         );
 
@@ -461,9 +456,14 @@ function AppInner() {
             initialValue={results.distanceRightLetters}
             onBack={handleClinicalBack}
             onNext={(v) => {
-              setResult('distanceRightLetters', v, 'pretest');
-              setResult('rightDistanceNoGlasses', calcSnellen(results.distanceRightLine, v), 'pretest');
-              submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current));
+              saveResultPatchAndNavigate({
+                sectionType: 'main_test',
+                patch: {
+                  distanceRightLetters: v,
+                  rightDistanceNoGlasses: calcSnellen(resultsRef.current.distanceRightLine, v),
+                },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
             }}
           />
         );
@@ -491,7 +491,13 @@ function AppInner() {
             imageCaption="Client covers right eye"
             initialValue={results.distanceLeftLine}
             onBack={handleClinicalBack}
-            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
+            onNext={(v) => {
+              saveResultPatchAndNavigate({
+                sectionType: 'main_test',
+                patch: { distanceLeftLine: v },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
+            }}
           />
         );
 
@@ -504,9 +510,14 @@ function AppInner() {
             initialValue={results.distanceLeftLetters}
             onBack={handleClinicalBack}
             onNext={(v) => {
-              setResult('distanceLeftLetters', v, 'pretest');
-              setResult('leftDistanceNoGlasses', calcSnellen(results.distanceLeftLine, v), 'pretest');
-              submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current));
+              saveResultPatchAndNavigate({
+                sectionType: 'main_test',
+                patch: {
+                  distanceLeftLetters: v,
+                  leftDistanceNoGlasses: calcSnellen(resultsRef.current.distanceLeftLine, v),
+                },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
             }}
           />
         );
@@ -534,7 +545,13 @@ function AppInner() {
             imageCaption="Client wearing glasses, both eyes open"
             initialValue={results.distanceBothGlassesLine}
             onBack={handleClinicalBack}
-            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
+            onNext={(v) => {
+              saveResultPatchAndNavigate({
+                sectionType: 'main_test',
+                patch: { distanceBothGlassesLine: v },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
+            }}
           />
         );
 
@@ -547,9 +564,14 @@ function AppInner() {
             initialValue={results.distanceBothGlassesLetters}
             onBack={handleClinicalBack}
             onNext={(v) => {
-              setResult('distanceBothGlassesLetters', v, 'pretest');
-              setResult('bothEyesDistanceWithGlasses', calcSnellen(results.distanceBothGlassesLine, v), 'pretest');
-              submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current));
+              saveResultPatchAndNavigate({
+                sectionType: 'main_test',
+                patch: {
+                  distanceBothGlassesLetters: v,
+                  bothEyesDistanceWithGlasses: calcSnellen(resultsRef.current.distanceBothGlassesLine, v),
+                },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
             }}
           />
         );
@@ -579,9 +601,14 @@ function AppInner() {
             initialValue={results.nearNoGlassesLine}
             onBack={handleClinicalBack}
             onNext={(v) => {
-              setResult('nearNoGlassesLine', v, 'pretest');
-              setResult('nearNoGlasses', calcSnellen(v, '0'), 'pretest');
-              submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current));
+              saveResultPatchAndNavigate({
+                sectionType: 'main_test',
+                patch: {
+                  nearNoGlassesLine: v,
+                  nearNoGlasses: calcSnellen(v, '0'),
+                },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
             }}
           />
         );
@@ -609,7 +636,13 @@ function AppInner() {
             options={['Yes', 'No']}
             initialValue={results.hasReadingGlasses}
             onBack={handleClinicalBack}
-            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
+            onNext={(v) => {
+              saveResultPatchAndNavigate({
+                sectionType: 'pretest',
+                patch: { hasReadingGlasses: v },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
+            }}
           />
         );
 
@@ -625,9 +658,14 @@ function AppInner() {
             initialValue={results.nearOwnGlassesLine}
             onBack={handleClinicalBack}
             onNext={(v) => {
-              setResult('nearOwnGlassesLine', v, 'pretest');
-              setResult('nearWithGlasses', calcSnellen(v, '0'), 'pretest');
-              submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current));
+              saveResultPatchAndNavigate({
+                sectionType: 'main_test',
+                patch: {
+                  nearOwnGlassesLine: v,
+                  nearWithGlasses: calcSnellen(v, '0'),
+                },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
             }}
           />
         );
@@ -651,7 +689,13 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             initialValue={results.pd?.toString()}
             onBack={handleClinicalBack}
-            onNext={(pd) => { setResult('pd', pd, 'main_test'); submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current)); }}
+            onNext={(pd) => {
+              saveResultPatchAndNavigate({
+                sectionType: 'post_test',
+                patch: { pd },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
+            }}
           />
         );
 
@@ -662,7 +706,13 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             initialValue={results.wheelRightDirection}
             onBack={handleClinicalBack}
-            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
+            onNext={(v) => {
+              saveResultPatchAndNavigate({
+                sectionType: 'post_test',
+                patch: { wheelRightDirection: v },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
+            }}
           />
         );
 
@@ -674,7 +724,13 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             initialValue={results.wheelRightPower}
             onBack={handleClinicalBack}
-            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
+            onNext={(v) => {
+              saveResultPatchAndNavigate({
+                sectionType: 'post_test',
+                patch: { wheelRightPower: v },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
+            }}
           />
         );
 
@@ -685,7 +741,13 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             initialValue={results.wheelRightTwoColour}
             onBack={handleClinicalBack}
-            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
+            onNext={(v) => {
+              saveResultPatchAndNavigate({
+                sectionType: 'post_test',
+                patch: { wheelRightTwoColour: v },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
+            }}
           />
         );
 
@@ -696,7 +758,13 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             initialValue={results.wheelRightLine9}
             onBack={handleClinicalBack}
-            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
+            onNext={(v) => {
+              saveResultPatchAndNavigate({
+                sectionType: 'post_test',
+                patch: { wheelRightLine9: v },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
+            }}
           />
         );
 
@@ -711,9 +779,14 @@ function AppInner() {
             line9={results.wheelRightLine9}
             onBack={handleClinicalBack}
             onNext={() => {
-              const res = results.wheelRightDirection.startsWith('Neither') ? results.wheelRightDirection : `${results.wheelRightDirection} ${results.wheelRightPower}`;
-              setResult('wheelRightEye', res, 'main_test');
-              submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current));
+              const res = resultsRef.current.wheelRightDirection?.startsWith('Neither')
+                ? resultsRef.current.wheelRightDirection
+                : `${resultsRef.current.wheelRightDirection} ${resultsRef.current.wheelRightPower}`;
+              saveResultPatchAndNavigate({
+                sectionType: 'post_test',
+                patch: { wheelRightEye: res },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
             }}
           />
         );
@@ -724,7 +797,13 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             initialValue={results.wheelRightDistanceImproved}
             onBack={handleClinicalBack}
-            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
+            onNext={(v) => {
+              saveResultPatchAndNavigate({
+                sectionType: 'post_test',
+                patch: { wheelRightDistanceImproved: v },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
+            }}
           />
         );
 
@@ -737,7 +816,13 @@ function AppInner() {
             imageCaption="Client covers left eye at wheel"
             initialValue={results.wheelRightDistanceLine}
             onBack={handleClinicalBack}
-            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
+            onNext={(v) => {
+              saveResultPatchAndNavigate({
+                sectionType: 'post_test',
+                patch: { wheelRightDistanceLine: v },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
+            }}
           />
         );
 
@@ -749,9 +834,14 @@ function AppInner() {
             initialValue={results.wheelRightDistanceLetters}
             onBack={handleClinicalBack}
             onNext={(v) => {
-              setResult('wheelRightDistanceLetters', v, 'post_test');
-              setResult('wheelRightDistanceSnellen', calcSnellen(results.wheelRightDistanceLine, v), 'post_test');
-              submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current));
+              saveResultPatchAndNavigate({
+                sectionType: 'post_test',
+                patch: {
+                  wheelRightDistanceLetters: v,
+                  wheelRightDistanceSnellen: calcSnellen(resultsRef.current.wheelRightDistanceLine, v),
+                },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
             }}
           />
         );
@@ -765,9 +855,12 @@ function AppInner() {
             snellen={results.wheelRightDistanceImproved === 'Yes' ? results.wheelRightDistanceSnellen : 'N/A (Did not improve)'}
             onBack={handleClinicalBack}
             onNext={() => {
-              const val = results.wheelRightDistanceImproved === 'Yes' ? results.wheelRightDistanceSnellen : 'No';
-              setResult('wheelRightDistance', val, 'post_test');
-              submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current));
+              const val = resultsRef.current.wheelRightDistanceImproved === 'Yes' ? resultsRef.current.wheelRightDistanceSnellen : 'No';
+              saveResultPatchAndNavigate({
+                sectionType: 'post_test',
+                patch: { wheelRightDistance: val },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
             }}
           />
         );
@@ -779,7 +872,13 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             initialValue={results.wheelLeftDirection}
             onBack={handleClinicalBack}
-            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
+            onNext={(v) => {
+              saveResultPatchAndNavigate({
+                sectionType: 'post_test',
+                patch: { wheelLeftDirection: v },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
+            }}
           />
         );
 
@@ -791,7 +890,13 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             initialValue={results.wheelLeftPower}
             onBack={handleClinicalBack}
-            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
+            onNext={(v) => {
+              saveResultPatchAndNavigate({
+                sectionType: 'post_test',
+                patch: { wheelLeftPower: v },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
+            }}
           />
         );
 
@@ -802,7 +907,13 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             initialValue={results.wheelLeftTwoColour}
             onBack={handleClinicalBack}
-            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
+            onNext={(v) => {
+              saveResultPatchAndNavigate({
+                sectionType: 'post_test',
+                patch: { wheelLeftTwoColour: v },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
+            }}
           />
         );
 
@@ -813,7 +924,13 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             initialValue={results.wheelLeftLine9}
             onBack={handleClinicalBack}
-            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
+            onNext={(v) => {
+              saveResultPatchAndNavigate({
+                sectionType: 'post_test',
+                patch: { wheelLeftLine9: v },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
+            }}
           />
         );
 
@@ -828,9 +945,14 @@ function AppInner() {
             line9={results.wheelLeftLine9}
             onBack={handleClinicalBack}
             onNext={() => {
-              const res = results.wheelLeftDirection.startsWith('Neither') ? results.wheelLeftDirection : `${results.wheelLeftDirection} ${results.wheelLeftPower}`;
-              setResult('wheelLeftEye', res, 'main_test');
-              submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current));
+              const res = resultsRef.current.wheelLeftDirection?.startsWith('Neither')
+                ? resultsRef.current.wheelLeftDirection
+                : `${resultsRef.current.wheelLeftDirection} ${resultsRef.current.wheelLeftPower}`;
+              saveResultPatchAndNavigate({
+                sectionType: 'post_test',
+                patch: { wheelLeftEye: res },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
             }}
           />
         );
@@ -846,8 +968,11 @@ function AppInner() {
             initialValue={results.sunglassesDispensed === true ? 'Yes' : (results.sunglassesDispensed === false ? 'No' : undefined)}
             onBack={handleClinicalBack}
             onNext={(v) => {
-              setResult('sunglassesDispensed', v === 'Yes', 'dispensing');
-              submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current));
+              saveResultPatchAndNavigate({
+                sectionType: 'dispensing',
+                patch: { sunglassesDispensed: v === 'Yes' },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
             }}
           />
         );
@@ -856,7 +981,13 @@ function AppInner() {
         return (
           <SunglassesSelection
             onBack={handleClinicalBack}
-            onNext={(t) => { setResult('sunglassesType', t, 'dispensing'); submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current)); }}
+            onNext={(t) => {
+              saveResultPatchAndNavigate({
+                sectionType: 'dispensing',
+                patch: { sunglassesType: t },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
+            }}
           />
         );
 
@@ -865,7 +996,13 @@ function AppInner() {
           <GlassesDispensedReview
             sunglassesDispensed={!!results.sunglassesDispensed}
             onBack={handleClinicalBack}
-            onNext={(price) => { setResult('totalPaid', price, 'completion'); submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current)); }}
+            onNext={(price) => {
+              saveResultPatchAndNavigate({
+                sectionType: 'completion',
+                patch: { totalPaid: price },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
+            }}
           />
         );
 
@@ -873,7 +1010,13 @@ function AppInner() {
         return (
           <FinalChecklist
             onBack={handleClinicalBack}
-            onNext={(state) => { setResult('finalChecklist', state, 'completion'); submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current)); }}
+            onNext={(state) => {
+              saveResultPatchAndNavigate({
+                sectionType: 'completion',
+                patch: { finalChecklist: state },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
+            }}
           />
         );
 
@@ -882,21 +1025,22 @@ function AppInner() {
           <AdditionalDetails
             onBack={handleClinicalBack}
             onSubmit={async (d) => {
-              setResult('additionalDetails', d, 'completion');
+              const updatedResults = { ...resultsRef.current, additionalDetails: d };
+              resultsRef.current = updatedResults;
+              setResults(updatedResults);
               
-              if (activeSession) {
+              if (activeSession && completionService) {
                 try {
-                  // Atomic completion via Service
                   await completionService.completeTest(activeSession.localId, [
-                    { type: 'completion', payload: { ...results, additionalDetails: d } }
+                    { type: 'completion', payload: { ...updatedResults, additionalDetails: d } }
                   ]);
                   await refreshSession();
-                  await refreshTester();
                   setResults({});
                   resultsRef.current = {};
                   setScreen('test-saved');
                 } catch (err) {
                   console.error('Failed to complete test:', err);
+                  setSaveError('Failed to save test completion to local database. Please try again.');
                 }
               }
             }}
@@ -935,7 +1079,7 @@ function AppInner() {
         );
 
       case 'tester-profile':
-        return <Profile onNav={nav} tester={tester as any} />;
+        return <Profile onNav={nav} />;
 
       case 'community-garden':
         return <Garden onNav={nav} />;
@@ -973,19 +1117,17 @@ function AppInner() {
             client={viewingClient}
             onBack={() => setScreen('client-profile')}
             onStartNewTest={async () => {
-              if (!authService) return;
-              const activeTester = await authService.getActiveTester();
-              if (!activeTester || !viewingClient) return;
+              if (!tester || !clientRepo || !workflowService) return;
               try {
                 const newClient = await clientRepo.create({
                   ooxiiClientId: viewingClient.clientId,
                   yearOfBirth: Number(viewingClient.yearOfBirth) || 0,
                   gender: viewingClient.gender,
                   cataractSurgery: viewingClient.cataractSurgery,
-                  country: activeTester.country, stateProvince: activeTester.stateProvince, city: activeTester.city,
-                  createdByTesterId: activeTester.localId,
+                  country: tester.country, stateProvince: tester.stateProvince, city: tester.city,
+                  createdByTesterId: tester.localId,
                 });
-                await workflowService.startNewTest(activeTester.localId, newClient.localId);
+                await workflowService.startNewTest(tester.localId, newClient.localId);
                 setClient({ localId: newClient.localId, ooxiiId: viewingClient.clientId, yearOfBirth: String(viewingClient.yearOfBirth), gender: viewingClient.gender, cataract: viewingClient.cataractSurgery });
                 setResults({});
                 await refreshSession();
@@ -1002,26 +1144,7 @@ function AppInner() {
         return <ClientGlassesPrescription client={viewingClient} onBack={() => setScreen('client-profile')} />;
 
       default:
-        if (legacyTesterNeedsAccount) {
-          return (
-            <SignupEmail 
-              onNext={async (email, pw) => {
-                if (!authService || !testerRepo) return;
-                const t = await testerRepo.getCurrentTester();
-                if (t) {
-                  try {
-                    await authService.linkAccountToExistingTester(t.localId, email, pw);
-                    setLegacyTesterNeedsAccount(false);
-                    setScreen('home');
-                  } catch (e) {
-                    alert(e instanceof Error ? e.message : 'Error linking account');
-                  }
-                }
-              }} 
-            />
-          );
-        }
-        return <Login onLogin={() => setScreen('home')} onCreateAccount={() => setScreen('signup-email')} />;
+        return <Login onLoginSuccess={() => setScreen('home')} onCreateAccount={() => setScreen('signup-email')} />;
     }
   }
 }

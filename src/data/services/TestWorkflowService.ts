@@ -66,6 +66,13 @@ export class TestWorkflowService {
     await this.sessionRepo.saveSection(sessionId, sectionType, payload);
   }
 
+  async saveSectionPatch(sessionId: string, sectionType: SectionType, patch: Record<string, unknown>): Promise<void> {
+    if (typeof patch !== 'object' || patch === null) {
+      throw new Error(`Invalid patch payload for section type: ${sectionType}`);
+    }
+    await this.sessionRepo.saveSectionPatch(sessionId, sectionType, patch);
+  }
+
   async cancelTest(sessionId: string): Promise<void> {
     await this.sessionRepo.cancelDraft(sessionId);
   }

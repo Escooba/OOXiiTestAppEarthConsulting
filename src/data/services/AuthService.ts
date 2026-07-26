@@ -3,7 +3,7 @@
 // ============================================================================
 
 import type { DatabaseManager } from '../database/DatabaseManager';
-import type { AccountRepository } from '../repositories/AccountRepository';
+import type { AccountRepository, LocalAccount } from '../repositories/AccountRepository';
 import type { TesterRepository } from '../repositories/TesterRepository';
 import { PasswordHasher } from './PasswordHasher';
 import type { TesterProfile } from '../models';
@@ -25,9 +25,10 @@ export class AuthService {
   }
 
   /**
-   * Logs out the current user by clearing the active_tester_id preference.
+   * Logs out the current user by clearing preferences.
    */
   async logout(): Promise<void> {
+    await this.accountRepo.setPreference('active_account_id', '');
     await this.accountRepo.setPreference('active_tester_id', '');
   }
 
@@ -35,7 +36,7 @@ export class AuthService {
    * Logs in a user given an email and password.
    * Throws an error on failure (incorrect credentials).
    */
-  async login(email: string, password: string):Promise<TesterProfile> {
+  async login(email: string, password: string): Promise<{ account: LocalAccount; tester: TesterProfile }> {
     const normalized = email.trim().toLowerCase();
     const account = await this.accountRepo.getByEmail(normalized);
     if (!account || account.disabled) {
@@ -49,17 +50,18 @@ export class AuthService {
 
     // Success! Update last login and set active user
     await this.accountRepo.updateLastLogin(account.localId);
+    await this.accountRepo.setPreference('active_account_id', account.localId);
     await this.accountRepo.setPreference('active_tester_id', account.testerId);
 
     const tester = await this.testerRepo.getById(account.testerId);
     if (!tester) throw new Error('Tester profile missing for account');
-    return tester;
+    return { account, tester };
   }
 
   /**
    * Creates a new tester profile and an associated account atomically.
    */
-  async signup(email: string, password: string, testerData: Omit<TesterProfile, 'localId' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'recordVersion' | 'syncState'>): Promise<TesterProfile> {
+  async signup(email: string, password: string, testerData: Omit<TesterProfile, 'localId' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'recordVersion' | 'syncState'>): Promise<{ account: LocalAccount; tester: TesterProfile }> {
     const normalized = email.trim().toLowerCase();
     
     // Check if email already exists
@@ -73,7 +75,7 @@ export class AuthService {
     // Run atomically
     return this.db.transaction(async () => {
       const tester = await this.testerRepo.createTester(testerData);
-      await this.accountRepo.createAccount({
+      const account = await this.accountRepo.createAccount({
         testerId: tester.localId,
         emailNormalized: normalized,
         passwordHash: hashResult.hashHex,
@@ -82,15 +84,16 @@ export class AuthService {
         passwordIterations: hashResult.iterations,
       });
 
+      await this.accountRepo.setPreference('active_account_id', account.localId);
       await this.accountRepo.setPreference('active_tester_id', tester.localId);
-      return tester;
+      return { account, tester };
     });
   }
 
   /**
    * For existing testers who don't have an account yet.
    */
-  async linkAccountToExistingTester(testerId: string, email: string, password: string): Promise<void> {
+  async linkAccountToExistingTester(testerId: string, email: string, password: string): Promise<{ account: LocalAccount; tester: TesterProfile }> {
     const normalized = email.trim().toLowerCase();
     
     const existing = await this.accountRepo.getByEmail(normalized);
@@ -100,8 +103,8 @@ export class AuthService {
 
     const hashResult = await PasswordHasher.hash(password);
 
-    await this.db.transaction(async () => {
-      await this.accountRepo.createAccount({
+    return this.db.transaction(async () => {
+      const account = await this.accountRepo.createAccount({
         testerId,
         emailNormalized: normalized,
         passwordHash: hashResult.hashHex,
@@ -109,7 +112,11 @@ export class AuthService {
         passwordAlgorithm: hashResult.algorithm,
         passwordIterations: hashResult.iterations,
       });
+      await this.accountRepo.setPreference('active_account_id', account.localId);
       await this.accountRepo.setPreference('active_tester_id', testerId);
+      const tester = await this.testerRepo.getById(testerId);
+      if (!tester) throw new Error('Tester profile missing');
+      return { account, tester };
     });
   }
 }

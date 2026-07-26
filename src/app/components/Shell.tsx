@@ -39,8 +39,7 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
 
   const goHome = () => (onHome ? onHome() : onNav('home'));
 
-  const isLight = mode === 'light';
-  const statusText = isLight ? 'text-[var(--text-muted)]' : 'text-[var(--text-muted)]';
+  const statusText = 'text-[var(--text-muted)]';
 
   const [time, setTime] = useState(() => {
     return new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
@@ -70,21 +69,20 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
           <div className="flex items-center gap-1.5">
             <button
               onClick={goHome}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${tokens.navPillBg} ${tokens.text} border-[#A984FF]/30 hover:border-[#A984FF]`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${tokens.navPillBg} ${tokens.text} border-[var(--primary)]/30 hover:border-[var(--primary)]`}
             >
               <HomeIcon size={13} />
               Home
             </button>
             <button
               onClick={() => setSettingsOpen(true)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${tokens.navPillBg} ${tokens.text} border-[#A984FF]/30 hover:border-[#A984FF]`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${tokens.navPillBg} ${tokens.text} border-[var(--primary)]/30 hover:border-[var(--primary)]`}
             >
               <SettingsIcon size={13} />
               Settings
             </button>
-            <div className={`hidden sm:flex items-center gap-2 px-3 py-1 rounded-full border ${tokens.navPillBg} border-[#3A3059]`}>
-              <div className="w-2 h-2 rounded-full bg-green-500" />
-              <span className="text-xs text-green-500 font-medium">Online</span>
+            <div className={`hidden sm:flex items-center gap-2 px-3 py-1 rounded-full border ${tokens.navPillBg} border-[var(--card-border)]`}>
+              <span className="text-xs text-[var(--text-muted)] font-medium">Saved on this device</span>
             </div>
           </div>
         </div>
@@ -93,12 +91,12 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
           <div className={`sticky top-0 z-30 pt-4 pb-6 px-6 bg-gradient-to-b from-[var(--bg)] via-[var(--bg)] to-transparent`}>
             <div className="flex justify-between items-end mb-2 pr-8">
               <span className={`text-xs ${tokens.textMuted} font-semibold uppercase tracking-wider`}>Overall Progress</span>
-              <span className="text-[#A984FF] font-bold text-sm">{progress}%</span>
+              <span className="text-[var(--primary)] font-bold text-sm">{progress}%</span>
             </div>
             <div className="relative w-[calc(100%-32px)] mt-2">
-              <div className={`relative w-full h-3 rounded-full ${tokens.progressTrack} border border-white/5 overflow-hidden`}>
+              <div className={`relative w-full h-3 rounded-full ${tokens.progressTrack} border border-[var(--card-border)] overflow-hidden`}>
                 <motion.div
-                  className="absolute left-0 top-0 h-full rounded-full bg-[#A984FF] shadow-[0_0_12px_rgba(0,209,193,0.4)]"
+                  className="absolute left-0 top-0 h-full rounded-full bg-[var(--primary)] shadow-[0_0_12px_rgba(169,132,255,0.4)]"
                   initial={{ width: `${lastProgress.current}%` }}
                   animate={{ width: `${progress}%` }}
                   transition={{ type: 'spring', stiffness: 80, damping: 20 }}
@@ -114,13 +112,13 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
                 <motion.div
                   animate={{ y: [0, -5, 0] }}
                   transition={{ repeat: Infinity, duration: 0.8, ease: 'easeInOut' }}
-                  className={`bg-[#2A0730] rounded-full shadow-[0_0_10px_rgba(0,209,193,0.6)] border border-[#A984FF] flex items-center justify-center w-6 h-6`}
+                  className={`bg-[var(--card)] rounded-full shadow-[0_0_10px_rgba(169,132,255,0.6)] border border-[var(--primary)] flex items-center justify-center w-6 h-6`}
                 >
                   <RabbitMascot size={14} />
                 </motion.div>
               </motion.div>
               <div className="absolute right-[-32px] top-1/2 -translate-y-1/2 opacity-50">
-                <Flag size={16} className={progress >= 100 ? 'text-[#A984FF] fill-[#A984FF]' : ''} />
+                <Flag size={16} className={progress >= 100 ? 'text-[var(--primary)] fill-[var(--primary)]' : ''} />
               </div>
             </div>
           </div>
@@ -158,16 +156,15 @@ export function BottomBar({
   hideBack?: boolean;
   hideNext?: boolean;
 }) {
-  const { mode } = useTheme();
   const grad = 'from-[var(--bg)] via-[var(--bg)] to-transparent';
   const backCls = 'border-[var(--card-border)] text-[var(--text)] hover:bg-[var(--card-active)]';
   return (
-    <div className={`fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t ${grad} z-40 flex justify-center pointer-events-none`}>
+    <div className={`fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t ${grad} z-40 flex justify-center pointer-events-none pb-safe`}>
       <div className="w-full max-w-[430px] flex gap-3 pointer-events-auto">
         {!hideBack && (
           <button
             onClick={onBack}
-            className={`flex-1 max-w-[110px] h-14 rounded-2xl border font-medium flex items-center justify-center gap-2 active:scale-95 transition-all ${backCls}`}
+            className={`flex-1 max-w-[110px] min-h-[52px] rounded-2xl border font-medium flex items-center justify-center gap-2 active:scale-95 transition-all ${backCls}`}
           >
             {backLabel}
           </button>
@@ -176,10 +173,10 @@ export function BottomBar({
           <button
             onClick={onNext}
             disabled={nextDisabled}
-            className={`flex-[2] h-14 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg ${
+            className={`flex-[2] min-h-[52px] rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg ${
               nextDisabled
-                ? 'bg-[#3A3059] text-[#6A608A] cursor-not-allowed'
-                : 'bg-[#A984FF] text-[#2A0730] hover:brightness-110 shadow-[#A984FF]/20'
+                ? 'bg-[var(--card)] text-[var(--text-muted)] cursor-not-allowed border border-[var(--card-border)]'
+                : 'bg-[var(--primary)] text-[var(--bg)] hover:brightness-110 shadow-[var(--primary)]/20'
             }`}
           >
             {nextLabel}
@@ -196,22 +193,28 @@ export function BottomNavigation({ current, onNav }: { current: 'home' | 'commun
     <div className="fixed bottom-0 left-0 right-0 h-20 bg-[var(--header-bg)] border-t border-[var(--card-border)] z-40 flex justify-center pb-safe">
       <div className="w-full max-w-[430px] flex justify-around items-center px-2 h-full">
         <button 
+          type="button"
+          aria-current={current === 'home' ? 'page' : undefined}
           onClick={() => onNav('home')}
-          className={`flex flex-col items-center justify-center w-16 gap-1 transition-colors ${current === 'home' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
+          className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-3 gap-1 transition-colors ${current === 'home' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
         >
           <HomeIcon size={24} strokeWidth={current === 'home' ? 2.5 : 2} />
           <span className="text-[10px] font-medium">{t('ui.home')}</span>
         </button>
         <button 
+          type="button"
+          aria-current={current === 'community-garden' ? 'page' : undefined}
           onClick={() => onNav('community-garden')}
-          className={`flex flex-col items-center justify-center w-16 gap-1 transition-colors ${current === 'community-garden' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
+          className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-3 gap-1 transition-colors ${current === 'community-garden' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
         >
           <Sprout size={24} strokeWidth={current === 'community-garden' ? 2.5 : 2} />
           <span className="text-[10px] font-medium">{t('ui.garden')}</span>
         </button>
         <button 
+          type="button"
+          aria-current={current === 'tester-profile' ? 'page' : undefined}
           onClick={() => onNav('tester-profile')}
-          className={`flex flex-col items-center justify-center w-16 gap-1 transition-colors ${current === 'tester-profile' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
+          className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-3 gap-1 transition-colors ${current === 'tester-profile' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
         >
           <User size={24} strokeWidth={current === 'tester-profile' ? 2.5 : 2} />
           <span className="text-[10px] font-medium">{t('ui.profile')}</span>

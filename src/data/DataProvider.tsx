@@ -38,6 +38,7 @@ interface DataContextState {
   syncCoordinator: SyncCoordinator | null;
   csvImporter: CsvImporter | null;
   loading: boolean;
+  isInitialized: boolean;
   error: Error | null;
 }
 
@@ -46,7 +47,7 @@ const DataContext = createContext<DataContextState>({
   progressRepo: null, gardenRepo: null, badgeRepo: null, accountRepo: null,
   workflowService: null, completionService: null, authService: null, syncCoordinator: null,
   csvImporter: null,
-  loading: true, error: null,
+  loading: true, isInitialized: false, error: null,
 });
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
@@ -55,7 +56,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     progressRepo: null, gardenRepo: null, badgeRepo: null, accountRepo: null,
     workflowService: null, completionService: null, authService: null, syncCoordinator: null,
     csvImporter: null,
-    loading: true, error: null,
+    loading: true, isInitialized: false, error: null,
   });
 
   useEffect(() => {
@@ -96,7 +97,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           setState({
             db, testerRepo, clientRepo, sessionRepo, progressRepo, gardenRepo, badgeRepo, accountRepo,
             workflowService, completionService, authService, syncCoordinator, csvImporter,
-            loading: false, error: null,
+            loading: false, isInitialized: true, error: null,
           });
         }
       } catch (err) {
@@ -130,7 +131,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <DataContext.Provider value={state}>{children}</DataContext.Provider>;
+  return    <DataContext.Provider
+      value={{
+        ...state,
+        isInitialized: !state.loading && !!state.db,
+      }}
+    >
+      {children}
+    </DataContext.Provider>;
 }
 
 export function useData() {

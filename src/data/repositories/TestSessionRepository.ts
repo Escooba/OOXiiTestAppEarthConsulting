@@ -105,6 +105,13 @@ export class TestSessionRepository {
     );
   }
 
+  async saveSectionPatch(sessionId: string, sectionType: SectionType, patch: Record<string, unknown>): Promise<void> {
+    const existingSection = await this.getSection(sessionId, sectionType);
+    const currentPayload = existingSection?.payload || {};
+    const mergedPayload = { ...currentPayload, ...patch };
+    await this.saveSection(sessionId, sectionType, mergedPayload);
+  }
+
   async getSection(sessionId: string, sectionType: SectionType): Promise<TestSessionSection | null> {
     const rows = await this.db.query<SectionRow>(
       `SELECT ${SECTION_COLS} FROM test_session_sections WHERE test_session_id = ? AND section_type = ?`,
