@@ -17,7 +17,7 @@ export function WheelDirectionScreen({
 }: Props) {
   const [direction, setDirection] = useState(initialValue);
   const [error, setError] = useState(false);
-  const { commitAndAdvance } = useAutoAdvance();
+  const { commitAndAdvance, isAdvancing } = useAutoAdvance();
 
   const opposite = side === 'right' ? 'left' : 'right';
 
@@ -30,7 +30,7 @@ export function WheelDirectionScreen({
   };
 
   return (
-    <Shell progress={progress}>
+    <Shell progress={progress} isAdvancing={isAdvancing}>
       <div className="px-5 pt-2 pb-32 flex flex-col gap-5">
         <div>
           <h1 className="text-2xl font-light">Wheel test — {side === 'right' ? 'Right' : 'Left'} eye</h1>
@@ -45,7 +45,7 @@ export function WheelDirectionScreen({
           type={error ? 'error' : direction ? 'success' : 'default'}
         />
 
-        <div className="bg-[#2A2049] border border-[#00D1C1]/30 rounded-3xl p-5 flex flex-col gap-4">
+        <div className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4">
           <label className="text-sm font-medium block">Best {side} lens is:</label>
           <RadioGroup
             value={direction}
@@ -62,7 +62,7 @@ export function WheelDirectionScreen({
           {error && !direction && <InlineError text="Choose the best lens before continuing." />}
         </div>
       </div>
-      <BottomBar onNext={handleNext} onBack={onBack} hideNext={true} />
+      <BottomBar onNext={handleNext} onBack={onBack} hideNext={!direction} />
     </Shell>
   );
 }

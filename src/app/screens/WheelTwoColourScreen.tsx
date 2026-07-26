@@ -17,7 +17,7 @@ export function WheelTwoColourScreen({
 }: Props) {
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState(false);
-  const { commitAndAdvance } = useAutoAdvance();
+  const { commitAndAdvance, isAdvancing } = useAutoAdvance();
 
   const handleNext = () => {
     if (!value) {
@@ -28,7 +28,7 @@ export function WheelTwoColourScreen({
   };
 
   return (
-    <Shell progress={progress}>
+    <Shell progress={progress} isAdvancing={isAdvancing}>
       <div className="px-5 pt-2 pb-32 flex flex-col gap-5">
         <div>
           <h1 className="text-2xl font-light">Wheel test — {side === 'right' ? 'Right' : 'Left'} eye</h1>
@@ -39,7 +39,7 @@ export function WheelTwoColourScreen({
           type={error ? 'error' : value ? 'success' : 'default'}
         />
 
-        <div className="bg-[#2A2049] border border-[#00D1C1]/30 rounded-3xl p-5 flex flex-col gap-4">
+        <div className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4">
           <label className="text-sm font-medium block mb-2">
             Now do 2-colour test. Which letters look sharper, darker, easier to read?
           </label>
@@ -58,7 +58,7 @@ export function WheelTwoColourScreen({
           {error && !value && <InlineError text="Choose a 2-colour test result before continuing." />}
         </div>
       </div>
-      <BottomBar onNext={handleNext} onBack={onBack} hideNext={true} />
+      <BottomBar onNext={handleNext} onBack={onBack} hideNext={!value} />
     </Shell>
   );
 }

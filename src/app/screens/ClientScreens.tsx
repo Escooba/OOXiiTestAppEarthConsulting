@@ -66,7 +66,7 @@ export function FindClient({
         <h1 className="text-2xl font-light">Find a client</h1>
 
         <div className="flex items-center gap-2">
-          <div className="flex-1 flex items-center gap-3 bg-white rounded-2xl px-4 py-3 border border-white/10 text-[#150F26]">
+          <div className="flex-1 flex items-center gap-3 bg-white rounded-2xl px-4 py-3 border border-white/10 text-[#2A0730]">
             <Search size={18} className="text-[#6A608A]" />
             <input
               value={query}
@@ -77,7 +77,7 @@ export function FindClient({
           </div>
           <button
             aria-label="Refresh client list"
-            className="w-12 h-12 rounded-2xl bg-[#22193B] border border-white/10 flex items-center justify-center text-white hover:border-[#00D1C1]/40"
+            className="w-12 h-12 rounded-2xl bg-[#22193B] border border-white/10 flex items-center justify-center text-white hover:border-[#A984FF]/40"
           >
             <RotateCw size={18} />
           </button>
@@ -92,7 +92,7 @@ export function FindClient({
             <button
               key={c.clientId}
               onClick={() => onOpenProfile(c)}
-              className="text-left bg-[#22193B] border border-white/10 rounded-2xl p-4 hover:border-[#00D1C1]/40 transition-colors"
+              className="text-left bg-[#22193B] border border-white/10 rounded-2xl p-4 hover:border-[#A984FF]/40 transition-colors"
             >
               <div className="flex justify-between items-start">
                 <div>
@@ -135,13 +135,13 @@ export function ClientProfileScreen({
         <div className="bg-[#22193B] border border-white/10 rounded-3xl p-5 flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div className="text-xs text-[#9B93BA] uppercase tracking-wider">Tester : {client.testerName}</div>
-            <button className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#00D1C1]/15 border border-[#00D1C1]/40 text-[#00D1C1] text-xs font-semibold">
+            <button className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#A984FF]/15 border border-[#A984FF]/40 text-[#A984FF] text-xs font-semibold">
               <Edit3 size={12} /> Edit
             </button>
           </div>
 
           <div>
-            <div className="text-xs uppercase text-[#00D1C1] tracking-wider font-semibold mb-2">Personal information</div>
+            <div className="text-xs uppercase text-[#A984FF] tracking-wider font-semibold mb-2">Personal information</div>
             <dl className="text-sm flex flex-col gap-1.5">
               <Row label="Client ID" value={client.clientId} />
               <Row label="Gender" value={client.gender} />
@@ -152,7 +152,7 @@ export function ClientProfileScreen({
           </div>
         </div>
 
-        <h2 className="text-sm uppercase tracking-wider text-[#00D1C1] font-semibold mt-2">Test sessions</h2>
+        <h2 className="text-sm uppercase tracking-wider text-[#A984FF] font-semibold mt-2">Test sessions</h2>
 
         <div className="bg-[#22193B] border border-white/10 rounded-3xl p-5 flex flex-col gap-3">
           <div className="text-lg font-medium">{client.latestSessionId}</div>
@@ -161,7 +161,7 @@ export function ClientProfileScreen({
             <span>Completed: 31 May 2026 02:00 pm</span>
           </div>
           <div className="flex gap-2 mt-2">
-            <button onClick={onOpenVisionReview} className="flex-1 h-11 rounded-xl bg-[#00D1C1] text-[#150F26] font-semibold text-sm">
+            <button onClick={onOpenVisionReview} className="flex-1 h-11 rounded-xl bg-[#A984FF] text-[#2A0730] font-semibold text-sm">
               Vision testing
             </button>
             <button onClick={onOpenPrescription} className="flex-1 h-11 rounded-xl border border-white/20 text-white font-medium text-sm">
@@ -228,7 +228,7 @@ export function VisionTestingReview({
           footer={
             <div className="flex justify-between items-center mt-2 pt-3 border-t border-white/5">
               <span className="text-xs uppercase tracking-wider text-[#9B93BA] font-semibold">Total</span>
-              <span className="text-lg font-bold text-[#00D1C1]">A$ 1000</span>
+              <span className="text-lg font-bold text-[#A984FF]">A$ 1000</span>
             </div>
           }
         />
@@ -263,18 +263,18 @@ export function ClientGlassesPrescription({
         <div className="bg-[#22193B] border border-white/10 rounded-3xl p-5 flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div className="text-lg font-medium">Distance vision prescription</div>
-            <span className="text-[10px] uppercase tracking-wider bg-[#00D1C1]/15 text-[#00D1C1] px-2 py-1 rounded-full border border-[#00D1C1]/40 font-semibold">
+            <span className="text-[10px] uppercase tracking-wider bg-[#A984FF]/15 text-[#A984FF] px-2 py-1 rounded-full border border-[#A984FF]/40 font-semibold">
               Wheel Test
             </span>
           </div>
 
-          <div className="flex gap-1 bg-[#150F26] p-1 rounded-full border border-white/10">
+          <div className="flex gap-1 bg-[#2A0730] p-1 rounded-full border border-white/10">
             {(['Ophthalmologist', 'Paediatrician'] as const).map((v) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
                 className={`flex-1 h-9 rounded-full text-xs font-semibold transition-colors ${
-                  view === v ? 'bg-white text-[#150F26]' : 'text-white/60'
+                  view === v ? 'bg-white text-[#2A0730]' : 'text-white/60'
                 }`}
               >
                 {v}
@@ -295,7 +295,7 @@ export function ClientGlassesPrescription({
           )}
 
           <div>
-            <div className="text-xs uppercase text-[#00D1C1] tracking-wider font-semibold mb-2">Frames</div>
+            <div className="text-xs uppercase text-[#A984FF] tracking-wider font-semibold mb-2">Frames</div>
             <dl className="text-sm flex flex-col gap-1.5">
               <Row label="Type" value="Plastic" />
               <Row label="Front" value="Red" />
@@ -352,7 +352,7 @@ function Row({ label, value }: { label: string; value: string }) {
 
 function SessionHeader({ session }: { session: string }) {
   return (
-    <div className="bg-[#150F26] border border-white/10 rounded-2xl p-4">
+    <div className="bg-[#2A0730] border border-white/10 rounded-2xl p-4">
       <div className="text-lg font-medium">{session}</div>
       <div className="text-xs text-[#9B93BA] flex flex-col gap-0.5 mt-1">
         <span>Created: 31 May 2026 01:56 pm</span>
@@ -374,7 +374,7 @@ function ReviewCard({
     <div className="bg-[#22193B] border border-white/10 rounded-3xl p-5 flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="text-lg font-medium">{title}</div>
-        <span className="text-[10px] uppercase tracking-wider bg-[#00D1C1]/15 text-[#00D1C1] px-2 py-1 rounded-full border border-[#00D1C1]/40 font-semibold">
+        <span className="text-[10px] uppercase tracking-wider bg-[#A984FF]/15 text-[#A984FF] px-2 py-1 rounded-full border border-[#A984FF]/40 font-semibold">
           {statusPill}
         </span>
       </div>
@@ -391,13 +391,13 @@ function PrescriptionGrid({
 }: { rightEye: [string, string][]; leftEye: [string, string][] }) {
   return (
     <div className="grid grid-cols-2 gap-3">
-      <div className="bg-[#150F26] border border-white/10 rounded-2xl p-3">
+      <div className="bg-[#2A0730] border border-white/10 rounded-2xl p-3">
         <div className="text-[10px] uppercase tracking-wider text-[#9B93BA] font-semibold mb-2">Right eye</div>
         <dl className="text-xs flex flex-col gap-1">
           {rightEye.map(([l, v]) => <Row key={l} label={l} value={v} />)}
         </dl>
       </div>
-      <div className="bg-[#150F26] border border-white/10 rounded-2xl p-3">
+      <div className="bg-[#2A0730] border border-white/10 rounded-2xl p-3">
         <div className="text-[10px] uppercase tracking-wider text-[#9B93BA] font-semibold mb-2">Left eye</div>
         <dl className="text-xs flex flex-col gap-1">
           {leftEye.map(([l, v]) => <Row key={l} label={l} value={v} />)}

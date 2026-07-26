@@ -58,7 +58,7 @@ export function SettingsModal({ open, onClose }: Props) {
 
             <div className="p-5 flex flex-col gap-5 max-h-[70vh] overflow-y-auto">
               <div>
-                <div className="text-xs uppercase tracking-wider text-[#00D1C1] font-semibold mb-2">Language</div>
+                <div className="text-xs uppercase tracking-wider text-[#A984FF] font-semibold mb-2">Language</div>
                 <SelectField
                   value={draftLang}
                   onChange={(v) => setDraftLang(v as Language)}
@@ -68,14 +68,14 @@ export function SettingsModal({ open, onClose }: Props) {
               </div>
 
               <div>
-                <div className="text-xs uppercase tracking-wider text-[#00D1C1] font-semibold mb-2">Display mode</div>
+                <div className="text-xs uppercase tracking-wider text-[#A984FF] font-semibold mb-2">Display mode</div>
                 <div className="flex flex-col gap-2">
                   <ThemeOption
                     id="ooxii_purple"
                     title="OOXii sunlight purple"
                     desc="Best for outdoor testing and bright sunlight."
-                    preview="from-[#150F26] to-[#2A2049]"
-                    accent="#00D1C1"
+                    preview="from-[#2A0730] to-[#2A2049]"
+                    accent="#A984FF"
                     icon={<Sparkles size={16} />}
                     selected={draftMode === 'ooxii_purple'}
                     onSelect={() => setDraftMode('ooxii_purple')}
@@ -85,7 +85,7 @@ export function SettingsModal({ open, onClose }: Props) {
                     title="Traditional light mode"
                     desc="Light background with dark text."
                     preview="from-white to-[#F5F5F7]"
-                    accent="#00D1C1"
+                    accent="#A984FF"
                     icon={<Sun size={16} />}
                     selected={draftMode === 'traditional_light'}
                     onSelect={() => setDraftMode('traditional_light')}
@@ -96,7 +96,7 @@ export function SettingsModal({ open, onClose }: Props) {
                     title="Traditional dark mode"
                     desc="Dark neutral background with light text."
                     preview="from-[#111214] to-[#26272C]"
-                    accent="#00D1C1"
+                    accent="#A984FF"
                     icon={<Moon size={16} />}
                     selected={draftMode === 'traditional_dark'}
                     onSelect={() => setDraftMode('traditional_dark')}
@@ -114,7 +114,7 @@ export function SettingsModal({ open, onClose }: Props) {
               </button>
               <button
                 onClick={apply}
-                className="flex-[2] h-11 rounded-xl bg-[#00D1C1] text-[#150F26] font-bold"
+                className="flex-[2] h-11 rounded-xl bg-[#A984FF] text-[#2A0730] font-bold"
               >
                 Apply
               </button>
@@ -137,7 +137,7 @@ function ThemeOption({
       type="button"
       onClick={onSelect}
       className={`text-left p-3 rounded-2xl border transition-all flex gap-3 items-center ${
-        selected ? 'border-[#00D1C1] bg-[#00D1C1]/10' : 'border-white/10 bg-[#150F26] hover:border-white/20'
+        selected ? 'border-[#A984FF] bg-[#A984FF]/10' : 'border-white/10 bg-[#2A0730] hover:border-white/20'
       }`}
     >
       <div
@@ -149,7 +149,7 @@ function ThemeOption({
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium flex items-center gap-2">
           {title}
-          {selected && <Check size={14} className="text-[#00D1C1]" />}
+          {selected && <Check size={14} className="text-[#A984FF]" />}
         </div>
         <div className="text-xs text-[#9B93BA] mt-0.5 leading-snug">{desc}</div>
       </div>

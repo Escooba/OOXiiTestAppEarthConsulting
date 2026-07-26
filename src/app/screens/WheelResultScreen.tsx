@@ -35,9 +35,9 @@ export function WheelResultScreen({
 
         <motion.div
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-          className="mt-2 rounded-2xl bg-[#00D1C1]/10 border border-[#00D1C1]/30 p-4 flex items-center gap-3"
+          className="mt-2 rounded-2xl bg-[#A984FF]/10 border border-[#A984FF]/30 p-4 flex items-center gap-3"
         >
-          <Flag size={20} className="text-[#00D1C1] shrink-0" />
+          <Flag size={20} className="text-[#A984FF] shrink-0" />
           <span className="text-sm text-white/90">Review the result. Press Next to continue to the next part of the test.</span>
         </motion.div>
       </div>

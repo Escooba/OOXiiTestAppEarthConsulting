@@ -66,7 +66,7 @@ export function SignupEmail({ onNext, onLogin }: Props) {
               <li key={r.label} className="flex items-center gap-2 text-xs">
                 <span
                   className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                    r.ok ? 'bg-[#00D1C1] text-[#150F26]' : 'bg-[#3A3059] text-[#9B93BA]'
+                    r.ok ? 'bg-[#A984FF] text-[#2A0730]' : 'bg-[#3A3059] text-[#9B93BA]'
                   }`}
                 >
                   {r.ok ? <Check size={10} /> : null}
@@ -88,7 +88,7 @@ export function SignupEmail({ onNext, onLogin }: Props) {
 
         <div className="text-center text-xs text-[#9B93BA] mt-4">
           Already registered?{' '}
-          <button type="button" onClick={onLogin} className="text-[#00D1C1] font-medium">Login to your account</button>
+          <button type="button" onClick={onLogin} className="text-[#A984FF] font-medium">Login to your account</button>
         </div>
       </div>
       <BottomBar onNext={submit} hideBack nextLabel="Next" />
@@ -97,8 +97,8 @@ export function SignupEmail({ onNext, onLogin }: Props) {
 }
 
 export function inputCls(err: boolean) {
-  return `w-full bg-[#150F26] border rounded-xl py-3.5 px-4 text-base outline-none transition-colors ${
-    err ? 'border-[#FF5C5C] text-white focus:ring-1 focus:ring-[#FF5C5C]' : 'border-white/10 text-white focus:border-[#00D1C1]'
+  return `w-full bg-[#2A0730] border rounded-xl py-3.5 px-4 text-base outline-none transition-colors ${
+    err ? 'border-[#FF5C5C] text-white focus:ring-1 focus:ring-[#FF5C5C]' : 'border-white/10 text-white focus:border-[#A984FF]'
   }`;
 }
 

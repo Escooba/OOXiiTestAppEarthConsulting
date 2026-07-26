@@ -56,20 +56,20 @@ export function Tutorial({ onNav }: { onNav: (s: ScreenId) => void }) {
 
         {SECTIONS.map((s) => (
           <div key={s.title} className="flex flex-col gap-2">
-            <h2 className="text-xs uppercase tracking-wider text-[#00D1C1] font-semibold px-1">{s.title}</h2>
+            <h2 className="text-xs uppercase tracking-wider text-[#A984FF] font-semibold px-1">{s.title}</h2>
             {s.items.map((it) => (
               <div
                 key={it.title}
                 className="bg-[#22193B] border border-white/5 rounded-2xl p-3 flex items-center gap-3"
               >
-                <div className="w-12 h-12 rounded-xl bg-[#150F26] flex items-center justify-center text-[#00D1C1]">
+                <div className="w-12 h-12 rounded-xl bg-[#2A0730] flex items-center justify-center text-[#A984FF]">
                   <Play size={20} className="fill-current ml-0.5" />
                 </div>
                 <div className="flex-1">
                   <div className="text-sm font-medium leading-tight">{it.title}</div>
                   <div className="text-xs text-[#9B93BA] mt-0.5">{it.duration}</div>
                 </div>
-                <button className="px-3 py-1.5 rounded-full bg-[#00D1C1]/15 border border-[#00D1C1]/40 text-[#00D1C1] text-xs font-semibold">
+                <button className="px-3 py-1.5 rounded-full bg-[#A984FF]/15 border border-[#A984FF]/40 text-[#A984FF] text-xs font-semibold">
                   Watch
                 </button>
               </div>

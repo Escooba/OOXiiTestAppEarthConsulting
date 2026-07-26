@@ -16,7 +16,7 @@ interface Props {
 export function WheelPDScreen({ progress, initialValue = '', onNext, onBack }: Props) {
   const [pd, setPd] = useState(initialValue);
   const [error, setError] = useState<string | null>(null);
-  const { commitAndAdvance } = useAutoAdvance();
+  const { commitAndAdvance, isAdvancing } = useAutoAdvance();
 
   const handleBlurOrEnter = () => {
     const n = parseInt(pd);
@@ -33,14 +33,14 @@ export function WheelPDScreen({ progress, initialValue = '', onNext, onBack }: P
   };
 
   return (
-    <Shell progress={progress}>
+    <Shell progress={progress} isAdvancing={isAdvancing}>
       <div className="px-5 pt-2 pb-32 flex flex-col gap-5">
         <h1 className="text-2xl font-light">Wheel test</h1>
         <ImagePanel caption="Client faces vision chart" marker="3m" />
         <InstructionCard text="To improve distance vision" />
         <RabbitBubble text={error ? 'Enter a PD between 52 and 78.' : pd ? 'Nice. Press Next to continue.' : "You're here. Complete this step to keep going."} type={error ? 'error' : pd ? 'success' : 'default'} />
 
-        <div className="bg-[#2A2049] border border-[#00D1C1]/30 rounded-3xl p-5 flex flex-col gap-3">
+        <div className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-3">
           <Field label="Pupillary distance (PD)">
             <div className="flex items-start gap-2">
               <input
@@ -70,7 +70,7 @@ export function WheelPDScreen({ progress, initialValue = '', onNext, onBack }: P
           {error && <InlineError text={error} />}
         </div>
       </div>
-      <BottomBar onNext={submit} onBack={onBack} hideNext={true} />
+      <BottomBar onNext={submit} onBack={onBack} hideNext={!pd} />
     </Shell>
   );
 }

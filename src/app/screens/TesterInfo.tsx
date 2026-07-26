@@ -76,7 +76,7 @@ export function TesterInfo({ onNext, onBack }: Props) {
           />
         </Field>
 
-        <h2 className="text-lg font-medium mt-2 text-[#00D1C1]">Clinic details</h2>
+        <h2 className="text-lg font-medium mt-2 text-[#A984FF]">Clinic details</h2>
 
         <Field label="Country" error={errors.country}>
           <SelectField

@@ -36,7 +36,7 @@ export function QuestionScreen({
 }: Props) {
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState(false);
-  const { commitAndAdvance } = useAutoAdvance();
+  const { commitAndAdvance, isAdvancing } = useAutoAdvance();
 
   const submit = () => {
     if (!value) {
@@ -47,11 +47,11 @@ export function QuestionScreen({
   };
 
   return (
-    <Shell progress={progress}>
+    <Shell progress={progress} isAdvancing={isAdvancing}>
       <div className="px-5 pt-2 pb-32 flex flex-col gap-5">
         <div>
           <h1 className="text-2xl font-light">{title}</h1>
-          {subtitle && <h2 className="text-lg font-medium text-[#00D1C1] mt-1">{subtitle}</h2>}
+          {subtitle && <h2 className="text-lg font-medium text-[#A984FF] mt-1">{subtitle}</h2>}
         </div>
 
         <RabbitBubble
@@ -65,7 +65,7 @@ export function QuestionScreen({
           type={error ? 'error' : value ? 'success' : 'default'}
         />
 
-        <div className="bg-[#2A2049] border border-[#00D1C1]/30 rounded-3xl p-5 flex flex-col gap-4">
+        <div className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4">
           <div className="flex items-start justify-between gap-3">
             <p className="font-medium text-[15px] leading-snug">{question}</p>
             {helpTitle && helpBody && <HelpButton title={helpTitle} description={helpBody} />}

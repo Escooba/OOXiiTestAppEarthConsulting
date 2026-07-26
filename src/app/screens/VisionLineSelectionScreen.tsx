@@ -22,7 +22,7 @@ export function VisionLineSelectionScreen({
 }: Props) {
   const [line, setLine] = useState(initialValue);
   const [error, setError] = useState(false);
-  const { commitAndAdvance } = useAutoAdvance();
+  const { commitAndAdvance, isAdvancing } = useAutoAdvance();
 
   const handleNext = () => {
     if (!line) {
@@ -33,11 +33,11 @@ export function VisionLineSelectionScreen({
   };
 
   return (
-    <Shell progress={progress}>
+    <Shell progress={progress} isAdvancing={isAdvancing}>
       <div className="px-5 pt-2 pb-32 flex flex-col gap-5">
         <div>
           <h1 className="text-2xl font-light">{title}</h1>
-          {subtitle && <h2 className="text-lg font-medium text-[#00D1C1] mt-1">{subtitle}</h2>}
+          {subtitle && <h2 className="text-lg font-medium text-[#A984FF] mt-1">{subtitle}</h2>}
         </div>
 
         <ImagePanel caption={imageCaption} marker={imageMarker} />
@@ -48,7 +48,7 @@ export function VisionLineSelectionScreen({
           type={error ? 'error' : line ? 'success' : 'default'}
         />
 
-        <div className="bg-[#2A2049] border border-[#00D1C1]/30 rounded-3xl p-5 flex flex-col gap-4">
+        <div className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4">
           <label className="text-[15px] font-medium leading-snug">
             Smallest OOXii line number
           </label>
@@ -68,7 +68,7 @@ export function VisionLineSelectionScreen({
           {error && !line && <InlineError text="Select the OOXii line number before continuing." />}
         </div>
       </div>
-      <BottomBar onNext={handleNext} onBack={onBack} hideNext={true} />
+      <BottomBar onNext={handleNext} onBack={onBack} hideNext={!line} />
     </Shell>
   );
 }

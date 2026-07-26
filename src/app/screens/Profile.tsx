@@ -88,7 +88,7 @@ export function Profile({ onNav, tester }: { onNav: (s: ScreenId) => void; teste
               <span className="text-sm text-[#9BB0D1]">{CLIENTS} / {NEXT_BADGE_TARGET}</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-[#122E2C] border border-[#00D1C1]/40 flex items-center justify-center text-xl">
+              <div className="w-12 h-12 rounded-2xl bg-[#122E2C] border border-[#A984FF]/40 flex items-center justify-center text-xl">
                 {nextBadge.iconKey}
               </div>
               <div>
@@ -101,7 +101,7 @@ export function Profile({ onNav, tester }: { onNav: (s: ScreenId) => void; teste
                 initial={{ width: 0 }}
                 animate={{ width: `${pct}%` }}
                 transition={{ duration: 0.9, ease: 'easeOut' }}
-                className="h-full rounded-full bg-gradient-to-r from-[#00D1C1] to-[#3BE0D4]"
+                className="h-full rounded-full bg-gradient-to-r from-[#A984FF] to-[#3BE0D4]"
               />
             </div>
           </div>
@@ -140,7 +140,7 @@ export function Profile({ onNav, tester }: { onNav: (s: ScreenId) => void; teste
             if (isEarned) {
               if (b.badgeCode === 'FIRST_VISION') tint = 'bg-[#1B3A5B]/60 border-[#3B82F6]/50';
               else if (b.badgeCode === 'TEN_HELPERS') tint = 'bg-[#4A3A12]/60 border-[#EAB308]/60';
-              else if (b.badgeCode === 'VISION_GUIDE') tint = 'bg-[#122E2C]/60 border-[#00D1C1]';
+              else if (b.badgeCode === 'VISION_GUIDE') tint = 'bg-[#122E2C]/60 border-[#A984FF]';
               else tint = 'bg-[#2D1B3A]/60 border-[#A855F7]/50'; // Default earned
             } else if (isNext) {
               tint = 'bg-[#1E293B]/80 border-[#475569] border-dashed';
@@ -158,7 +158,7 @@ export function Profile({ onNav, tester }: { onNav: (s: ScreenId) => void; teste
                 className={`relative rounded-2xl border p-3 flex flex-col items-center text-center gap-1.5 aspect-[3/3.4] justify-center cursor-pointer transition-colors ${tint}`}
               >
                 {isEarned && (
-                  <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#00D1C1] flex items-center justify-center">
+                  <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#A984FF] flex items-center justify-center">
                     <Check size={12} className="text-[#0B0817]" strokeWidth={3} />
                   </span>
                 )}

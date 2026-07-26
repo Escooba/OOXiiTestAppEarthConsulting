@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ScreenId, calcSnellen } from './lib/theme';
 import { ThemeProvider } from './lib/ThemeContext';
 import { ShellNavProvider } from './components/Shell';
@@ -104,6 +104,7 @@ function AppInner() {
   // Client session state for UI rendering
   const [client, setClient] = useState<{ localId: string; ooxiiId: string; yearOfBirth: string; gender: string; cataract: string } | null>(null);
   const [results, setResults] = useState<Record<string, any>>({});
+  const resultsRef = useRef<Record<string, any>>(results);
 
   // Client-search flow state
   const [viewingClient, setViewingClient] = useState<ClientRecord | null>(null);
@@ -173,6 +174,7 @@ function AppInner() {
           loaded = { ...loaded, ...s.payload };
         });
         setResults(loaded);
+        resultsRef.current = loaded;
       }).catch(err => console.error('Failed to load session sections', err));
     }
   }, [activeSession, workflowService]);
@@ -195,11 +197,9 @@ function AppInner() {
   }, [activeSession, client, clientRepo]);
 
   const setResult = async (key: string, value: any, sectionType: SectionType = 'main_test') => {
-    let finalResults = {};
-    setResults(prev => {
-      finalResults = { ...prev, [key]: value };
-      return finalResults;
-    });
+    const finalResults = { ...resultsRef.current, [key]: value };
+    resultsRef.current = finalResults;
+    setResults(finalResults);
     
     // Save to SQLite
     if (activeSession) {
@@ -225,6 +225,7 @@ function AppInner() {
     // Clear state if starting fresh
     if (target === 'client-info') {
       setResults({});
+      resultsRef.current = {};
       if (activeSession) {
         try {
           await workflowService.cancelTest(activeSession.localId);

@@ -16,7 +16,7 @@ export function WheelDistanceImprovedScreen({
 }: Props) {
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState(false);
-  const { commitAndAdvance } = useAutoAdvance();
+  const { commitAndAdvance, isAdvancing } = useAutoAdvance();
 
   const handleNext = () => {
     if (!value) {
@@ -27,7 +27,7 @@ export function WheelDistanceImprovedScreen({
   };
 
   return (
-    <Shell progress={progress}>
+    <Shell progress={progress} isAdvancing={isAdvancing}>
       <div className="px-5 pt-2 pb-32 flex flex-col gap-5">
         <div>
           <h1 className="text-2xl font-light">Right distance vision at the wheel</h1>
@@ -41,7 +41,7 @@ export function WheelDistanceImprovedScreen({
           type={error ? 'error' : value ? 'success' : 'default'}
         />
 
-        <div className="bg-[#2A2049] border border-[#00D1C1]/30 rounded-3xl p-5 flex flex-col gap-4">
+        <div className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4">
           <label className="text-sm font-medium block mb-2">Did vision improve with lenses at the wheel?</label>
           <RadioGroup
             value={value}
@@ -58,7 +58,7 @@ export function WheelDistanceImprovedScreen({
           {error && !value && <InlineError text="Choose Yes or No before continuing." />}
         </div>
       </div>
-      <BottomBar onNext={handleNext} onBack={onBack} hideNext={true} />
+      <BottomBar onNext={handleNext} onBack={onBack} hideNext={!value} />
     </Shell>
   );
 }

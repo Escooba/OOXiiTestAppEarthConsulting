@@ -42,23 +42,23 @@ export function GlassesDispensedReview({
               key={c.title}
               className="bg-[#22193B] border border-white/5 rounded-2xl p-4 flex items-center gap-3"
             >
-              <div className={`p-2.5 rounded-full ${c.complete ? 'bg-[#00D1C1]/15 text-[#00D1C1]' : 'bg-white/10 text-[#9B93BA]'}`}>
+              <div className={`p-2.5 rounded-full ${c.complete ? 'bg-[#A984FF]/15 text-[#A984FF]' : 'bg-white/10 text-[#9B93BA]'}`}>
                 {c.icon}
               </div>
               <div className="flex-1 text-sm font-medium">{c.title}</div>
               {c.complete && (
-                <div className="w-7 h-7 rounded-full bg-[#00D1C1] flex items-center justify-center">
-                  <Check size={16} className="text-[#150F26]" />
+                <div className="w-7 h-7 rounded-full bg-[#A984FF] flex items-center justify-center">
+                  <Check size={16} className="text-[#2A0730]" />
                 </div>
               )}
             </div>
           ))}
         </div>
 
-        <div className="bg-[#2A2049] border border-[#00D1C1]/30 rounded-3xl p-5 flex flex-col gap-3">
+        <div className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-3">
           <Field label="Total price paid" error={error || undefined}>
             <div className="flex items-stretch gap-2">
-              <div className="flex items-center px-4 rounded-xl bg-[#150F26] border border-white/10 text-[#9B93BA] text-sm font-medium">
+              <div className="flex items-center px-4 rounded-xl bg-[#2A0730] border border-white/10 text-[#9B93BA] text-sm font-medium">
                 A$
               </div>
               <input
@@ -127,12 +127,12 @@ export function FinalChecklist({
                 onClick={() => { setChecked((s) => ({ ...s, [c]: !s[c] })); setError(false); }}
                 className={`text-left rounded-2xl border p-4 flex items-center gap-4 transition-all ${
                   on
-                    ? 'bg-[#00D1C1]/10 border-[#00D1C1]'
+                    ? 'bg-[#A984FF]/10 border-[#A984FF]'
                     : `bg-[#22193B] ${error ? 'border-[#FF5C5C]/40' : 'border-white/10 hover:border-white/20'}`
                 }`}
               >
                 <span className={`w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                  on ? 'bg-[#00D1C1] border-[#00D1C1] text-[#150F26]' : 'border-white/40'
+                  on ? 'bg-[#A984FF] border-[#A984FF] text-[#2A0730]' : 'border-white/40'
                 }`}>
                   {on && <Check size={16} />}
                 </span>
@@ -189,7 +189,7 @@ export function AdditionalDetails({
             type="checkbox"
             checked={includeClinical}
             onChange={(e) => setIncludeClinical(e.target.checked)}
-            className="accent-[#00D1C1] mt-1"
+            className="accent-[#A984FF] mt-1"
           />
           <div>
             <div className="text-sm font-medium">Add clinical and/or referral information</div>
@@ -205,8 +205,8 @@ export function AdditionalDetails({
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
-              <div className="bg-[#2A2049] border border-[#00D1C1]/30 rounded-3xl p-5 flex flex-col gap-4">
-                <h3 className="text-sm font-medium text-[#00D1C1] uppercase tracking-wider">
+              <div className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4">
+                <h3 className="text-sm font-medium text-[#A984FF] uppercase tracking-wider">
                   Clinical and/or referral information
                 </h3>
                 <Field label="Referral needed?">
@@ -253,7 +253,7 @@ export function TestResultsSaved({ onHome }: { onHome: () => void }) {
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 200 }}
-          className="w-32 h-32 rounded-full bg-[#00D1C1]/15 border-2 border-[#00D1C1] flex items-center justify-center text-[#00D1C1]"
+          className="w-32 h-32 rounded-full bg-[#A984FF]/15 border-2 border-[#A984FF] flex items-center justify-center text-[#A984FF]"
         >
           <Smile size={64} strokeWidth={1.5} />
         </motion.div>
@@ -264,7 +264,7 @@ export function TestResultsSaved({ onHome }: { onHome: () => void }) {
         <RabbitBubble text="Great work. This test has been saved on this device." type="success" />
         <button
           onClick={onHome}
-          className="h-12 px-6 rounded-2xl bg-[#00D1C1] text-[#150F26] font-bold"
+          className="h-12 px-6 rounded-2xl bg-[#A984FF] text-[#2A0730] font-bold"
         >
           Return to dashboard
         </button>

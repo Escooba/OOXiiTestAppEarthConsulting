@@ -1,4 +1,4 @@
-import React, { ReactNode, useState, createContext, useContext } from 'react';
+import React, { ReactNode, useState, createContext, useContext, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { Flag, Wifi, Battery, Signal, Home as HomeIcon, Settings as SettingsIcon } from 'lucide-react';
 import { RabbitMascot } from './RabbitMascot';
@@ -24,12 +24,18 @@ interface ShellProps {
   progress?: number;
   showProgress?: boolean;
   onHome?: () => void;
+  isAdvancing?: boolean;
 }
 
-export function Shell({ children, progress = 0, showProgress = true, onHome }: ShellProps) {
+export function Shell({ children, progress = 0, showProgress = true, onHome, isAdvancing = false }: ShellProps) {
   const { tokens, mode } = useTheme();
   const { onNav } = useContext(ShellNavContext);
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const lastProgress = useRef(Number(sessionStorage.getItem('lastProgress') || 0));
+  useEffect(() => {
+    sessionStorage.setItem('lastProgress', String(progress));
+  }, [progress]);
 
   const goHome = () => (onHome ? onHome() : onNav('home'));
 
@@ -64,14 +70,14 @@ export function Shell({ children, progress = 0, showProgress = true, onHome }: S
           <div className="flex items-center gap-1.5">
             <button
               onClick={goHome}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${tokens.navPillBg} ${tokens.text} border-[#00D1C1]/30 hover:border-[#00D1C1]`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${tokens.navPillBg} ${tokens.text} border-[#A984FF]/30 hover:border-[#A984FF]`}
             >
               <HomeIcon size={13} />
               Home
             </button>
             <button
               onClick={() => setSettingsOpen(true)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${tokens.navPillBg} ${tokens.text} border-[#00D1C1]/30 hover:border-[#00D1C1]`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${tokens.navPillBg} ${tokens.text} border-[#A984FF]/30 hover:border-[#A984FF]`}
             >
               <SettingsIcon size={13} />
               Settings
@@ -85,25 +91,25 @@ export function Shell({ children, progress = 0, showProgress = true, onHome }: S
 
         {showProgress && (
           <div className={`sticky top-0 z-30 pt-4 pb-6 px-6 bg-gradient-to-b ${
-            mode === 'ooxii_purple' ? 'from-[#150F26] via-[#150F26]' :
+            mode === 'ooxii_purple' ? 'from-[#2A0730] via-[#2A0730]' :
             mode === 'traditional_light' ? 'from-[#F5F5F7] via-[#F5F5F7]' :
             'from-[#111214] via-[#111214]'} to-transparent`}>
             <div className="flex justify-between items-end mb-2 pr-8">
               <span className={`text-xs ${tokens.textMuted} font-semibold uppercase tracking-wider`}>Overall Progress</span>
-              <span className="text-[#00D1C1] font-bold text-sm">{progress}%</span>
+              <span className="text-[#A984FF] font-bold text-sm">{progress}%</span>
             </div>
             <div className="relative w-[calc(100%-32px)] mt-2">
               <div className={`relative w-full h-3 rounded-full ${tokens.progressTrack} border border-white/5 overflow-hidden`}>
                 <motion.div
-                  className="absolute left-0 top-0 h-full rounded-full bg-[#00D1C1] shadow-[0_0_12px_rgba(0,209,193,0.4)]"
-                  initial={{ width: 0 }}
+                  className="absolute left-0 top-0 h-full rounded-full bg-[#A984FF] shadow-[0_0_12px_rgba(0,209,193,0.4)]"
+                  initial={{ width: `${lastProgress.current}%` }}
                   animate={{ width: `${progress}%` }}
                   transition={{ type: 'spring', stiffness: 80, damping: 20 }}
                 />
               </div>
               <motion.div
                 className="absolute top-1/2 z-20"
-                initial={{ left: '3%' }}
+                initial={{ left: `${Math.max(3, lastProgress.current)}%` }}
                 animate={{ left: `${Math.max(3, progress)}%` }}
                 transition={{ type: 'spring', stiffness: 120, damping: 20 }}
                 style={{ transform: 'translate(-50%, -50%)' }}
@@ -111,19 +117,26 @@ export function Shell({ children, progress = 0, showProgress = true, onHome }: S
                 <motion.div
                   animate={{ y: [0, -5, 0] }}
                   transition={{ repeat: Infinity, duration: 0.8, ease: 'easeInOut' }}
-                  className={`bg-[#150F26] rounded-full shadow-[0_0_10px_rgba(0,209,193,0.6)] border border-[#00D1C1] flex items-center justify-center w-6 h-6`}
+                  className={`bg-[#2A0730] rounded-full shadow-[0_0_10px_rgba(0,209,193,0.6)] border border-[#A984FF] flex items-center justify-center w-6 h-6`}
                 >
                   <RabbitMascot size={14} />
                 </motion.div>
               </motion.div>
               <div className="absolute right-[-32px] top-1/2 -translate-y-1/2 opacity-50">
-                <Flag size={16} className={progress >= 100 ? 'text-[#00D1C1] fill-[#00D1C1]' : ''} />
+                <Flag size={16} className={progress >= 100 ? 'text-[#A984FF] fill-[#A984FF]' : ''} />
               </div>
             </div>
           </div>
         )}
 
-        <div className="flex-1 flex flex-col">{children}</div>
+        <motion.div
+          className="flex-1 flex flex-col"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isAdvancing ? 0 : 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          {children}
+        </motion.div>
 
         <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       </div>
@@ -151,7 +164,7 @@ export function BottomBar({
   const { mode } = useTheme();
   const grad =
     mode === 'ooxii_purple'
-      ? 'from-[#150F26] via-[#150F26] to-[#150F26]/0'
+      ? 'from-[#2A0730] via-[#2A0730] to-[#2A0730]/0'
       : mode === 'traditional_light'
       ? 'from-[#F5F5F7] via-[#F5F5F7] to-[#F5F5F7]/0'
       : 'from-[#111214] via-[#111214] to-[#111214]/0';
@@ -176,7 +189,7 @@ export function BottomBar({
             className={`flex-[2] h-14 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg ${
               nextDisabled
                 ? 'bg-[#3A3059] text-[#6A608A] cursor-not-allowed'
-                : 'bg-[#00D1C1] text-[#150F26] hover:brightness-110 shadow-[#00D1C1]/20'
+                : 'bg-[#A984FF] text-[#2A0730] hover:brightness-110 shadow-[#A984FF]/20'
             }`}
           >
             {nextLabel}

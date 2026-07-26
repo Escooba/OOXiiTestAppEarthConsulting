@@ -33,12 +33,12 @@ export function Login({ onLogin, onCreateAccount }: Props) {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 200, damping: 16 }}
-            className="relative w-20 h-20 rounded-3xl border border-[#00D1C1]/40 bg-[#00D1C1]/10 flex items-center justify-center"
+            className="relative w-20 h-20 rounded-3xl border border-[#A984FF]/40 bg-[#A984FF]/10 flex items-center justify-center"
           >
             <motion.div
               animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.15, 1] }}
               transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-              className="absolute inset-0 rounded-3xl bg-[#00D1C1]/20 blur-xl"
+              className="absolute inset-0 rounded-3xl bg-[#A984FF]/20 blur-xl"
             />
             <Eye size={36} className="relative text-[#3BE0D4]" strokeWidth={1.8} />
           </motion.div>
@@ -55,7 +55,7 @@ export function Login({ onLogin, onCreateAccount }: Props) {
           <motion.div
             animate={{ y: [0, -5, 0] }}
             transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
-            className="bg-[#150F26] p-2 rounded-full border-2 border-[#00D1C1] shrink-0 flex items-center justify-center"
+            className="bg-[#2A0730] p-2 rounded-full border-2 border-[#A984FF] shrink-0 flex items-center justify-center"
           >
             <RabbitMascot size={22} />
           </motion.div>
@@ -92,7 +92,7 @@ export function Login({ onLogin, onCreateAccount }: Props) {
               </button>
             </div>
             <div className="text-right mt-2">
-              <span className="text-xs text-[#00D1C1] font-medium cursor-pointer">Forgot password?</span>
+              <span className="text-xs text-[#A984FF] font-medium cursor-pointer">Forgot password?</span>
             </div>
           </Field>
         </div>
@@ -108,7 +108,7 @@ export function Login({ onLogin, onCreateAccount }: Props) {
         {/* Create an account */}
         <div className="text-center text-sm text-[#9B93BA]">
           Don't have an account?{' '}
-          <button onClick={onCreateAccount} className="text-[#00D1C1] font-semibold">
+          <button onClick={onCreateAccount} className="text-[#A984FF] font-semibold">
             Create an account
           </button>
         </div>

@@ -22,7 +22,7 @@ export function WheelPowerScreen({
 }: Props) {
   const [power, setPower] = useState(initialValue);
   const [error, setError] = useState(false);
-  const { commitAndAdvance } = useAutoAdvance(100); // Shorter delay for selects
+  const { commitAndAdvance, isAdvancing } = useAutoAdvance(100); // Shorter delay for selects
 
   const handleNext = () => {
     if (!power) {
@@ -35,7 +35,7 @@ export function WheelPowerScreen({
   const options = direction === 'Plus' ? LENS_OPTIONS_PLUS : LENS_OPTIONS_MINUS;
 
   return (
-    <Shell progress={progress}>
+    <Shell progress={progress} isAdvancing={isAdvancing}>
       <div className="px-5 pt-2 pb-32 flex flex-col gap-5">
         <div>
           <h1 className="text-2xl font-light">Wheel test — {side === 'right' ? 'Right' : 'Left'} eye</h1>
@@ -46,7 +46,7 @@ export function WheelPowerScreen({
           type={error ? 'error' : power ? 'success' : 'default'}
         />
 
-        <div className="bg-[#2A2049] border border-[#00D1C1]/30 rounded-3xl p-5 flex flex-col gap-4">
+        <div className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4">
           <label className="text-sm font-medium block">Best {direction.toLowerCase()} lens {side} eye</label>
           <SelectField
             value={power}
@@ -64,7 +64,7 @@ export function WheelPowerScreen({
           {error && !power && <InlineError text="Select a lens power before continuing." />}
         </div>
       </div>
-      <BottomBar onNext={handleNext} onBack={onBack} hideNext={true} />
+      <BottomBar onNext={handleNext} onBack={onBack} hideNext={!power} />
     </Shell>
   );
 }

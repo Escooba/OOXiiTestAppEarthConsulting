@@ -22,18 +22,18 @@ export interface ThemeTokens {
 }
 
 const PURPLE: ThemeTokens = {
-  bg: 'bg-[#150F26]',
+  bg: 'bg-[#2A0730]',
   card: 'bg-[#22193B]',
   cardActive: 'bg-[#2A2049]',
   cardBorder: 'border-white/5',
   text: 'text-white',
   textMuted: 'text-[#9B93BA]',
-  input: 'bg-[#150F26]',
+  input: 'bg-[#2A0730]',
   inputBorder: 'border-white/10',
-  headerBg: 'bg-[#150F26]',
-  overlay: 'bg-[#150F26]/90',
+  headerBg: 'bg-[#2A0730]',
+  overlay: 'bg-[#2A0730]/90',
   navPillBg: 'bg-[#22193B]',
-  navPillActiveText: 'text-[#150F26]',
+  navPillActiveText: 'text-[#2A0730]',
   progressTrack: 'bg-[#22193B]',
 };
 const LIGHT: ThemeTokens = {

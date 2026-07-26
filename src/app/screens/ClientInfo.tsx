@@ -30,12 +30,12 @@ export function ClientInfo({ onStart, onCancel }: Props) {
       <div className="px-6 pt-2 pb-48 flex flex-col gap-5">
         <h1 className="text-2xl font-light mt-4">Client information</h1>
 
-        <div className="rounded-2xl bg-[#00D1C1]/10 border border-[#00D1C1]/30 p-4 flex justify-between items-center">
+        <div className="rounded-2xl bg-[#A984FF]/10 border border-[#A984FF]/30 p-4 flex justify-between items-center">
           <div>
-            <div className="text-xs uppercase text-[#00D1C1] font-semibold tracking-wider">OOXii ID</div>
+            <div className="text-xs uppercase text-[#A984FF] font-semibold tracking-wider">OOXii ID</div>
             <div className="text-xs text-[#9B93BA] mt-1">Anonymous — no personal data stored</div>
           </div>
-          <div className="text-2xl font-bold text-[#00D1C1]">{ooxiiId}</div>
+          <div className="text-2xl font-bold text-[#A984FF]">{ooxiiId}</div>
         </div>
 
         <Field label="Year of birth" error={errors.year}>

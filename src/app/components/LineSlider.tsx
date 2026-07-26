@@ -34,7 +34,7 @@ export function LineSlider({ value, onChange, error, disabled, max = 11 }: Props
       {/* Big readout */}
       <div
         className={`rounded-2xl border p-4 ${
-          error ? 'border-[#FF5C5C]/50 bg-[#FF5C5C]/5' : 'border-white/10 bg-[#150F26]'
+          error ? 'border-[#FF5C5C]/50 bg-[#FF5C5C]/5' : 'border-white/10 bg-[#2A0730]'
         }`}
       >
         <div className="text-xs text-[#9B93BA]">Selected line</div>
@@ -42,7 +42,7 @@ export function LineSlider({ value, onChange, error, disabled, max = 11 }: Props
           key={raw}
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`text-2xl font-semibold ${selected ? 'text-[#00D1C1]' : 'text-[#6A608A]'}`}
+          className={`text-2xl font-semibold ${selected ? 'text-[#A984FF]' : 'text-[#6A608A]'}`}
         >
           {selected ? `Line ${raw}` : 'Not selected'}
         </motion.div>
@@ -59,11 +59,11 @@ export function LineSlider({ value, onChange, error, disabled, max = 11 }: Props
           disabled={disabled}
           onChange={(e) => handle(parseInt(e.target.value, 10))}
           className={`w-full h-2 rounded-full appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-            error ? 'accent-[#FF5C5C]' : 'accent-[#00D1C1]'
+            error ? 'accent-[#FF5C5C]' : 'accent-[#A984FF]'
           }`}
           style={{
             background: selected
-              ? `linear-gradient(to right, ${error ? '#FF5C5C' : '#00D1C1'} ${pct}%, #3A3059 ${pct}%)`
+              ? `linear-gradient(to right, ${error ? '#FF5C5C' : '#A984FF'} ${pct}%, #3A3059 ${pct}%)`
               : '#3A3059',
           }}
           aria-label="Smallest OOXii line number"
@@ -88,11 +88,11 @@ export function LineSlider({ value, onChange, error, disabled, max = 11 }: Props
                 className="absolute -translate-x-1/2 flex flex-col items-center gap-1 top-0"
               >
                 <span
-                  className={`w-px h-2 ${active ? (error ? 'bg-[#FF5C5C]' : 'bg-[#00D1C1]') : 'bg-white/20'}`}
+                  className={`w-px h-2 ${active ? (error ? 'bg-[#FF5C5C]' : 'bg-[#A984FF]') : 'bg-white/20'}`}
                 />
                 <span
                   className={`text-[10px] leading-none ${
-                    active ? (error ? 'text-[#FF5C5C]' : 'text-[#00D1C1]') : 'text-[#6A608A]'
+                    active ? (error ? 'text-[#FF5C5C]' : 'text-[#A984FF]') : 'text-[#6A608A]'
                   }`}
                 >
                   {n}

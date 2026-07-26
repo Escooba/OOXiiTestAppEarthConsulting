@@ -27,7 +27,7 @@ export function SunglassesSelection({
           type={error ? 'error' : value ? 'success' : 'default'}
         />
 
-        <div className="bg-[#2A2049] border border-[#00D1C1]/30 rounded-3xl p-5 flex flex-col gap-4">
+        <div className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4">
           <label className="text-[15px] font-medium leading-snug">Sunglass type</label>
           <RadioGroup
             value={value}

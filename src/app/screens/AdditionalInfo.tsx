@@ -52,7 +52,7 @@ export function AdditionalInfo({ onCreate, onBack }: Props) {
 
         <div className="text-center text-xs text-[#9B93BA] mt-4">
           Already registered?{' '}
-          <span className="text-[#00D1C1] font-medium">Login to your account</span>
+          <span className="text-[#A984FF] font-medium">Login to your account</span>
         </div>
       </div>
       <BottomBar onNext={submit} onBack={onBack} nextLabel="Create account" />

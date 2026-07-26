@@ -35,12 +35,12 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 200, damping: 16 }}
-            className="relative w-20 h-20 rounded-3xl border border-[#00D1C1]/40 bg-[#00D1C1]/10 flex items-center justify-center"
+            className="relative w-20 h-20 rounded-3xl border border-[#A984FF]/40 bg-[#A984FF]/10 flex items-center justify-center"
           >
             <motion.div
               animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.15, 1] }}
               transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-              className="absolute inset-0 rounded-3xl bg-[#00D1C1]/20 blur-xl"
+              className="absolute inset-0 rounded-3xl bg-[#A984FF]/20 blur-xl"
             />
             <Eye size={36} className="relative text-[#3BE0D4]" strokeWidth={1.8} />
           </motion.div>
@@ -75,9 +75,9 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
           <motion.div
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl border border-[#00D1C1]/40 bg-[#00D1C1]/10 p-4 flex items-center gap-3"
+            className="rounded-2xl border border-[#A984FF]/40 bg-[#A984FF]/10 p-4 flex items-center gap-3"
           >
-            <PlayCircle size={22} className="text-[#00D1C1]" />
+            <PlayCircle size={22} className="text-[#A984FF]" />
             <div className="flex-1">
               <div className="text-sm font-medium">Test in progress</div>
               <div className="text-xs text-[#9B93BA] mt-0.5">
@@ -86,7 +86,7 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
             </div>
             <button
               onClick={onResumeTest}
-              className="h-9 px-3 rounded-full bg-[#00D1C1] text-[#150F26] text-xs font-bold flex items-center gap-1"
+              className="h-9 px-3 rounded-full bg-[#A984FF] text-[#2A0730] text-xs font-bold flex items-center gap-1"
             >
               Resume <ArrowRight size={12} />
             </button>
@@ -135,14 +135,14 @@ function HomeCard({
       className="bg-[#22193B] border border-white/5 rounded-3xl p-5 flex flex-col gap-3"
     >
       <div className="flex items-center gap-3">
-        <div className="bg-[#00D1C1]/15 text-[#00D1C1] p-2.5 rounded-full">{icon}</div>
+        <div className="bg-[#A984FF]/15 text-[#A984FF] p-2.5 rounded-full">{icon}</div>
         <h3 className="text-lg font-medium">{title}</h3>
       </div>
       <p className="text-sm text-[#9B93BA] leading-relaxed">{body}</p>
       <motion.button
         whileTap={{ scale: 0.98 }}
         onClick={onClick}
-        className="mt-2 h-12 rounded-2xl bg-[#00D1C1] text-[#150F26] font-semibold"
+        className="mt-2 h-12 rounded-2xl bg-[#A984FF] text-[#2A0730] font-semibold"
       >
         {cta}
       </motion.button>
@@ -182,15 +182,15 @@ function RegionModal({ onSaved, defaultRegion }: { onSaved: (region: string) => 
       >
         <h2 className="text-xl font-medium">Confirm your region</h2>
 
-        <label className="flex items-start gap-3 p-3 rounded-2xl border border-white/10 bg-[#150F26] cursor-pointer">
-          <input type="radio" checked={choice === 'tester'} onChange={() => setChoice('tester')} className="accent-[#00D1C1] mt-1" />
+        <label className="flex items-start gap-3 p-3 rounded-2xl border border-white/10 bg-[#2A0730] cursor-pointer">
+          <input type="radio" checked={choice === 'tester'} onChange={() => setChoice('tester')} className="accent-[#A984FF] mt-1" />
           <div>
             <div className="text-sm font-medium">Tester Region</div>
             <div className="text-xs text-[#9B93BA] mt-1">Use the region set on your profile</div>
           </div>
         </label>
-        <label className="flex items-start gap-3 p-3 rounded-2xl border border-white/10 bg-[#150F26] cursor-pointer">
-          <input type="radio" checked={choice === 'other'} onChange={() => setChoice('other')} className="accent-[#00D1C1] mt-1" />
+        <label className="flex items-start gap-3 p-3 rounded-2xl border border-white/10 bg-[#2A0730] cursor-pointer">
+          <input type="radio" checked={choice === 'other'} onChange={() => setChoice('other')} className="accent-[#A984FF] mt-1" />
           <div className="flex-1">
             <div className="text-sm font-medium">Other Region</div>
             <div className="text-xs text-[#9B93BA] mt-1">Choose manually for outreach visits</div>
@@ -198,8 +198,8 @@ function RegionModal({ onSaved, defaultRegion }: { onSaved: (region: string) => 
         </label>
 
         {choice === 'tester' ? (
-          <div className="rounded-2xl border border-[#00D1C1]/30 bg-[#00D1C1]/10 p-4">
-            <div className="text-xs uppercase text-[#00D1C1] font-semibold tracking-wider">Current tester region</div>
+          <div className="rounded-2xl border border-[#A984FF]/30 bg-[#A984FF]/10 p-4">
+            <div className="text-xs uppercase text-[#A984FF] font-semibold tracking-wider">Current tester region</div>
             <div className="text-sm mt-1 text-white">{defaultRegion}</div>
           </div>
         ) : (
@@ -211,7 +211,7 @@ function RegionModal({ onSaved, defaultRegion }: { onSaved: (region: string) => 
               value={village}
               onChange={(e) => setVillage(e.target.value)}
               placeholder="Optional village / site name"
-              className="w-full bg-[#150F26] border border-white/10 rounded-xl py-3 px-4 text-sm outline-none focus:border-[#00D1C1]"
+              className="w-full bg-[#2A0730] border border-white/10 rounded-xl py-3 px-4 text-sm outline-none focus:border-[#A984FF]"
             />
           </div>
         )}
@@ -223,7 +223,7 @@ function RegionModal({ onSaved, defaultRegion }: { onSaved: (region: string) => 
             const parts = [village, city, state, country].filter(Boolean);
             onSaved(parts.join(', '));
           }
-        }} className="mt-2 h-12 rounded-2xl bg-[#00D1C1] text-[#150F26] font-bold">
+        }} className="mt-2 h-12 rounded-2xl bg-[#A984FF] text-[#2A0730] font-bold">
           Save
         </button>
       </motion.div>

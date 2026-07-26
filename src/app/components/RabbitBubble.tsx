@@ -17,7 +17,7 @@ export function RabbitBubble({ text, type = 'default' }: Props) {
       <motion.div
         animate={{ y: [0, -6, 0] }}
         transition={{ repeat: Infinity, duration: 1.4, ease: 'easeInOut' }}
-        className="bg-[#150F26] p-2 rounded-full shadow-[0_4px_15px_rgba(0,209,193,0.3)] relative z-10 shrink-0 border-2 border-[#00D1C1] flex items-center justify-center"
+        className="bg-[#2A0730] p-2 rounded-full shadow-[0_4px_15px_rgba(0,209,193,0.3)] relative z-10 shrink-0 border-2 border-[#A984FF] flex items-center justify-center"
       >
         <RabbitMascot size={22} />
       </motion.div>
@@ -26,8 +26,8 @@ export function RabbitBubble({ text, type = 'default' }: Props) {
           type === 'error'
             ? 'bg-[#FF5C5C] text-white'
             : type === 'success'
-            ? 'bg-[#00D1C1] text-[#150F26]'
-            : 'bg-white text-[#150F26]'
+            ? 'bg-[#A984FF] text-[#2A0730]'
+            : 'bg-white text-[#2A0730]'
         }`}
       >
         {text}

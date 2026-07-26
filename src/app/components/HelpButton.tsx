@@ -18,7 +18,7 @@ export function HelpButton({ title, description, pulse = false }: HelpButtonProp
           e.stopPropagation();
           setOpen(true);
         }}
-        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#00D1C1]/15 border border-[#00D1C1]/40 text-[#00D1C1] text-xs font-semibold hover:bg-[#00D1C1]/25 transition-colors ${
+        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#A984FF]/15 border border-[#A984FF]/40 text-[#A984FF] text-xs font-semibold hover:bg-[#A984FF]/25 transition-colors ${
           pulse ? 'animate-pulse' : ''
         }`}
       >
@@ -32,7 +32,7 @@ export function HelpButton({ title, description, pulse = false }: HelpButtonProp
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#150F26]/90 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#2A0730]/90 backdrop-blur-sm"
             onClick={() => setOpen(false)}
           >
             <motion.div
@@ -51,8 +51,8 @@ export function HelpButton({ title, description, pulse = false }: HelpButtonProp
                   <X size={16} />
                 </button>
               </div>
-              <div className="relative aspect-video bg-[#150F26] flex items-center justify-center">
-                <div className="bg-[#00D1C1]/90 rounded-full p-4 text-[#150F26] shadow-lg">
+              <div className="relative aspect-video bg-[#2A0730] flex items-center justify-center">
+                <div className="bg-[#A984FF]/90 rounded-full p-4 text-[#2A0730] shadow-lg">
                   <Play className="fill-current w-8 h-8 ml-1" />
                 </div>
               </div>
@@ -61,7 +61,7 @@ export function HelpButton({ title, description, pulse = false }: HelpButtonProp
                 <div className="flex gap-2 mt-4">
                   <button
                     onClick={() => setOpen(false)}
-                    className="flex-1 h-11 rounded-xl bg-[#00D1C1] text-[#150F26] font-semibold"
+                    className="flex-1 h-11 rounded-xl bg-[#A984FF] text-[#2A0730] font-semibold"
                   >
                     Got it
                   </button>

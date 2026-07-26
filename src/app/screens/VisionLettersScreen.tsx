@@ -18,7 +18,7 @@ export function VisionLettersScreen({
 }: Props) {
   const [letters, setLetters] = useState(initialValue);
   const [error, setError] = useState(false);
-  const { commitAndAdvance } = useAutoAdvance();
+  const { commitAndAdvance, isAdvancing } = useAutoAdvance();
 
   const handleNext = () => {
     if (!letters) {
@@ -29,11 +29,11 @@ export function VisionLettersScreen({
   };
 
   return (
-    <Shell progress={progress}>
+    <Shell progress={progress} isAdvancing={isAdvancing}>
       <div className="px-5 pt-2 pb-32 flex flex-col gap-5">
         <div>
           <h1 className="text-2xl font-light">{title}</h1>
-          {subtitle && <h2 className="text-lg font-medium text-[#00D1C1] mt-1">{subtitle}</h2>}
+          {subtitle && <h2 className="text-lg font-medium text-[#A984FF] mt-1">{subtitle}</h2>}
         </div>
 
         <RabbitBubble
@@ -41,7 +41,7 @@ export function VisionLettersScreen({
           type={error ? 'error' : letters ? 'success' : 'default'}
         />
 
-        <div className="bg-[#2A2049] border border-[#00D1C1]/30 rounded-3xl p-5 flex flex-col gap-4">
+        <div className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4">
           <label className="text-[15px] font-medium leading-snug">
             Select number of letters correct on next smaller line
           </label>
@@ -60,7 +60,7 @@ export function VisionLettersScreen({
           {error && !letters && <InlineError text="Select the number of letters correct." />}
         </div>
       </div>
-      <BottomBar onNext={handleNext} onBack={onBack} hideNext={true} />
+      <BottomBar onNext={handleNext} onBack={onBack} hideNext={!letters} />
     </Shell>
   );
 }

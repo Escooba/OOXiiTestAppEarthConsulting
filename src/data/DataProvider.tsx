@@ -108,7 +108,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   if (state.error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#150F26] text-white p-5">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#2A0730] text-white p-5">
         <h2 className="text-[#FF5C5C] text-xl font-bold mb-4">Database Error</h2>
         <p className="text-sm bg-black/30 p-4 rounded-lg font-mono text-red-200">{state.error.message}</p>
       </div>
@@ -117,8 +117,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   if (state.loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#150F26] text-white">
-        <div className="w-12 h-12 border-4 border-[#00D1C1] border-t-transparent rounded-full animate-spin mb-4" />
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#2A0730] text-white">
+        <div className="w-12 h-12 border-4 border-[#A984FF] border-t-transparent rounded-full animate-spin mb-4" />
         <p className="text-[#9B93BA]">Loading local database...</p>
       </div>
     );

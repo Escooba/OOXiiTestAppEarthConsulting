@@ -23,7 +23,7 @@ const STEPS: Step[] = [
     title: "Hi! I'm Bun",
     emoji: '🐰',
     body: "I'll show you around the app so you can start helping clients see better. It only takes a minute!",
-    gradient: 'from-[#00D1C1] to-[#0FB5A8]',
+    gradient: 'from-[#A984FF] to-[#0FB5A8]',
     icon: <RabbitMascot size={26} />,
     iconBg: 'bg-white/25',
     cta: 'Next',
@@ -127,7 +127,7 @@ export function FirstLoginGuide({ onDone }: Props) {
                     <motion.span
                       key={idx}
                       animate={{ width: idx === i ? 22 : 8 }}
-                      className={`h-2 rounded-full ${idx === i ? 'bg-[#00D1C1]' : 'bg-white/25'}`}
+                      className={`h-2 rounded-full ${idx === i ? 'bg-[#A984FF]' : 'bg-white/25'}`}
                     />
                   ))}
                 </div>
@@ -143,7 +143,7 @@ export function FirstLoginGuide({ onDone }: Props) {
                 </button>
                 <button
                   onClick={() => (isLast ? onDone() : setI(i + 1))}
-                  className="flex-[1.4] h-12 rounded-2xl bg-[#00D1C1] text-[#150F26] font-bold flex items-center justify-center gap-2 hover:brightness-105 transition-all"
+                  className="flex-[1.4] h-12 rounded-2xl bg-[#A984FF] text-[#2A0730] font-bold flex items-center justify-center gap-2 hover:brightness-105 transition-all"
                 >
                   {step.cta}
                   {isLast ? <RabbitMascot size={18} /> : <ArrowRight size={18} />}
