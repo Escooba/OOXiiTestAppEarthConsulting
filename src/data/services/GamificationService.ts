@@ -40,6 +40,13 @@ export class GamificationService {
 
     const completedTests = await this.sessionRepo.getCompletedTestCount(testerId);
     const distinctClients = await this.sessionRepo.getDistinctClientCount(testerId);
+    
+    // Distinct testing days
+    const daysRows = await this.db.query<{ count: number }>(
+      "SELECT COUNT(DISTINCT DATE(started_at / 1000, 'unixepoch')) AS count FROM test_sessions WHERE tester_id = ? AND status = 'completed' AND deleted_at IS NULL",
+      [testerId]
+    );
+    const distinctTestingDays = daysRows.length > 0 ? Number(daysRows[0].count) : 0;
 
     for (const badge of lockedBadges) {
       let meetsCriteria = false;
@@ -50,7 +57,11 @@ export class GamificationService {
         case 'clients_helped':
           meetsCriteria = distinctClients >= badge.targetValue;
           break;
-        // other rule types omitted for prototype simplicity
+        case 'distinct_testing_days':
+          meetsCriteria = distinctTestingDays >= badge.targetValue;
+          break;
+        default:
+          meetsCriteria = completedTests >= badge.targetValue; // fallback
       }
 
       if (meetsCriteria) {

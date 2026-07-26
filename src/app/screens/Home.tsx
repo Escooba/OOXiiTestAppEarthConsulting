@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Shell } from '../components/Shell';
+import { Shell, BottomNavigation } from '../components/Shell';
 import { ScreenId } from '../lib/theme';
 import { Eye, Search, MapPin, PlayCircle, BookOpen, User, Flag, ArrowRight, UserPlus } from 'lucide-react';
 import { SelectField } from './TesterInfo';
@@ -120,6 +120,7 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
       <AnimatePresence>
         {showRegionModal && <RegionModal onSaved={onRegionSaved} defaultRegion={region} />}
       </AnimatePresence>
+      <BottomNavigation current="home" onNav={onNav} />
     </Shell>
   );
 }

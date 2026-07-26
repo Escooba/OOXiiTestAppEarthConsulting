@@ -1,6 +1,6 @@
 import React, { ReactNode, useState, createContext, useContext, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { Flag, Wifi, Battery, Signal, Home as HomeIcon, Settings as SettingsIcon } from 'lucide-react';
+import { Flag, Wifi, Battery, Signal, Home as HomeIcon, Settings as SettingsIcon, Sprout, User } from 'lucide-react';
 import { RabbitMascot } from './RabbitMascot';
 import { ScreenId } from '../lib/theme';
 import { useTheme } from '../lib/ThemeContext';
@@ -39,8 +39,8 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
 
   const goHome = () => (onHome ? onHome() : onNav('home'));
 
-  const isLight = mode === 'traditional_light';
-  const statusText = isLight ? 'text-gray-600' : 'text-gray-300';
+  const isLight = mode === 'light';
+  const statusText = isLight ? 'text-[var(--text-muted)]' : 'text-[var(--text-muted)]';
 
   const [time, setTime] = useState(() => {
     return new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
@@ -90,10 +90,7 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
         </div>
 
         {showProgress && (
-          <div className={`sticky top-0 z-30 pt-4 pb-6 px-6 bg-gradient-to-b ${
-            mode === 'ooxii_purple' ? 'from-[#2A0730] via-[#2A0730]' :
-            mode === 'traditional_light' ? 'from-[#F5F5F7] via-[#F5F5F7]' :
-            'from-[#111214] via-[#111214]'} to-transparent`}>
+          <div className={`sticky top-0 z-30 pt-4 pb-6 px-6 bg-gradient-to-b from-[var(--bg)] via-[var(--bg)] to-transparent`}>
             <div className="flex justify-between items-end mb-2 pr-8">
               <span className={`text-xs ${tokens.textMuted} font-semibold uppercase tracking-wider`}>Overall Progress</span>
               <span className="text-[#A984FF] font-bold text-sm">{progress}%</span>
@@ -162,15 +159,8 @@ export function BottomBar({
   hideNext?: boolean;
 }) {
   const { mode } = useTheme();
-  const grad =
-    mode === 'ooxii_purple'
-      ? 'from-[#2A0730] via-[#2A0730] to-[#2A0730]/0'
-      : mode === 'traditional_light'
-      ? 'from-[#F5F5F7] via-[#F5F5F7] to-[#F5F5F7]/0'
-      : 'from-[#111214] via-[#111214] to-[#111214]/0';
-  const backCls = mode === 'traditional_light'
-    ? 'border-[#D0D2DE] text-[#1A1B3A] hover:bg-black/5'
-    : 'border-white/20 text-white hover:bg-white/5';
+  const grad = 'from-[var(--bg)] via-[var(--bg)] to-transparent';
+  const backCls = 'border-[var(--card-border)] text-[var(--text)] hover:bg-[var(--card-active)]';
   return (
     <div className={`fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t ${grad} z-40 flex justify-center pointer-events-none`}>
       <div className="w-full max-w-[430px] flex gap-3 pointer-events-auto">
@@ -195,6 +185,37 @@ export function BottomBar({
             {nextLabel}
           </button>
         )}
+      </div>
+    </div>
+  );
+}
+
+export function BottomNavigation({ current, onNav }: { current: 'home' | 'community-garden' | 'tester-profile', onNav: (s: import('../lib/theme').ScreenId) => void }) {
+  const { t } = useTheme();
+  return (
+    <div className="fixed bottom-0 left-0 right-0 h-20 bg-[var(--header-bg)] border-t border-[var(--card-border)] z-40 flex justify-center pb-safe">
+      <div className="w-full max-w-[430px] flex justify-around items-center px-2 h-full">
+        <button 
+          onClick={() => onNav('home')}
+          className={`flex flex-col items-center justify-center w-16 gap-1 transition-colors ${current === 'home' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
+        >
+          <HomeIcon size={24} strokeWidth={current === 'home' ? 2.5 : 2} />
+          <span className="text-[10px] font-medium">{t('ui.home')}</span>
+        </button>
+        <button 
+          onClick={() => onNav('community-garden')}
+          className={`flex flex-col items-center justify-center w-16 gap-1 transition-colors ${current === 'community-garden' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
+        >
+          <Sprout size={24} strokeWidth={current === 'community-garden' ? 2.5 : 2} />
+          <span className="text-[10px] font-medium">{t('ui.garden')}</span>
+        </button>
+        <button 
+          onClick={() => onNav('tester-profile')}
+          className={`flex flex-col items-center justify-center w-16 gap-1 transition-colors ${current === 'tester-profile' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
+        >
+          <User size={24} strokeWidth={current === 'tester-profile' ? 2.5 : 2} />
+          <span className="text-[10px] font-medium">{t('ui.profile')}</span>
+        </button>
       </div>
     </div>
   );

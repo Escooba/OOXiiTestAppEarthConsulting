@@ -7,6 +7,7 @@ import type { TestSessionRepository } from '../repositories/TestSessionRepositor
 import type { SyncRepository } from '../repositories/SyncRepository';
 import type { GamificationService } from './GamificationService';
 import type { SectionType } from '../models';
+import { generateLocalId, nowUtcMs } from '../models';
 
 export class TestCompletionService {
   constructor(
@@ -39,6 +40,55 @@ export class TestCompletionService {
       // 1. Save final sections
       for (const { type, payload } of finalSections) {
         await this.sessionRepo.saveSection(sessionId, type, payload);
+      }
+
+      // 2. Structured data extraction (Idempotent)
+      await this.db.run(`DELETE FROM visual_acuity_measurements WHERE test_session_id = ?`, [sessionId]);
+      await this.db.run(`DELETE FROM prescriptions WHERE test_session_id = ?`, [sessionId]);
+      await this.db.run(`DELETE FROM dispensed_items WHERE test_session_id = ?`, [sessionId]);
+      await this.db.run(`DELETE FROM completion_checklist_items WHERE test_session_id = ?`, [sessionId]);
+
+      const allSections = await this.sessionRepo.getAllSections(sessionId);
+      const payload: any = {};
+      for (const sec of allSections) Object.assign(payload, sec.payload);
+      
+      const now = nowUtcMs();
+
+      // Example: visual acuity (Right Distance No Glasses)
+      if (payload.distanceRightLine) {
+        await this.db.run(
+          `INSERT INTO visual_acuity_measurements (local_id, test_session_id, phase, test_method, eye_context, correction_context, ooxii_line, snellen_metres, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [generateLocalId(), sessionId, 'pretest', 'ooxii_chart', 'right', 'no_glasses', payload.distanceRightLine, payload.rightDistanceNoGlasses, now, now]
+        );
+      }
+      if (payload.distanceLeftLine) {
+        await this.db.run(
+          `INSERT INTO visual_acuity_measurements (local_id, test_session_id, phase, test_method, eye_context, correction_context, ooxii_line, snellen_metres, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [generateLocalId(), sessionId, 'pretest', 'ooxii_chart', 'left', 'no_glasses', payload.distanceLeftLine, payload.leftDistanceNoGlasses, now, now]
+        );
+      }
+      
+      // Prescriptions (Right)
+      if (payload.wheelRightPower) {
+        await this.db.run(
+          `INSERT INTO prescriptions (local_id, test_session_id, eye_side, prescription_mode, sphere, lens_type, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [generateLocalId(), sessionId, 'right', 'distance', payload.wheelRightPower, 'spherical', now, now]
+        );
+      }
+      // Prescriptions (Left)
+      if (payload.wheelLeftPower) {
+        await this.db.run(
+          `INSERT INTO prescriptions (local_id, test_session_id, eye_side, prescription_mode, sphere, lens_type, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [generateLocalId(), sessionId, 'left', 'distance', payload.wheelLeftPower, 'spherical', now, now]
+        );
+      }
+
+      // Dispensed items
+      if (payload.sunglassesType) {
+         await this.db.run(
+           `INSERT INTO dispensed_items (local_id, test_session_id, item_category, frame_type, dispensed, price_cents, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+           [generateLocalId(), sessionId, 'sunglasses', payload.sunglassesType, 1, (payload.totalPaid || 0) * 100, now, now]
+         );
       }
 
       // 2. Set status to completed

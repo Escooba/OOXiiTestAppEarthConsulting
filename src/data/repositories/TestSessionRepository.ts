@@ -92,23 +92,17 @@ export class TestSessionRepository {
     const now = nowUtcMs();
     const localId = generateLocalId();
     const payloadStr = JSON.stringify(payload);
-    // Upsert: INSERT OR REPLACE with unique constraint on (test_session_id, section_type)
-    // First check if exists
-    const existing = await this.db.query<SectionRow>(
-      `SELECT ${SECTION_COLS} FROM test_session_sections WHERE test_session_id = ? AND section_type = ?`,
-      [sessionId, sectionType]
+    
+    // Atomic SQLite UPSERT
+    await this.db.run(
+      `INSERT INTO test_session_sections (local_id, test_session_id, section_type, section_schema_version, payload, created_at, updated_at)
+       VALUES (?, ?, ?, 1, ?, ?, ?)
+       ON CONFLICT(test_session_id, section_type) DO UPDATE SET 
+         payload = excluded.payload, 
+         updated_at = excluded.updated_at,
+         section_schema_version = excluded.section_schema_version`,
+      [localId, sessionId, sectionType, payloadStr, now, now]
     );
-    if (existing.length > 0) {
-      await this.db.run(
-        'UPDATE test_session_sections SET payload = ?, updated_at = ?, section_schema_version = 1 WHERE test_session_id = ? AND section_type = ?',
-        [payloadStr, now, sessionId, sectionType]
-      );
-    } else {
-      await this.db.run(
-        'INSERT INTO test_session_sections (local_id, test_session_id, section_type, section_schema_version, payload, created_at, updated_at) VALUES (?, ?, ?, 1, ?, ?, ?)',
-        [localId, sessionId, sectionType, payloadStr, now, now]
-      );
-    }
   }
 
   async getSection(sessionId: string, sectionType: SectionType): Promise<TestSessionSection | null> {

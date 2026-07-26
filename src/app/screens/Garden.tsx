@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Shell } from '../components/Shell';
+import { Shell, BottomNavigation } from '../components/Shell';
 import { ScreenId } from '../lib/theme';
 import { ArrowLeft, Wifi, Upload, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useGarden } from '../../data/hooks';
+import { useTheme } from '../lib/ThemeContext';
 
 
 const MILESTONES = [
@@ -17,6 +18,7 @@ const MILESTONES = [
 export function Garden({ onNav }: { onNav: (s: ScreenId) => void }) {
   const [view, setView] = useState<'mine' | 'community'>('mine');
   const { localCarrots, cache } = useGarden();
+  const { t } = useTheme();
 
   const globalCarrots = cache?.totalCommunityCarrots ?? 0;
   const visionTests = cache?.totalCompletedTests ?? 0;
@@ -32,7 +34,7 @@ export function Garden({ onNav }: { onNav: (s: ScreenId) => void }) {
             </button>
             <div>
               <div className="text-[11px] uppercase tracking-[0.15em] text-[#7E92B5]">Community</div>
-              <h1 className="text-3xl font-bold text-white leading-tight">Garden</h1>
+              <h1 className="text-3xl font-bold text-white leading-tight">{t('garden.title')}</h1>
             </div>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#123A2A] border border-[#22C55E]/40">
@@ -59,7 +61,7 @@ export function Garden({ onNav }: { onNav: (s: ScreenId) => void }) {
                  animate={{ opacity: 1, y: 0 }}
                  className="text-sm font-bold text-white tracking-wide uppercase"
                >
-                 {view === 'mine' ? 'My Plot' : 'Community Plot'}
+                 {view === 'mine' ? t('garden.my_plot') : t('garden.community_plot')}
                </motion.div>
                <div className="text-[10px] text-[#8AA0C0]">
                  {view === 'mine' ? 'Your contribution' : 'Global worldwide plots'}
@@ -171,6 +173,7 @@ export function Garden({ onNav }: { onNav: (s: ScreenId) => void }) {
           ))}
         </div>
       </div>
+      <BottomNavigation current="community-garden" onNav={onNav} />
     </Shell>
   );
 }
@@ -219,16 +222,26 @@ function GardenScene({ view, localCarrots, globalCarrots }: { view: 'mine' | 'co
   );
 }
 
-const PLOT_CAPACITY = 20; // 5x4 grid
+function getGridConfig(displayedCarrots: number) {
+  let size = 3;
+  if (displayedCarrots > 25) size = 6;
+  else if (displayedCarrots > 16) size = 5;
+  else if (displayedCarrots > 9) size = 4;
+  
+  const capacity = size * size;
+  const tier = Math.floor(Math.max(0, displayedCarrots - 1) / 36);
+  const count = displayedCarrots === 0 ? 0 : ((displayedCarrots - 1) % 36) + 1;
+  return { size, capacity, tier, count };
+}
 
 function MyPlot({ carrots }: { carrots: number }) {
   const displayedCarrots = Math.floor(carrots / 10);
-  const tier = Math.floor(Math.max(0, displayedCarrots - 1) / PLOT_CAPACITY);
-  const count = displayedCarrots === 0 ? 0 : ((displayedCarrots - 1) % PLOT_CAPACITY) + 1;
+  const { size, tier, count } = getGridConfig(displayedCarrots);
 
   return (
-    <div className="w-[320px] aspect-[5/4] bg-[#3D2916] rounded-xl grid grid-cols-5 grid-rows-4 gap-2.5 p-3 border-4 border-[#24170B] shadow-[0_15px_35px_rgba(0,0,0,0.4)]">
-      {Array.from({ length: 20 }).map((_, i) => (
+    <div className={`w-[320px] aspect-square bg-[#3D2916] rounded-xl grid gap-2.5 p-3 border-4 border-[#24170B] shadow-[0_15px_35px_rgba(0,0,0,0.4)]`} 
+         style={{ gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${size}, minmax(0, 1fr))` }}>
+      {Array.from({ length: size * size }).map((_, i) => (
         <div key={i} className="relative bg-[#291A0D] rounded-md shadow-inner overflow-visible">
           {/* Soil detail */}
           <div className="absolute inset-1.5 rounded-sm bg-[#1E1108] opacity-50"></div>
@@ -250,35 +263,45 @@ function MyPlot({ carrots }: { carrots: number }) {
 function CommunityPlots({ total, myCarrots }: { total: number; myCarrots: number }) {
   // A 5x5 grid of plots to represent the community
   const myDisplayedCarrots = Math.floor(myCarrots / 10);
-  const myCount = myDisplayedCarrots === 0 ? 0 : ((myDisplayedCarrots - 1) % PLOT_CAPACITY) + 1;
-  const myTier = Math.floor(Math.max(0, myDisplayedCarrots - 1) / PLOT_CAPACITY);
+  const myConfig = getGridConfig(myDisplayedCarrots);
 
   return (
-    <div className="w-[700px] aspect-[5/4] bg-[#3D2916] rounded-2xl grid grid-cols-5 grid-rows-5 gap-1 p-2 border-4 border-[#24170B] shadow-[0_20px_40px_rgba(0,0,0,0.5)]">
+    <div className="w-[700px] aspect-square bg-[#3D2916] rounded-2xl grid grid-cols-5 grid-rows-5 gap-1 p-2 border-4 border-[#24170B] shadow-[0_20px_40px_rgba(0,0,0,0.5)]">
       {Array.from({ length: 25 }).map((_, i) => {
-        // Randomize how full each community plot is for visual variety
-        const randomFill = Math.floor(Math.abs(Math.sin(i * 12.34)) * 20) + 1;
-        const randomTier = Math.floor(Math.abs(Math.cos(i * 7.65)) * 4);
-        
         // Highlight one as "Your Plot"
         const isMine = i === 12; // center one
+        
+        let plotSize = 3;
+        let plotCount = 0;
+        let plotTier = 0;
+        
+        if (isMine) {
+          plotSize = myConfig.size;
+          plotCount = myConfig.count;
+          plotTier = myConfig.tier;
+        } else {
+          plotSize = [3, 4, 5, 6][Math.floor(Math.abs(Math.sin(i * 3.14)) * 4)];
+          plotCount = Math.floor(Math.abs(Math.sin(i * 12.34)) * (plotSize * plotSize)) + 1;
+          plotTier = Math.floor(Math.abs(Math.cos(i * 7.65)) * 4);
+        }
 
         return (
           <div 
             key={i} 
-            className={`relative grid grid-cols-5 grid-rows-4 gap-1 ${isMine ? 'ring-2 ring-[#3BE0D4] ring-offset-2 ring-offset-[#3D2916] rounded-sm z-10' : ''}`}
+            className={`relative grid gap-1 ${isMine ? 'ring-2 ring-[#3BE0D4] ring-offset-2 ring-offset-[#3D2916] rounded-sm z-10' : ''}`}
+            style={{ gridTemplateColumns: `repeat(${plotSize}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${plotSize}, minmax(0, 1fr))` }}
           >
-            {Array.from({ length: 20 }).map((_, j) => (
+            {Array.from({ length: plotSize * plotSize }).map((_, j) => (
               <div key={j} className="relative bg-[#291A0D] rounded-[3px] shadow-inner overflow-visible">
                 {/* Soil detail */}
                 <div className="absolute inset-0.5 rounded-[2px] bg-[#1E1108] opacity-50"></div>
 
-                {(isMine ? (j < myCount) : (j < randomFill)) && (
+                {j < plotCount && (
                   <div 
                     className="absolute left-1/2 top-1/2 z-10"
                     style={{ transform: 'translate(-50%, -50%) translateY(-2px)' }}
                   >
-                    <AnimatedChunkyCarrot tier={isMine ? myTier : randomTier} index={j} />
+                    <AnimatedChunkyCarrot tier={plotTier} index={j} />
                   </div>
                 )}
               </div>

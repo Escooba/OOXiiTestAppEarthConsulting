@@ -4,6 +4,7 @@ import { Shell } from '../components/Shell';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { RabbitMascot } from '../components/RabbitMascot';
 import { inputCls, Field } from './SignupEmail';
+import { useAuth } from '../../data/hooks';
 
 interface Props {
   onLogin: () => void;
@@ -16,12 +17,28 @@ export function Login({ onLogin, onCreateAccount }: Props) {
   const [showPw, setShowPw] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const submit = () => {
+  const auth = useAuth();
+
+  const submit = async () => {
     const e: Record<string, string> = {};
     if (!/^\S+@\S+\.\S+$/.test(email)) e.email = 'Enter a valid email address.';
     if (!pw) e.pw = 'Enter your password.';
-    setErrors(e);
-    if (Object.keys(e).length === 0) onLogin();
+    if (Object.keys(e).length > 0) {
+      setErrors(e);
+      return;
+    }
+    
+    try {
+      if (auth) {
+        await auth.login(email, pw);
+        localStorage.setItem('ooxii_logged_in', 'true');
+        onLogin();
+      } else {
+        throw new Error('Auth service not ready');
+      }
+    } catch (err) {
+      setErrors({ pw: err instanceof Error ? err.message : String(err) });
+    }
   };
 
   return (

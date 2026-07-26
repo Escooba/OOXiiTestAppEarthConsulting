@@ -41,7 +41,7 @@ import {
 } from './screens/ClientScreens';
 
 // Data Layer Imports
-import { useTester, useActiveSession } from '../data/hooks';
+import { useTester, useActiveSession, useAuth } from '../data/hooks';
 import { useData } from '../data/DataProvider';
 import type { SectionType } from '../data/models';
 
@@ -110,34 +110,32 @@ function AppInner() {
   const [viewingClient, setViewingClient] = useState<ClientRecord | null>(null);
   const [returnToAfterProfile, setReturnToAfterProfile] = useState<ScreenId>('home');
 
-  const ensureActiveTester = async () => {
-    if (tester) return tester;
-    if (!testerRepo) return null;
-    let t = await testerRepo.getCurrentTester();
-    if (!t) {
-      t = await testerRepo.createTester({
-        firstName: 'John', lastName: 'Smith', gender: 'Male',
-        country: 'Australia', stateProvince: 'New South Wales', city: 'Sydney',
-        role: 'Community Health Worker', experienceLevel: 'Experienced tester',
-        organisation: 'Lions Club',
-        firstLoginGuideCompleted: true, remoteId: null,
-      });
-      await refreshTester();
-    }
-    return t;
-  };
+  const [signupState, setSignupState] = useState<any>({});
+  const authService = useAuth();
+  const [authChecked, setAuthChecked] = useState(false);
+  const [legacyTesterNeedsAccount, setLegacyTesterNeedsAccount] = useState(false);
 
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem('ooxii_logged_in') === 'true';
-    if (isLoggedIn && testerRepo && !tester) {
-      ensureActiveTester();
+    async function checkAuth() {
+      if (!authService || !testerRepo) return;
+      const t = await authService.getActiveTester();
+      if (t) {
+        // Authenticated user exists
+        if (['login', 'signup-email', 'signup-tester', 'signup-additional'].includes(screen)) {
+          setScreen('home');
+        }
+      } else {
+        // Not authenticated. Check if there's a legacy tester that needs an account
+        const legacy = await testerRepo.getCurrentTester();
+        if (legacy && legacy.firstName) {
+          setLegacyTesterNeedsAccount(true);
+        }
+      }
+      setAuthChecked(true);
     }
-    if (tester && screen === 'login' && isLoggedIn) {
-      setScreen('home');
-    }
-  }, [tester, screen, testerRepo]);
+    checkAuth();
+  }, [authService, testerRepo, screen]);
 
-  // Seed 300 tests for jon huh
   useEffect(() => {
     async function seedJonHuh() {
       if (!db || !testerRepo || !clientRepo || !workflowService || !completionService) return;
@@ -259,6 +257,13 @@ function AppInner() {
     setScreen(target);
   };
 
+  const submitAndNav = async (key: string, value: any, target: ScreenId, sectionType: SectionType = 'main_test') => {
+    if (key) {
+      await setResult(key, value, sectionType);
+    }
+    await nav(target);
+  };
+
   const inProgressCard = activeSession && activeSession.currentRoute
     ? {
         clientId: (client && client.localId === activeSession.clientId) ? client.ooxiiId : activeSession.clientId.slice(-5),
@@ -310,15 +315,22 @@ function AppInner() {
         );
 
       case 'signup-email':
-        return <SignupEmail onNext={() => setScreen('signup-tester')} onLogin={() => setScreen('login')} />;
+        return (
+          <SignupEmail 
+            onNext={(email, pw) => {
+              setSignupState({ email, pw });
+              setScreen('signup-tester');
+            }} 
+            onLogin={() => setScreen('login')} 
+          />
+        );
 
       case 'signup-tester':
         return (
           <TesterInfo
             onBack={() => setScreen('signup-email')}
             onNext={async (d) => {
-              // Create partial tester profile, to be completed next
-              setResults({ signupTesterInfo: d });
+              setSignupState((prev: any) => ({ ...prev, ...d }));
               setScreen('signup-additional');
             }}
           />
@@ -329,24 +341,28 @@ function AppInner() {
           <AdditionalInfo
             onBack={() => setScreen('signup-tester')}
             onCreate={async (d) => {
-              const tInfo = results.signupTesterInfo || {};
-              await testerRepo.createTester({
-                firstName: tInfo.firstName || 'New',
-                lastName: tInfo.lastName || 'Tester',
-                gender: tInfo.gender || '',
-                country: tInfo.country || '',
-                stateProvince: tInfo.state || '',
-                city: tInfo.city || '',
-                role: d.role,
-                experienceLevel: d.experience,
-                organisation: d.organisation,
-                firstLoginGuideCompleted: d.experience !== 'New tester',
-                remoteId: null,
-              });
-              await refreshTester();
-              localStorage.setItem('ooxii_logged_in', 'true');
-              setShowGuide(true);
-              setScreen('home');
+              if (!authService) return;
+              try {
+                await authService.signup(signupState.email, signupState.pw, {
+                  firstName: signupState.firstName,
+                  lastName: signupState.lastName,
+                  gender: signupState.gender,
+                  country: signupState.country,
+                  stateProvince: signupState.state,
+                  city: signupState.city,
+                  role: d.role,
+                  experienceLevel: d.experience,
+                  organisation: d.organisation,
+                  firstLoginGuideCompleted: d.experience !== 'New tester',
+                  remoteId: null
+                });
+                await refreshTester();
+                localStorage.setItem('ooxii_logged_in', 'true');
+                setShowGuide(d.experience === 'New tester');
+                setScreen('home');
+              } catch (e) {
+                alert(e instanceof Error ? e.message : 'Signup failed');
+              }
             }}
           />
         );
@@ -380,7 +396,7 @@ function AppInner() {
           <ClientInfo
             onCancel={() => nav('home')}
             onStart={async (d) => {
-              const activeTester = await ensureActiveTester();
+              const activeTester = await testerRepo?.getCurrentTester();
               if (!activeTester) return;
               try {
                 // 1. Create client in SQLite
@@ -418,7 +434,7 @@ function AppInner() {
             options={['Yes', 'No']}
             initialValue={results.hasDistanceGlasses}
             onBack={handleClinicalBack}
-            onNext={(v) => { setResult('hasDistanceGlasses', v, 'pretest'); handleClinicalNext(); }}
+            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
           />
         );
 
@@ -432,7 +448,7 @@ function AppInner() {
             imageCaption="Client covers left eye"
             initialValue={results.distanceRightLine}
             onBack={handleClinicalBack}
-            onNext={(v) => { setResult('distanceRightLine', v, 'pretest'); handleClinicalNext(); }}
+            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
           />
         );
 
@@ -447,7 +463,7 @@ function AppInner() {
             onNext={(v) => {
               setResult('distanceRightLetters', v, 'pretest');
               setResult('rightDistanceNoGlasses', calcSnellen(results.distanceRightLine, v), 'pretest');
-              handleClinicalNext();
+              submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current));
             }}
           />
         );
@@ -475,7 +491,7 @@ function AppInner() {
             imageCaption="Client covers right eye"
             initialValue={results.distanceLeftLine}
             onBack={handleClinicalBack}
-            onNext={(v) => { setResult('distanceLeftLine', v, 'pretest'); handleClinicalNext(); }}
+            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
           />
         );
 
@@ -490,7 +506,7 @@ function AppInner() {
             onNext={(v) => {
               setResult('distanceLeftLetters', v, 'pretest');
               setResult('leftDistanceNoGlasses', calcSnellen(results.distanceLeftLine, v), 'pretest');
-              handleClinicalNext();
+              submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current));
             }}
           />
         );
@@ -518,7 +534,7 @@ function AppInner() {
             imageCaption="Client wearing glasses, both eyes open"
             initialValue={results.distanceBothGlassesLine}
             onBack={handleClinicalBack}
-            onNext={(v) => { setResult('distanceBothGlassesLine', v, 'pretest'); handleClinicalNext(); }}
+            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
           />
         );
 
@@ -533,7 +549,7 @@ function AppInner() {
             onNext={(v) => {
               setResult('distanceBothGlassesLetters', v, 'pretest');
               setResult('bothEyesDistanceWithGlasses', calcSnellen(results.distanceBothGlassesLine, v), 'pretest');
-              handleClinicalNext();
+              submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current));
             }}
           />
         );
@@ -565,7 +581,7 @@ function AppInner() {
             onNext={(v) => {
               setResult('nearNoGlassesLine', v, 'pretest');
               setResult('nearNoGlasses', calcSnellen(v, '0'), 'pretest');
-              handleClinicalNext();
+              submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current));
             }}
           />
         );
@@ -593,7 +609,7 @@ function AppInner() {
             options={['Yes', 'No']}
             initialValue={results.hasReadingGlasses}
             onBack={handleClinicalBack}
-            onNext={(v) => { setResult('hasReadingGlasses', v, 'pretest'); handleClinicalNext(); }}
+            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
           />
         );
 
@@ -611,7 +627,7 @@ function AppInner() {
             onNext={(v) => {
               setResult('nearOwnGlassesLine', v, 'pretest');
               setResult('nearWithGlasses', calcSnellen(v, '0'), 'pretest');
-              handleClinicalNext();
+              submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current));
             }}
           />
         );
@@ -635,7 +651,7 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             initialValue={results.pd?.toString()}
             onBack={handleClinicalBack}
-            onNext={(pd) => { setResult('pd', pd, 'main_test'); handleClinicalNext(); }}
+            onNext={(pd) => { setResult('pd', pd, 'main_test'); submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current)); }}
           />
         );
 
@@ -646,7 +662,7 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             initialValue={results.wheelRightDirection}
             onBack={handleClinicalBack}
-            onNext={(v) => { setResult('wheelRightDirection', v, 'main_test'); handleClinicalNext(); }}
+            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
           />
         );
 
@@ -658,7 +674,7 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             initialValue={results.wheelRightPower}
             onBack={handleClinicalBack}
-            onNext={(v) => { setResult('wheelRightPower', v, 'main_test'); handleClinicalNext(); }}
+            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
           />
         );
 
@@ -669,7 +685,7 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             initialValue={results.wheelRightTwoColour}
             onBack={handleClinicalBack}
-            onNext={(v) => { setResult('wheelRightTwoColour', v, 'main_test'); handleClinicalNext(); }}
+            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
           />
         );
 
@@ -680,7 +696,7 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             initialValue={results.wheelRightLine9}
             onBack={handleClinicalBack}
-            onNext={(v) => { setResult('wheelRightLine9', v, 'main_test'); handleClinicalNext(); }}
+            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
           />
         );
 
@@ -697,7 +713,7 @@ function AppInner() {
             onNext={() => {
               const res = results.wheelRightDirection.startsWith('Neither') ? results.wheelRightDirection : `${results.wheelRightDirection} ${results.wheelRightPower}`;
               setResult('wheelRightEye', res, 'main_test');
-              handleClinicalNext();
+              submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current));
             }}
           />
         );
@@ -708,7 +724,7 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             initialValue={results.wheelRightDistanceImproved}
             onBack={handleClinicalBack}
-            onNext={(v) => { setResult('wheelRightDistanceImproved', v, 'post_test'); handleClinicalNext(); }}
+            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
           />
         );
 
@@ -721,7 +737,7 @@ function AppInner() {
             imageCaption="Client covers left eye at wheel"
             initialValue={results.wheelRightDistanceLine}
             onBack={handleClinicalBack}
-            onNext={(v) => { setResult('wheelRightDistanceLine', v, 'post_test'); handleClinicalNext(); }}
+            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
           />
         );
 
@@ -735,7 +751,7 @@ function AppInner() {
             onNext={(v) => {
               setResult('wheelRightDistanceLetters', v, 'post_test');
               setResult('wheelRightDistanceSnellen', calcSnellen(results.wheelRightDistanceLine, v), 'post_test');
-              handleClinicalNext();
+              submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current));
             }}
           />
         );
@@ -751,7 +767,7 @@ function AppInner() {
             onNext={() => {
               const val = results.wheelRightDistanceImproved === 'Yes' ? results.wheelRightDistanceSnellen : 'No';
               setResult('wheelRightDistance', val, 'post_test');
-              handleClinicalNext();
+              submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current));
             }}
           />
         );
@@ -763,7 +779,7 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             initialValue={results.wheelLeftDirection}
             onBack={handleClinicalBack}
-            onNext={(v) => { setResult('wheelLeftDirection', v, 'main_test'); handleClinicalNext(); }}
+            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
           />
         );
 
@@ -775,7 +791,7 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             initialValue={results.wheelLeftPower}
             onBack={handleClinicalBack}
-            onNext={(v) => { setResult('wheelLeftPower', v, 'main_test'); handleClinicalNext(); }}
+            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
           />
         );
 
@@ -786,7 +802,7 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             initialValue={results.wheelLeftTwoColour}
             onBack={handleClinicalBack}
-            onNext={(v) => { setResult('wheelLeftTwoColour', v, 'main_test'); handleClinicalNext(); }}
+            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
           />
         );
 
@@ -797,7 +813,7 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             initialValue={results.wheelLeftLine9}
             onBack={handleClinicalBack}
-            onNext={(v) => { setResult('wheelLeftLine9', v, 'main_test'); handleClinicalNext(); }}
+            onNext={(v) => { submitAndNav('', v, getNextClinicalRoute(screen, resultsRef.current)); }}
           />
         );
 
@@ -814,7 +830,7 @@ function AppInner() {
             onNext={() => {
               const res = results.wheelLeftDirection.startsWith('Neither') ? results.wheelLeftDirection : `${results.wheelLeftDirection} ${results.wheelLeftPower}`;
               setResult('wheelLeftEye', res, 'main_test');
-              handleClinicalNext();
+              submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current));
             }}
           />
         );
@@ -831,7 +847,7 @@ function AppInner() {
             onBack={handleClinicalBack}
             onNext={(v) => {
               setResult('sunglassesDispensed', v === 'Yes', 'dispensing');
-              handleClinicalNext();
+              submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current));
             }}
           />
         );
@@ -840,7 +856,7 @@ function AppInner() {
         return (
           <SunglassesSelection
             onBack={handleClinicalBack}
-            onNext={(t) => { setResult('sunglassesType', t, 'dispensing'); handleClinicalNext(); }}
+            onNext={(t) => { setResult('sunglassesType', t, 'dispensing'); submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current)); }}
           />
         );
 
@@ -849,7 +865,7 @@ function AppInner() {
           <GlassesDispensedReview
             sunglassesDispensed={!!results.sunglassesDispensed}
             onBack={handleClinicalBack}
-            onNext={(price) => { setResult('totalPaid', price, 'completion'); handleClinicalNext(); }}
+            onNext={(price) => { setResult('totalPaid', price, 'completion'); submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current)); }}
           />
         );
 
@@ -857,7 +873,7 @@ function AppInner() {
         return (
           <FinalChecklist
             onBack={handleClinicalBack}
-            onNext={(state) => { setResult('finalChecklist', state, 'completion'); handleClinicalNext(); }}
+            onNext={(state) => { setResult('finalChecklist', state, 'completion'); submitAndNav('', null, getNextClinicalRoute(screen, resultsRef.current)); }}
           />
         );
 
@@ -957,7 +973,8 @@ function AppInner() {
             client={viewingClient}
             onBack={() => setScreen('client-profile')}
             onStartNewTest={async () => {
-              const activeTester = await ensureActiveTester();
+              if (!authService) return;
+              const activeTester = await authService.getActiveTester();
               if (!activeTester || !viewingClient) return;
               try {
                 const newClient = await clientRepo.create({
@@ -985,7 +1002,26 @@ function AppInner() {
         return <ClientGlassesPrescription client={viewingClient} onBack={() => setScreen('client-profile')} />;
 
       default:
-        return <SignupEmail onNext={() => setScreen('signup-tester')} onLogin={() => setScreen('login')} />;
+        if (legacyTesterNeedsAccount) {
+          return (
+            <SignupEmail 
+              onNext={async (email, pw) => {
+                if (!authService || !testerRepo) return;
+                const t = await testerRepo.getCurrentTester();
+                if (t) {
+                  try {
+                    await authService.linkAccountToExistingTester(t.localId, email, pw);
+                    setLegacyTesterNeedsAccount(false);
+                    setScreen('home');
+                  } catch (e) {
+                    alert(e instanceof Error ? e.message : 'Error linking account');
+                  }
+                }
+              }} 
+            />
+          );
+        }
+        return <Login onLogin={() => setScreen('home')} onCreateAccount={() => setScreen('signup-email')} />;
     }
   }
 }

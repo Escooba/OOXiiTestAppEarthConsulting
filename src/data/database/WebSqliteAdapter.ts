@@ -3,20 +3,76 @@
 // ============================================================================
 // Uses official SQLite compiled to WASM (sql.js).
 // All queries run against a real SQLite database engine in memory,
-// with state persisted to localStorage as a binary database file.
+// with state persisted to IndexedDB as a binary database file.
 // ============================================================================
 
 import initSqlJs, { Database, SqlJsStatic } from 'sql.js';
 import sqlWasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 import type { DatabaseAdapter, QueryResult, RunResult } from './DatabaseAdapter';
 
-const STORAGE_KEY = 'ooxii_sqlite_db_binary';
+const IDB_DB_NAME = 'OOXii_SQLite_Store';
+const IDB_STORE_NAME = 'sqlite_binary_store';
+const IDB_KEY = 'ooxii_db';
+
+/**
+ * Simple IndexedDB wrapper for storing the Uint8Array database blob.
+ */
+function openIDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    if (typeof indexedDB === 'undefined') {
+      return reject(new Error('IndexedDB is not supported'));
+    }
+    const req = indexedDB.open(IDB_DB_NAME, 1);
+    req.onupgradeneeded = (e) => {
+      const db = (e.target as IDBOpenDBRequest).result;
+      if (!db.objectStoreNames.contains(IDB_STORE_NAME)) {
+        db.createObjectStore(IDB_STORE_NAME);
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function loadFromIDB(): Promise<Uint8Array | null> {
+  try {
+    const db = await openIDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE_NAME, 'readonly');
+      const store = tx.objectStore(IDB_STORE_NAME);
+      const req = store.get(IDB_KEY);
+      req.onsuccess = () => resolve(req.result as Uint8Array || null);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.warn('[WebSqliteAdapter] IDB load error:', err);
+    return null;
+  }
+}
+
+async function saveToIDB(data: Uint8Array): Promise<void> {
+  try {
+    const db = await openIDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE_NAME, 'readwrite');
+      const store = tx.objectStore(IDB_STORE_NAME);
+      const req = store.put(data, IDB_KEY);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.warn('[WebSqliteAdapter] IDB save error:', err);
+  }
+}
 
 export class WebSqliteAdapter implements DatabaseAdapter {
   private SQL: SqlJsStatic | null = null;
   private db: Database | null = null;
   private inTransaction = false;
   readonly isNative = false;
+  
+  private persistPromise: Promise<void> = Promise.resolve();
+  private pendingPersist = false;
 
   async open(_dbName: string): Promise<void> {
     if (!this.SQL) {
@@ -27,28 +83,17 @@ export class WebSqliteAdapter implements DatabaseAdapter {
       this.SQL = await initSqlJs(config);
     }
 
-    let loaded = false;
-    if (typeof localStorage !== 'undefined') {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const binary = Uint8Array.from(atob(saved), (c) => c.charCodeAt(0));
-          this.db = new this.SQL.Database(binary);
-          loaded = true;
-        }
-      } catch (err) {
-        console.warn('[WebSqliteAdapter] Failed to restore database from localStorage:', err);
-      }
-    }
-
-    if (!loaded) {
+    const savedBinary = await loadFromIDB();
+    if (savedBinary && savedBinary.length > 0) {
+      this.db = new this.SQL.Database(savedBinary);
+    } else {
       this.db = new this.SQL.Database();
     }
   }
 
   async close(): Promise<void> {
     this.inTransaction = false;
-    this.persist();
+    await this.persistInternal();
     if (this.db) {
       this.db.close();
       this.db = null;
@@ -123,17 +168,25 @@ export class WebSqliteAdapter implements DatabaseAdapter {
   }
 
   private persist(): void {
-    if (this.inTransaction || !this.db || typeof localStorage === 'undefined') return;
+    if (this.inTransaction || !this.db) return;
+    if (this.pendingPersist) return;
+    
+    this.pendingPersist = true;
+    this.persistPromise = this.persistPromise
+      .then(() => this.persistInternal())
+      .catch((err) => console.error('[WebSqliteAdapter] Background persist failed:', err))
+      .finally(() => {
+        this.pendingPersist = false;
+      });
+  }
+
+  private async persistInternal(): Promise<void> {
+    if (!this.db) return;
     try {
       const data = this.db.export();
-      let binary = '';
-      const len = data.byteLength;
-      for (let i = 0; i < len; i++) {
-        binary += String.fromCharCode(data[i]);
-      }
-      localStorage.setItem(STORAGE_KEY, btoa(binary));
+      await saveToIDB(data);
     } catch (err) {
-      console.warn('[WebSqliteAdapter] Failed to persist database:', err);
+      console.error('[WebSqliteAdapter] Failed to export and save database:', err);
     }
   }
 

@@ -1,9 +1,7 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
+import { LanguageCode, translate, TranslationKey } from './i18n';
 
-export type DisplayMode = 'ooxii_purple' | 'traditional_light' | 'traditional_dark';
-export type Language =
-  | 'English' | 'Tok Pisin' | 'Bislama' | 'French' | 'Spanish'
-  | 'Portuguese' | 'Bahasa Indonesia' | 'Mongolian';
+export type DisplayMode = 'ooxii' | 'light';
 
 export interface ThemeTokens {
   bg: string;
@@ -21,79 +19,52 @@ export interface ThemeTokens {
   progressTrack: string;
 }
 
-const PURPLE: ThemeTokens = {
-  bg: 'bg-[#2A0730]',
-  card: 'bg-[#22193B]',
-  cardActive: 'bg-[#2A2049]',
-  cardBorder: 'border-white/5',
-  text: 'text-white',
-  textMuted: 'text-[#9B93BA]',
-  input: 'bg-[#2A0730]',
-  inputBorder: 'border-white/10',
-  headerBg: 'bg-[#2A0730]',
-  overlay: 'bg-[#2A0730]/90',
-  navPillBg: 'bg-[#22193B]',
-  navPillActiveText: 'text-[#2A0730]',
-  progressTrack: 'bg-[#22193B]',
-};
-const LIGHT: ThemeTokens = {
-  bg: 'bg-[#F5F5F7]',
-  card: 'bg-white',
-  cardActive: 'bg-white',
-  cardBorder: 'border-[#E1E1E8]',
-  text: 'text-[#1A1B3A]',
-  textMuted: 'text-[#6A6F8A]',
-  input: 'bg-white',
-  inputBorder: 'border-[#D0D2DE]',
-  headerBg: 'bg-white',
-  overlay: 'bg-white/90',
-  navPillBg: 'bg-[#EDEDF3]',
-  navPillActiveText: 'text-white',
-  progressTrack: 'bg-[#E1E1E8]',
-};
-const DARK: ThemeTokens = {
-  bg: 'bg-[#111214]',
-  card: 'bg-[#1D1E22]',
-  cardActive: 'bg-[#26272C]',
-  cardBorder: 'border-white/5',
-  text: 'text-white',
-  textMuted: 'text-[#9AA0A8]',
-  input: 'bg-[#111214]',
-  inputBorder: 'border-white/10',
-  headerBg: 'bg-[#111214]',
-  overlay: 'bg-black/80',
-  navPillBg: 'bg-[#1D1E22]',
-  navPillActiveText: 'text-[#111214]',
-  progressTrack: 'bg-[#26272C]',
-};
-
-const TOKEN_MAP: Record<DisplayMode, ThemeTokens> = {
-  ooxii_purple: PURPLE,
-  traditional_light: LIGHT,
-  traditional_dark: DARK,
+const TOKENS: ThemeTokens = {
+  bg: 'bg-[var(--bg)]',
+  card: 'bg-[var(--card)]',
+  cardActive: 'bg-[var(--card-active)]',
+  cardBorder: 'border-[var(--card-border)]',
+  text: 'text-[var(--text)]',
+  textMuted: 'text-[var(--text-muted)]',
+  input: 'bg-[var(--input)]',
+  inputBorder: 'border-[var(--input-border)]',
+  headerBg: 'bg-[var(--header-bg)]',
+  overlay: 'bg-[var(--overlay)]',
+  navPillBg: 'bg-[var(--nav-pill-bg)]',
+  navPillActiveText: 'text-[var(--nav-pill-active-text)]',
+  progressTrack: 'bg-[var(--progress-track)]',
 };
 
 interface Ctx {
   mode: DisplayMode;
-  language: Language;
+  language: LanguageCode;
   tokens: ThemeTokens;
+  t: (key: TranslationKey) => string;
   setMode: (m: DisplayMode) => void;
-  setLanguage: (l: Language) => void;
+  setLanguage: (l: LanguageCode) => void;
 }
 
 const ThemeCtx = createContext<Ctx>({
-  mode: 'ooxii_purple',
-  language: 'English',
-  tokens: PURPLE,
+  mode: 'ooxii',
+  language: 'en',
+  tokens: TOKENS,
+  t: (k) => k,
   setMode: () => {},
   setLanguage: () => {},
 });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [mode, setMode] = useState<DisplayMode>('ooxii_purple');
-  const [language, setLanguage] = useState<Language>('English');
+  const [mode, setMode] = useState<DisplayMode>('ooxii');
+  const [language, setLanguage] = useState<LanguageCode>('en');
+  
+  const t = useMemo(() => (key: TranslationKey) => translate(language, key), [language]);
+  
+  React.useEffect(() => {
+    document.documentElement.setAttribute('data-theme', mode);
+  }, [mode]);
+
   return (
-    <ThemeCtx.Provider value={{ mode, language, tokens: TOKEN_MAP[mode], setMode, setLanguage }}>
+    <ThemeCtx.Provider value={{ mode, language, tokens: TOKENS, t, setMode, setLanguage }}>
       {children}
     </ThemeCtx.Provider>
   );

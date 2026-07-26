@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Shell } from '../components/Shell';
+import { Shell, BottomNavigation } from '../components/Shell';
 import { ScreenId } from '../lib/theme';
 import { Users, Star, TrendingUp, Check, LogOut, Lock, ArrowLeft } from 'lucide-react';
 import { RabbitMascot } from '../components/RabbitMascot';
@@ -274,6 +274,7 @@ export function Profile({ onNav, tester }: { onNav: (s: ScreenId) => void; teste
           <span>Log out</span>
         </button>
       </div>
+      <BottomNavigation current="tester-profile" onNav={onNav} />
     </Shell>
   );
 }

@@ -3,7 +3,7 @@ import { Shell, BottomBar } from '../components/Shell';
 import { Eye, EyeOff, AlertCircle, Check } from 'lucide-react';
 
 interface Props {
-  onNext: () => void;
+  onNext: (email: string, pw: string) => void;
   onLogin?: () => void;
 }
 
@@ -26,7 +26,7 @@ export function SignupEmail({ onNext, onLogin }: Props) {
     if (!rules.every((r) => r.ok)) e.pw = 'Password does not meet the rules below.';
     if (pw !== pw2) e.pw2 = 'Passwords do not match.';
     setErrors(e);
-    if (Object.keys(e).length === 0) onNext();
+    if (Object.keys(e).length === 0) onNext(email, pw);
   };
 
   return (

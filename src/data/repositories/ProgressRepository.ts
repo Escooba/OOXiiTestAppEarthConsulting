@@ -44,8 +44,12 @@ export class ProgressRepository {
     );
     const badgesEarned = badgeRows.length > 0 ? Number(badgeRows[0].count) : 0;
 
-    // Distinct testing days (approximate)
-    const distinctTestingDays = completedTests; // Simplified
+    // Distinct testing days
+    const daysRows = await this.db.query<{ count: number }>(
+      "SELECT COUNT(DISTINCT DATE(started_at / 1000, 'unixepoch')) AS count FROM test_sessions WHERE tester_id = ? AND status = 'completed' AND deleted_at IS NULL",
+      [testerId]
+    );
+    const distinctTestingDays = daysRows.length > 0 ? Number(daysRows[0].count) : 0;
 
     // Next badge
     const earnedCodes = await this.db.query<{ badge_code: string }>(
@@ -66,8 +70,17 @@ export class ProgressRepository {
       }
     }
 
-    const progressTowardNext = nextBadge ? Math.min(completedTests, nextBadge.targetValue) : 0;
-    const remainingForNext = nextBadge ? Math.max(0, nextBadge.targetValue - completedTests) : 0;
+    let progressTowardNext = 0;
+    if (nextBadge) {
+      if (nextBadge.ruleType === 'completed_tests') progressTowardNext = completedTests;
+      else if (nextBadge.ruleType === 'clients_helped') progressTowardNext = clientsHelped;
+      else if (nextBadge.ruleType === 'distinct_testing_days') progressTowardNext = distinctTestingDays;
+      else progressTowardNext = completedTests; // fallback
+      
+      progressTowardNext = Math.min(progressTowardNext, nextBadge.targetValue);
+    }
+    
+    const remainingForNext = nextBadge ? Math.max(0, nextBadge.targetValue - progressTowardNext) : 0;
 
     return {
       completedTests, clientsHelped, distinctTestingDays,

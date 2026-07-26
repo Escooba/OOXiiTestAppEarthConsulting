@@ -13,11 +13,13 @@ import { ProgressRepository } from './repositories/ProgressRepository';
 import { GardenRepository } from './repositories/GardenRepository';
 import { BadgeRepository } from './repositories/BadgeRepository';
 import { SyncRepository } from './repositories/SyncRepository';
+import { AccountRepository } from './repositories/AccountRepository';
 import { TestWorkflowService } from './services/TestWorkflowService';
 import { GamificationService } from './services/GamificationService';
 import { TestCompletionService } from './services/TestCompletionService';
 import { SyncCoordinator } from './services/SyncCoordinator';
 import { DisabledSyncTransport } from './services/SyncTransport';
+import { AuthService } from './services/AuthService';
 import { CsvImporter } from './services/CsvImporter';
 import { generateLocalId } from './models';
 
@@ -29,8 +31,10 @@ interface DataContextState {
   progressRepo: ProgressRepository | null;
   gardenRepo: GardenRepository | null;
   badgeRepo: BadgeRepository | null;
+  accountRepo: AccountRepository | null;
   workflowService: TestWorkflowService | null;
   completionService: TestCompletionService | null;
+  authService: AuthService | null;
   syncCoordinator: SyncCoordinator | null;
   csvImporter: CsvImporter | null;
   loading: boolean;
@@ -39,8 +43,8 @@ interface DataContextState {
 
 const DataContext = createContext<DataContextState>({
   db: null, testerRepo: null, clientRepo: null, sessionRepo: null,
-  progressRepo: null, gardenRepo: null, badgeRepo: null,
-  workflowService: null, completionService: null, syncCoordinator: null,
+  progressRepo: null, gardenRepo: null, badgeRepo: null, accountRepo: null,
+  workflowService: null, completionService: null, authService: null, syncCoordinator: null,
   csvImporter: null,
   loading: true, error: null,
 });
@@ -48,8 +52,8 @@ const DataContext = createContext<DataContextState>({
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<DataContextState>({
     db: null, testerRepo: null, clientRepo: null, sessionRepo: null,
-    progressRepo: null, gardenRepo: null, badgeRepo: null,
-    workflowService: null, completionService: null, syncCoordinator: null,
+    progressRepo: null, gardenRepo: null, badgeRepo: null, accountRepo: null,
+    workflowService: null, completionService: null, authService: null, syncCoordinator: null,
     csvImporter: null,
     loading: true, error: null,
   });
@@ -74,10 +78,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         const gardenRepo = new GardenRepository(db);
         const badgeRepo = new BadgeRepository(db);
         const syncRepo = new SyncRepository(db);
+        const accountRepo = new AccountRepository(db);
 
         const gamification = new GamificationService(db, badgeRepo, sessionRepo);
         const workflowService = new TestWorkflowService(sessionRepo, clientRepo, testerRepo);
         const completionService = new TestCompletionService(db, sessionRepo, syncRepo, gamification);
+        const authService = new AuthService(db, accountRepo, testerRepo);
         
         const transport = new DisabledSyncTransport();
         const syncCoordinator = new SyncCoordinator(syncRepo, transport);
@@ -88,8 +94,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
         if (mounted) {
           setState({
-            db, testerRepo, clientRepo, sessionRepo, progressRepo, gardenRepo, badgeRepo,
-            workflowService, completionService, syncCoordinator, csvImporter,
+            db, testerRepo, clientRepo, sessionRepo, progressRepo, gardenRepo, badgeRepo, accountRepo,
+            workflowService, completionService, authService, syncCoordinator, csvImporter,
             loading: false, error: null,
           });
         }

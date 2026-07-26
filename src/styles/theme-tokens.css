@@ -1,0 +1,43 @@
+:root {
+  /* OOXii Purple (Default) */
+  --bg: #2A0730;
+  --card: #22193B;
+  --card-active: #2A2049;
+  --card-border: rgba(255, 255, 255, 0.05);
+  --text: #ffffff;
+  --text-muted: #9B93BA;
+  --input: #2A0730;
+  --input-border: rgba(255, 255, 255, 0.1);
+  --header-bg: #2A0730;
+  --overlay: rgba(42, 7, 48, 0.9);
+  --nav-pill-bg: #22193B;
+  --nav-pill-active-text: #2A0730;
+  --progress-track: #22193B;
+  --primary: #A984FF;
+  --primary-hover: #BBA0FF;
+}
+
+[data-theme="light"] {
+  /* Light Mode */
+  --bg: #F5F5F7;
+  --card: #ffffff;
+  --card-active: #ffffff;
+  --card-border: #E1E1E8;
+  --text: #1A1B3A;
+  --text-muted: #6A6F8A;
+  --input: #ffffff;
+  --input-border: #D0D2DE;
+  --header-bg: #ffffff;
+  --overlay: rgba(255, 255, 255, 0.9);
+  --nav-pill-bg: #EDEDF3;
+  --nav-pill-active-text: #ffffff;
+  --progress-track: #E1E1E8;
+  --primary: #A984FF;
+  --primary-hover: #BBA0FF;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}

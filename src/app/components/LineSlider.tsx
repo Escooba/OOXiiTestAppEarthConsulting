@@ -21,9 +21,29 @@ interface Props {
 export function LineSlider({ value, onChange, onChangeEnd, onDragStart, error, disabled, max = 11 }: Props) {
   const raw = value === '' ? -1 : parseInt(value.replace(/\D/g, ''), 10);
   const selected = raw >= 0;
-  const isDragging = useRef(false);
   const latestValueRef = useRef(value);
+  const inputRef = useRef<HTMLInputElement>(null);
   latestValueRef.current = value;
+
+  React.useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+
+    const handleChange = (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const val = target.value;
+      const n = parseInt(val, 10);
+      const strVal = n < 0 ? '' : `Line ${n}`;
+      if (strVal !== '' && onChangeEnd) {
+        onChangeEnd(strVal);
+      }
+    };
+
+    el.addEventListener('change', handleChange);
+    return () => {
+      el.removeEventListener('change', handleChange);
+    };
+  }, [onChangeEnd]);
 
   const handle = (n: number) => {
     const val = n < 0 ? '' : `Line ${n}`;
@@ -66,39 +86,16 @@ export function LineSlider({ value, onChange, onChangeEnd, onDragStart, error, d
       {/* Slider track */}
       <div className="px-1">
         <input
+          ref={inputRef}
           type="range"
           min={-1}
           max={max}
           step={1}
           value={raw}
           disabled={disabled}
-          onPointerDown={() => {
-            isDragging.current = true;
-            onDragStart?.();
-          }}
           onChange={(e) => {
-            if (!isDragging.current) {
-              onDragStart?.();
-            }
+            onDragStart?.();
             handle(parseInt(e.target.value, 10));
-          }}
-          onPointerUp={() => {
-            if (isDragging.current) {
-              isDragging.current = false;
-              handleRelease();
-            }
-          }}
-          onMouseUp={() => {
-            if (isDragging.current) {
-              isDragging.current = false;
-              handleRelease();
-            }
-          }}
-          onTouchEnd={() => {
-            if (isDragging.current) {
-              isDragging.current = false;
-              handleRelease();
-            }
           }}
           onKeyUp={() => {
             handleRelease();
