@@ -5,6 +5,7 @@ import { RabbitMascot } from './RabbitMascot';
 import { ScreenId } from '../lib/theme';
 import { useTheme } from '../lib/ThemeContext';
 import { SettingsModal } from './SettingsModal';
+import { useOnlineStatus } from '../lib/useOnlineStatus';
 
 interface NavCtx {
   onNav: (s: ScreenId) => void;
@@ -31,6 +32,7 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
   const { tokens, mode } = useTheme();
   const { onNav } = useContext(ShellNavContext);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const isOnline = useOnlineStatus();
 
   const lastProgress = useRef(Number(sessionStorage.getItem('lastProgress') || 0));
   useEffect(() => {
@@ -81,8 +83,13 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
               <SettingsIcon size={13} />
               Settings
             </button>
-            <div className={`hidden sm:flex items-center gap-2 px-3 py-1 rounded-full border ${tokens.navPillBg} border-[var(--card-border)]`}>
-              <span className="text-xs text-[var(--text-muted)] font-medium">Saved on this device</span>
+            <div className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${
+              isOnline
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+            }`}>
+              <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+              <span>{isOnline ? 'Online' : 'Offline mode'}</span>
             </div>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { Shell, BottomNavigation } from '../components/Shell';
 import { ScreenId } from '../lib/theme';
 import { useGarden, useProgress } from '../../data/hooks';
 import { useTheme } from '../lib/ThemeContext';
+import { useOnlineStatus } from '../lib/useOnlineStatus';
 
 /**
  * Calculates the grid slot coordinates for an N x N plot recursively.
@@ -51,6 +52,7 @@ export function Garden({ onNav }: { onNav: (s: ScreenId) => void }) {
   const { progress } = useProgress();
   const { cache } = useGarden();
   const { t } = useTheme();
+  const isOnline = useOnlineStatus();
 
   const completedTests = progress?.completedTests ?? 0;
   const totalCarrots = progress?.totalCarrots ?? 0;
@@ -74,8 +76,13 @@ export function Garden({ onNav }: { onNav: (s: ScreenId) => void }) {
             <div className="text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)]">Personal & Community</div>
             <h1 className="text-3xl font-bold text-[var(--text)] leading-tight">{t('garden.title')}</h1>
           </div>
-          <div className="px-3 py-1 rounded-full bg-[var(--card)] border border-[var(--card-border)] text-xs text-[var(--text-muted)] font-medium">
-            Offline mode
+          <div className={`px-3 py-1.5 rounded-full border text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            isOnline
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+              : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+          }`}>
+            <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+            <span>{isOnline ? 'Online' : 'Offline mode'}</span>
           </div>
         </div>
 
