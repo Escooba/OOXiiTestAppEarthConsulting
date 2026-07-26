@@ -109,19 +109,19 @@ export function Garden({ onNav }: { onNav: (s: ScreenId) => void }) {
                 </linearGradient>
               </defs>
 
-              {/* Island Earth Sides */}
+              {/* Island Earth Sides (Fixed Size Island) */}
               <polygon
-                points={`40,${originY + size * tileDy} 180,${originY + 2 * size * tileDy} 180,${originY + 2 * size * tileDy + 24} 40,${originY + size * tileDy + 24}`}
+                points="40,105 180,175 180,205 40,135"
                 fill="url(#soilLeftGrad)"
               />
               <polygon
-                points={`180,${originY + 2 * size * tileDy} 320,${originY + size * tileDy} 320,${originY + size * tileDy + 24} 180,${originY + 2 * size * tileDy + 24}`}
+                points="180,175 320,105 320,135 180,205"
                 fill="url(#soilRightGrad)"
               />
 
-              {/* Grass Top Surface */}
+              {/* Grass Top Surface (Fixed Size Island) */}
               <polygon
-                points={`180,${originY} 320,${originY + size * tileDy} 180,${originY + 2 * size * tileDy} 40,${originY + size * tileDy}`}
+                points="180,35 320,105 180,175 40,105"
                 fill="url(#grassGrad)"
                 stroke="rgba(255,255,255,0.2)"
                 strokeWidth="1.5"
@@ -130,30 +130,38 @@ export function Garden({ onNav }: { onNav: (s: ScreenId) => void }) {
               {/* Grid Cells & Carrots */}
               {slotOrder.slice(0, size * size).map((slot, idx) => {
                 const isPlanted = idx < plantedCarrots;
+                const tileDx = 280 / size;
+                const tileDy = 140 / size;
+
                 const cx = originX + (slot.col - slot.row) * (tileDx / 2);
-                const cy = originY + (slot.col + slot.row) * (tileDy / 2) + tileDy / 2;
+                const cy = originY + (slot.row + slot.col + 1) * (tileDy / 2);
+                const rx = (tileDx / 2) * 0.44;
+                const ry = (tileDy / 2) * 0.44;
+                const fontSize = Math.max(12, Math.round(36 / Math.sqrt(size)));
 
                 return (
                   <g key={`${slot.row}-${slot.col}`} transform={`translate(${cx}, ${cy})`}>
-                    {/* Dirt Patch */}
+                    {/* Dirt Patch / Circle */}
                     <ellipse
                       cx="0"
                       cy="0"
-                      rx={tileDx / 2.6}
-                      ry={tileDy / 2.6}
+                      rx={rx}
+                      ry={ry}
                       fill="#78350F"
-                      opacity={isPlanted ? "0.9" : "0.3"}
+                      opacity={isPlanted ? "0.9" : "0.35"}
+                      stroke="#B45309"
+                      strokeWidth={isPlanted ? "1" : "0.5"}
                     />
                     {isPlanted ? (
                       /* Static Carrot Sprite */
-                      <g transform="translate(-10, -22)">
-                        <text x="0" y="16" fontSize="18" style={{ userSelect: 'none' }}>
+                      <g transform={`translate(${-fontSize / 2}, ${-fontSize * 0.85})`}>
+                        <text x="0" y={fontSize} fontSize={fontSize} style={{ userSelect: 'none' }}>
                           🥕
                         </text>
                       </g>
                     ) : (
                       /* Subtle Soil Marker */
-                      <circle cx="0" cy="0" r="2" fill="#B45309" opacity="0.4" />
+                      <circle cx="0" cy="0" r={Math.max(1.5, 3 / Math.sqrt(size))} fill="#B45309" opacity="0.5" />
                     )}
                   </g>
                 );
