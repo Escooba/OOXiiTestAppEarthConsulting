@@ -38,7 +38,6 @@ export class TestCompletionService {
 
       // 1. Save final sections
       for (const { type, payload } of finalSections) {
-        // Validation could be added here
         await this.sessionRepo.saveSection(sessionId, type, payload);
       }
 

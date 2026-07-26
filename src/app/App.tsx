@@ -853,9 +853,11 @@ function AppInner() {
                   await completionService.completeTest(activeSession.localId, [
                     { type: 'completion', payload: { ...results, additionalDetails: d } }
                   ]);
-                  await workflowService.sessionRepo.updateRoute(activeSession.localId, 'test-saved');
-                  // We bypass nav() to not call saveProgress manually again for completion since completeTest handles it.
-                  window.location.reload(); // Quick reset
+                  await refreshSession();
+                  await refreshTester();
+                  setResults({});
+                  resultsRef.current = {};
+                  setScreen('test-saved');
                 } catch (err) {
                   console.error('Failed to complete test:', err);
                 }
@@ -865,7 +867,17 @@ function AppInner() {
         );
 
       case 'test-saved':
-        return <TestResultsSaved onHome={() => { setClient(null); nav('home'); }} />;
+        return (
+          <TestResultsSaved
+            onHome={async () => {
+              setClient(null);
+              setResults({});
+              resultsRef.current = {};
+              await refreshSession();
+              nav('home');
+            }}
+          />
+        );
 
       case 'final-summary':
         return (

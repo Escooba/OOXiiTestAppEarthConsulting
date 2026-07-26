@@ -54,6 +54,10 @@ export class TestSessionRepository {
 
   async startTest(data: { clientId: string; testerId: string; clinicId?: string | null; displayTestNumber?: string }): Promise<TestSession> {
     const now = nowUtcMs();
+    await this.db.run(
+      `UPDATE test_sessions SET status = 'cancelled', updated_at = ? WHERE tester_id = ? AND status IN ('draft', 'in_progress')`,
+      [now, data.testerId]
+    );
     const localId = generateLocalId();
     const num = data.displayTestNumber || await this.nextTestNumber(data.testerId);
     await this.db.run(
@@ -140,6 +144,12 @@ export class TestSessionRepository {
       'UPDATE test_sessions SET status = ?, completed_at = ?, updated_at = ?, record_version = record_version + 1 WHERE local_id = ?',
       [status, completedAt, now, sessionId]
     );
+    if (status === 'completed') {
+      await this.db.run(
+        `UPDATE test_sessions SET status = 'cancelled', updated_at = ? WHERE tester_id = ? AND status IN ('draft', 'in_progress') AND local_id != ?`,
+        [now, session.testerId, sessionId]
+      );
+    }
   }
 
   async cancelDraft(sessionId: string): Promise<void> {

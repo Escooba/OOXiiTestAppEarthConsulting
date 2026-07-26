@@ -5,7 +5,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { DatabaseManager } from './database/DatabaseManager';
 import { NativeSQLiteAdapter } from './database/NativeSQLiteAdapter';
-import { BrowserDevelopmentAdapter } from './database/BrowserDevelopmentAdapter';
+import { WebSqliteAdapter } from './database/WebSqliteAdapter';
 import { TesterRepository } from './repositories/TesterRepository';
 import { ClientRepository } from './repositories/ClientRepository';
 import { TestSessionRepository } from './repositories/TestSessionRepository';
@@ -62,7 +62,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         // Decide adapter based on environment
         // In a real app we'd use Capacitor.isNativePlatform(), for Vite we use a simple check
         const isCapacitor = typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform?.();
-        const adapter = isCapacitor ? new NativeSQLiteAdapter() : new BrowserDevelopmentAdapter();
+        const adapter = isCapacitor ? new NativeSQLiteAdapter() : new WebSqliteAdapter();
         
         const db = new DatabaseManager(adapter);
         await db.initialise();

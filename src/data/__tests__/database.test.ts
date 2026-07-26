@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { BrowserDevelopmentAdapter } from '../database/BrowserDevelopmentAdapter';
+import { WebSqliteAdapter } from '../database/WebSqliteAdapter';
 import { DatabaseManager } from '../database/DatabaseManager';
 import { TesterRepository } from '../repositories/TesterRepository';
 import { ClientRepository } from '../repositories/ClientRepository';
@@ -11,7 +11,7 @@ import { TestWorkflowService } from '../services/TestWorkflowService';
 import { TestCompletionService } from '../services/TestCompletionService';
 import { generateLocalId } from '../models';
 
-// Setup mock localStorage for BrowserDevelopmentAdapter
+// Setup mock localStorage for WebSqliteAdapter
 const mockLocalStorage = {
   getItem: () => null,
   setItem: () => {},
@@ -31,9 +31,7 @@ describe('Database System Tests', () => {
   let completion: TestCompletionService;
 
   beforeEach(async () => {
-    // Clear storage key concept if we had real localStorage, but we mock it.
-    // The adapter creates an in-memory state each time open() is called without localStorage data.
-    const adapter = new BrowserDevelopmentAdapter();
+    const adapter = new WebSqliteAdapter();
     db = new DatabaseManager(adapter);
     await db.initialise();
 
@@ -138,6 +136,41 @@ describe('Database System Tests', () => {
     await completion.completeTest(session.localId, [{ type: 'completion', payload: { additionalNotes: 'Test completed' } }]);
     const completed = await sessionRepo.getById(session.localId);
     expect(completed?.status).toBe('completed');
+
+    // 5. Active session should now be null
+    const active = await sessionRepo.getActiveSession(tester.localId);
+    expect(active).toBeNull();
+  });
+
+  it('should clear old uncompleted sessions when starting or completing a test', async () => {
+    const tester = await testerRepo.createTester({
+      firstName: 'Test', lastName: 'User', role: 'Tester', gender: '', experienceLevel: '',
+      organisation: '', country: '', stateProvince: '', city: '', firstLoginGuideCompleted: true, remoteId: null
+    });
+
+    const client1 = await clientRepo.create({
+      ooxiiClientId: 'CLIENT_004', yearOfBirth: 1990, gender: 'Female', cataractSurgery: 'No',
+      country: 'AU', stateProvince: 'NSW', city: 'Sydney', createdByTesterId: tester.localId
+    });
+    const client2 = await clientRepo.create({
+      ooxiiClientId: 'CLIENT_005', yearOfBirth: 1992, gender: 'Male', cataractSurgery: 'No',
+      country: 'AU', stateProvince: 'NSW', city: 'Sydney', createdByTesterId: tester.localId
+    });
+
+    // Start first test and abandon it halfway
+    await workflow.startNewTest(tester.localId, client1.localId);
+
+    // Start second test (should cancel first test)
+    const session2 = await workflow.startNewTest(tester.localId, client2.localId);
+    let active = await sessionRepo.getActiveSession(tester.localId);
+    expect(active?.localId).toBe(session2.localId);
+
+    // Complete second test
+    await completion.completeTest(session2.localId, []);
+
+    // Active session must be null (old abandoned test should not reappear)
+    active = await sessionRepo.getActiveSession(tester.localId);
+    expect(active).toBeNull();
   });
 
   it('should earn badges after test completion', async () => {
@@ -161,7 +194,8 @@ describe('Database System Tests', () => {
     const session = await workflow.startNewTest(tester.localId, client.localId);
     
     // Simulate glasses dispensed to get 50 carrots
-    await db.run('INSERT INTO dispensed_items (local_id, session_id, item_type) VALUES (?, ?, ?)', [generateLocalId(), session.localId, 'distance_glasses']);
+    const now = Date.now();
+    await db.run('INSERT INTO dispensed_items (local_id, test_session_id, item_category, created_at, updated_at) VALUES (?, ?, ?, ?, ?)', [generateLocalId(), session.localId, 'distance_glasses', now, now]);
 
     // Complete session
     await completion.completeTest(session.localId, [{ type: 'completion', payload: { summary: 'Done' } }]);
