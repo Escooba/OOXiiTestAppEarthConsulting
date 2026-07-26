@@ -108,13 +108,6 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
           cta="Search client"
           onClick={() => onNav('find-client')}
         />
-
-        {/* Quick nav */}
-        <div className="grid grid-cols-3 gap-2">
-          <QuickNav icon={<BookOpen size={16} />} label="Tutorial" onClick={() => onNav('tutorial')} />
-          <QuickNav icon={<User size={16} />} label="Profile" onClick={() => onNav('tester-profile')} />
-          <QuickNav icon={<Flag size={16} />} label="Garden" onClick={() => onNav('community-garden')} />
-        </div>
       </div>
 
       <AnimatePresence>
@@ -151,19 +144,7 @@ function HomeCard({
   );
 }
 
-function QuickNav({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
-  return (
-    <motion.button
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.97 }}
-      onClick={onClick}
-      className="flex flex-col items-center gap-1 p-3 rounded-2xl bg-[#1C1633]/60 border border-white/5 hover:border-white/20"
-    >
-      <span className="text-[#3BE0D4]">{icon}</span>
-      <span className="text-xs text-white/80">{label}</span>
-    </motion.button>
-  );
-}
+
 
 function RegionModal({ onSaved, defaultRegion }: { onSaved: (region: string) => void; defaultRegion: string }) {
   const [choice, setChoice] = useState<'tester' | 'other'>('tester');
