@@ -110,12 +110,32 @@ function AppInner() {
   const [viewingClient, setViewingClient] = useState<ClientRecord | null>(null);
   const [returnToAfterProfile, setReturnToAfterProfile] = useState<ScreenId>('home');
 
+  const ensureActiveTester = async () => {
+    if (tester) return tester;
+    if (!testerRepo) return null;
+    let t = await testerRepo.getCurrentTester();
+    if (!t) {
+      t = await testerRepo.createTester({
+        firstName: 'John', lastName: 'Smith', gender: 'Male',
+        country: 'Australia', stateProvince: 'New South Wales', city: 'Sydney',
+        role: 'Community Health Worker', experienceLevel: 'Experienced tester',
+        organisation: 'Lions Club',
+        firstLoginGuideCompleted: true, remoteId: null,
+      });
+      await refreshTester();
+    }
+    return t;
+  };
+
   useEffect(() => {
     const isLoggedIn = localStorage.getItem('ooxii_logged_in') === 'true';
+    if (isLoggedIn && testerRepo && !tester) {
+      ensureActiveTester();
+    }
     if (tester && screen === 'login' && isLoggedIn) {
       setScreen('home');
     }
-  }, [tester, screen]);
+  }, [tester, screen, testerRepo]);
 
   // Seed 300 tests for jon huh
   useEffect(() => {
@@ -360,7 +380,8 @@ function AppInner() {
           <ClientInfo
             onCancel={() => nav('home')}
             onStart={async (d) => {
-              if (!tester) return;
+              const activeTester = await ensureActiveTester();
+              if (!activeTester) return;
               try {
                 // 1. Create client in SQLite
                 const newClient = await clientRepo.create({
@@ -368,14 +389,14 @@ function AppInner() {
                   yearOfBirth: parseInt(d.yearOfBirth) || 0,
                   gender: d.gender,
                   cataractSurgery: d.cataract,
-                  country: tester.country,
-                  stateProvince: tester.stateProvince,
-                  city: tester.city,
-                  createdByTesterId: tester.localId,
+                  country: activeTester.country,
+                  stateProvince: activeTester.stateProvince,
+                  city: activeTester.city,
+                  createdByTesterId: activeTester.localId,
                 });
                 
                 // 2. Start Test Session
-                await workflowService.startNewTest(tester.localId, newClient.localId);
+                await workflowService.startNewTest(activeTester.localId, newClient.localId);
                 
                 setClient({ localId: newClient.localId, ...d });
                 setResults({});
@@ -935,24 +956,26 @@ function AppInner() {
           <VisionTestingReview
             client={viewingClient}
             onBack={() => setScreen('client-profile')}
-            onStartNewTest={() => {
-              // Same start logic
-              if (!tester) return;
-              clientRepo.create({
-                ooxiiClientId: viewingClient.clientId,
-                yearOfBirth: Number(viewingClient.yearOfBirth) || 0,
-                gender: viewingClient.gender,
-                cataractSurgery: viewingClient.cataractSurgery,
-                country: tester.country, stateProvince: tester.stateProvince, city: tester.city,
-                createdByTesterId: tester.localId,
-              }).then(newClient => {
-                workflowService.startNewTest(tester.localId, newClient.localId).then(() => {
-                  setClient({ localId: newClient.localId, ooxiiId: viewingClient.clientId, yearOfBirth: String(viewingClient.yearOfBirth), gender: viewingClient.gender, cataract: viewingClient.cataractSurgery });
-                  setResults({});
-                  refreshSession();
-                  nav('glasses-question');
+            onStartNewTest={async () => {
+              const activeTester = await ensureActiveTester();
+              if (!activeTester || !viewingClient) return;
+              try {
+                const newClient = await clientRepo.create({
+                  ooxiiClientId: viewingClient.clientId,
+                  yearOfBirth: Number(viewingClient.yearOfBirth) || 0,
+                  gender: viewingClient.gender,
+                  cataractSurgery: viewingClient.cataractSurgery,
+                  country: activeTester.country, stateProvince: activeTester.stateProvince, city: activeTester.city,
+                  createdByTesterId: activeTester.localId,
                 });
-              });
+                await workflowService.startNewTest(activeTester.localId, newClient.localId);
+                setClient({ localId: newClient.localId, ooxiiId: viewingClient.clientId, yearOfBirth: String(viewingClient.yearOfBirth), gender: viewingClient.gender, cataract: viewingClient.cataractSurgery });
+                setResults({});
+                await refreshSession();
+                nav('glasses-question');
+              } catch (err) {
+                console.error('Failed to start new test:', err);
+              }
             }}
           />
         );
