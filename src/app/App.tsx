@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ScreenId, calcSnellen } from './lib/theme';
 import { ThemeProvider } from './lib/ThemeContext';
 import { AuthProvider, useAuthContext } from './lib/AuthProvider';
+import { ShellNavProvider } from './components/Shell';
 import { Login } from './screens/Login';
 import { SignupEmail } from './screens/SignupEmail';
 import { TesterInfo } from './screens/TesterInfo';
@@ -287,7 +288,7 @@ function AppInner() {
   }
 
   return (
-    <>
+    <ShellNavProvider onNav={nav} hasInProgressTest={!!activeSession}>
       {saveError && (
         <div className="fixed top-0 left-0 right-0 z-[200] bg-red-600 text-white px-4 py-3 text-center text-sm font-semibold shadow-lg flex justify-between items-center">
           <span>{saveError}</span>
@@ -295,7 +296,7 @@ function AppInner() {
         </div>
       )}
       {renderScreen()}
-    </>
+    </ShellNavProvider>
   );
 
   function renderScreen() {
