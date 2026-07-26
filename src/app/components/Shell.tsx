@@ -1,6 +1,6 @@
 import React, { ReactNode, useState, createContext, useContext, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { Flag, Wifi, Battery, Signal, Home as HomeIcon, Settings as SettingsIcon, Sprout, User } from 'lucide-react';
+import { Flag, Wifi, Battery, Signal, Home as HomeIcon, Settings as SettingsIcon, Sprout, User, XCircle } from 'lucide-react';
 import { RabbitMascot } from './RabbitMascot';
 import { ScreenId } from '../lib/theme';
 import { useTheme } from '../lib/ThemeContext';
@@ -10,13 +10,14 @@ import { useOnlineStatus } from '../lib/useOnlineStatus';
 interface NavCtx {
   onNav: (s: ScreenId) => void;
   hasInProgressTest?: boolean;
+  onCancelTest?: () => void;
 }
 
 export const ShellNavContext = createContext<NavCtx>({ onNav: () => {} });
 
-export function ShellNavProvider({ children, onNav, hasInProgressTest }: NavCtx & { children: ReactNode }) {
+export function ShellNavProvider({ children, onNav, hasInProgressTest, onCancelTest }: NavCtx & { children: ReactNode }) {
   return (
-    <ShellNavContext.Provider value={{ onNav, hasInProgressTest }}>{children}</ShellNavContext.Provider>
+    <ShellNavContext.Provider value={{ onNav, hasInProgressTest, onCancelTest }}>{children}</ShellNavContext.Provider>
   );
 }
 
@@ -30,8 +31,9 @@ interface ShellProps {
 
 export function Shell({ children, progress = 0, showProgress = true, onHome, isAdvancing = false }: ShellProps) {
   const { tokens, mode } = useTheme();
-  const { onNav } = useContext(ShellNavContext);
+  const { onNav, hasInProgressTest, onCancelTest } = useContext(ShellNavContext);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const isOnline = useOnlineStatus();
 
   const lastProgress = useRef(Number(sessionStorage.getItem('lastProgress') || 0));
@@ -83,6 +85,15 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
               <SettingsIcon size={13} />
               Settings
             </button>
+            {hasInProgressTest && onCancelTest && (
+              <button
+                onClick={() => setShowCancelConfirm(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+              >
+                <XCircle size={13} />
+                Cancel Test
+              </button>
+            )}
             <div className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${
               isOnline
                 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
@@ -141,6 +152,37 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
         </motion.div>
 
         <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+
+        {showCancelConfirm && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="w-full max-w-sm rounded-3xl border border-[var(--card-border)] bg-[var(--card)] p-6 shadow-2xl flex flex-col items-center text-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center text-red-400">
+                <XCircle size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-[var(--text)]">Cancel Test Session?</h3>
+              <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+                Are you sure you want to cancel this in-progress test? All unsaved test data for this session will be discarded.
+              </p>
+              <div className="flex gap-3 w-full mt-2">
+                <button
+                  onClick={() => setShowCancelConfirm(false)}
+                  className="flex-1 py-3 rounded-xl bg-[var(--bg)] text-[var(--text)] font-medium border border-[var(--card-border)]"
+                >
+                  Keep Testing
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCancelConfirm(false);
+                    onCancelTest?.();
+                  }}
+                  className="flex-1 py-3 rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
+                >
+                  Cancel Test
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

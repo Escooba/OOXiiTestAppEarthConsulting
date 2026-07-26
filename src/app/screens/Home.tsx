@@ -15,9 +15,11 @@ interface Props {
   region: string;
   inProgressTest?: { clientId: string; step: string; screen: ScreenId } | null;
   onResumeTest?: () => void;
+  onCancelTest?: () => void;
 }
 
-export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region, inProgressTest, onResumeTest }: Props) {
+export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region, inProgressTest, onResumeTest, onCancelTest }: Props) {
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   return (
     <Shell showProgress={false}>
       <div className={`px-6 pt-4 pb-32 flex flex-col gap-5 ${showRegionModal ? 'blur-sm pointer-events-none select-none' : ''}`}>
@@ -75,21 +77,36 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
           <motion.div
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl border border-[#A984FF]/40 bg-[#A984FF]/10 p-4 flex items-center gap-3"
+            className="rounded-3xl border border-[var(--primary)]/40 bg-[var(--card)] p-5 flex flex-col gap-3.5 shadow-lg"
           >
-            <PlayCircle size={22} className="text-[#A984FF]" />
-            <div className="flex-1">
-              <div className="text-sm font-medium">Test in progress</div>
-              <div className="text-xs text-[#9B93BA] mt-0.5">
-                Client ID: {inProgressTest.clientId} · {inProgressTest.step}
+            <div className="flex items-center gap-3">
+              <PlayCircle size={24} className="text-[var(--primary)] shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold text-[var(--text)]">Test in progress</div>
+                <div className="text-xs text-[var(--text-muted)] truncate mt-0.5">
+                  Client ID: {inProgressTest.clientId} · {inProgressTest.step}
+                </div>
               </div>
             </div>
-            <button
-              onClick={onResumeTest}
-              className="h-9 px-3 rounded-full bg-[#A984FF] text-[#2A0730] text-xs font-bold flex items-center gap-1"
-            >
-              Resume <ArrowRight size={12} />
-            </button>
+            <div className="flex gap-2.5">
+              {onCancelTest && (
+                <button
+                  type="button"
+                  onClick={() => setShowCancelConfirm(true)}
+                  className="flex-1 min-h-[44px] px-3 rounded-2xl border border-red-500/40 bg-red-500/10 text-red-400 text-xs font-semibold hover:bg-red-500/20 transition-colors"
+                >
+                  Cancel test
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={onResumeTest}
+                className="flex-1 min-h-[44px] px-3 rounded-2xl bg-[var(--primary)] text-[var(--bg)] text-xs font-bold flex items-center justify-center gap-1.5 hover:brightness-110 transition-all shadow-md"
+              >
+                <span>Resume</span>
+                <ArrowRight size={14} />
+              </button>
+            </div>
           </motion.div>
         )}
 
@@ -112,6 +129,36 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
 
       <AnimatePresence>
         {showRegionModal && <RegionModal onSaved={onRegionSaved} defaultRegion={region} />}
+        {showCancelConfirm && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="w-full max-w-sm rounded-3xl border border-[var(--card-border)] bg-[var(--card)] p-6 shadow-2xl flex flex-col items-center text-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center text-red-400">
+                <PlayCircle size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-[var(--text)]">Cancel Test Session?</h3>
+              <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+                Are you sure you want to cancel the test session for Client ID: {inProgressTest?.clientId}? All unsaved test data will be discarded.
+              </p>
+              <div className="flex gap-3 w-full mt-2">
+                <button
+                  onClick={() => setShowCancelConfirm(false)}
+                  className="flex-1 min-h-[44px] rounded-xl bg-[var(--bg)] text-[var(--text)] font-medium border border-[var(--card-border)]"
+                >
+                  Keep Testing
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCancelConfirm(false);
+                    onCancelTest?.();
+                  }}
+                  className="flex-1 min-h-[44px] rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
+                >
+                  Cancel Test
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </AnimatePresence>
       <BottomNavigation current="home" onNav={onNav} />
     </Shell>

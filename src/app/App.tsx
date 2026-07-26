@@ -268,6 +268,21 @@ function AppInner() {
     }
   };
 
+  const cancelActiveTest = async () => {
+    if (activeSession && workflowService) {
+      try {
+        await workflowService.cancelTest(activeSession.localId);
+        setResults({});
+        resultsRef.current = {};
+        setClient(null);
+        await refreshSession();
+        setScreen('home');
+      } catch (err) {
+        console.error('Failed to cancel active test session:', err);
+      }
+    }
+  };
+
   const inProgressCard = activeSession && activeSession.currentRoute
     ? {
         clientId: (client && client.localId === activeSession.clientId) ? client.ooxiiId : activeSession.clientId.slice(-5),
@@ -288,7 +303,7 @@ function AppInner() {
   }
 
   return (
-    <ShellNavProvider onNav={nav} hasInProgressTest={!!activeSession}>
+    <ShellNavProvider onNav={nav} hasInProgressTest={!!activeSession} onCancelTest={cancelActiveTest}>
       {saveError && (
         <div className="fixed top-0 left-0 right-0 z-[200] bg-red-600 text-white px-4 py-3 text-center text-sm font-semibold shadow-lg flex justify-between items-center">
           <span>{saveError}</span>
@@ -370,6 +385,7 @@ function AppInner() {
               region={activeRegion || (tester ? `${tester.city}, ${tester.stateProvince}, ${tester.country}` : '')}
               inProgressTest={inProgressCard}
               onResumeTest={resumeTest}
+              onCancelTest={cancelActiveTest}
             />
             {showGuide && <FirstLoginGuide onDone={async () => {
               setShowGuide(false);
