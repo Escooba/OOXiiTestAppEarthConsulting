@@ -22,7 +22,7 @@ export function VisionLineSelectionScreen({
 }: Props) {
   const [line, setLine] = useState(initialValue);
   const [error, setError] = useState(false);
-  const { commitAndAdvance, isAdvancing } = useAutoAdvance();
+  const { commitAndAdvance, clearAdvance, isAdvancing } = useAutoAdvance();
 
   const handleNext = () => {
     if (!line) {
@@ -56,8 +56,16 @@ export function VisionLineSelectionScreen({
             <LineSlider
               value={line}
               error={error && !line}
+              onDragStart={() => {
+                clearAdvance();
+              }}
               onChange={(val) => {
                 setLine(val);
+                if (val) {
+                  setError(false);
+                }
+              }}
+              onChangeEnd={(val) => {
                 if (val) {
                   setError(false);
                   commitAndAdvance(() => onNext(val));

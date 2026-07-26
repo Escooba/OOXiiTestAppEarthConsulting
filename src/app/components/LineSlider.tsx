@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { motion } from 'motion/react';
 
 interface Props {
   /** '' when nothing selected, otherwise 'Line N' */
   value: string;
   onChange: (v: string) => void;
+  onChangeEnd?: (v: string) => void;
+  onDragStart?: () => void;
   error?: boolean;
   disabled?: boolean;
   max?: number;
@@ -16,12 +18,25 @@ interface Props {
  * the "can't continue without selecting" constraint is preserved — value stays
  * '' until the tester actually moves the slider onto a line.
  */
-export function LineSlider({ value, onChange, error, disabled, max = 11 }: Props) {
+export function LineSlider({ value, onChange, onChangeEnd, onDragStart, error, disabled, max = 11 }: Props) {
   const raw = value === '' ? -1 : parseInt(value.replace(/\D/g, ''), 10);
   const selected = raw >= 0;
+  const isDragging = useRef(false);
+  const latestValueRef = useRef(value);
+  latestValueRef.current = value;
 
   const handle = (n: number) => {
-    onChange(n < 0 ? '' : `Line ${n}`);
+    const val = n < 0 ? '' : `Line ${n}`;
+    latestValueRef.current = val;
+    onChange(val);
+    return val;
+  };
+
+  const handleRelease = () => {
+    const currentVal = latestValueRef.current;
+    if (currentVal !== '' && onChangeEnd) {
+      onChangeEnd(currentVal);
+    }
   };
 
   // Percentage position of the thumb across the -1..max span.
@@ -57,7 +72,37 @@ export function LineSlider({ value, onChange, error, disabled, max = 11 }: Props
           step={1}
           value={raw}
           disabled={disabled}
-          onChange={(e) => handle(parseInt(e.target.value, 10))}
+          onPointerDown={() => {
+            isDragging.current = true;
+            onDragStart?.();
+          }}
+          onChange={(e) => {
+            if (!isDragging.current) {
+              onDragStart?.();
+            }
+            handle(parseInt(e.target.value, 10));
+          }}
+          onPointerUp={() => {
+            if (isDragging.current) {
+              isDragging.current = false;
+              handleRelease();
+            }
+          }}
+          onMouseUp={() => {
+            if (isDragging.current) {
+              isDragging.current = false;
+              handleRelease();
+            }
+          }}
+          onTouchEnd={() => {
+            if (isDragging.current) {
+              isDragging.current = false;
+              handleRelease();
+            }
+          }}
+          onKeyUp={() => {
+            handleRelease();
+          }}
           className={`w-full h-2 rounded-full appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
             error ? 'accent-[#FF5C5C]' : 'accent-[#A984FF]'
           }`}
@@ -83,7 +128,13 @@ export function LineSlider({ value, onChange, error, disabled, max = 11 }: Props
                 key={n}
                 type="button"
                 disabled={disabled}
-                onClick={() => handle(n)}
+                onClick={() => {
+                  onDragStart?.();
+                  const val = handle(n);
+                  if (val && onChangeEnd) {
+                    onChangeEnd(val);
+                  }
+                }}
                 style={{ left: leftCalc }}
                 className="absolute -translate-x-1/2 flex flex-col items-center gap-1 top-0"
               >
