@@ -7,6 +7,7 @@
 // ============================================================================
 
 import initSqlJs, { Database, SqlJsStatic } from 'sql.js';
+import sqlWasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 import type { DatabaseAdapter, QueryResult, RunResult } from './DatabaseAdapter';
 
 const STORAGE_KEY = 'ooxii_sqlite_db_binary';
@@ -21,7 +22,7 @@ export class WebSqliteAdapter implements DatabaseAdapter {
     if (!this.SQL) {
       const config: any = {};
       if (typeof window !== 'undefined' && !(window as any).process?.versions?.node) {
-        config.locateFile = (file: string) => `https://sql.js.org/dist/${file}`;
+        config.locateFile = () => sqlWasmUrl;
       }
       this.SQL = await initSqlJs(config);
     }
