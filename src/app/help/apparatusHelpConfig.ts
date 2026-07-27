@@ -50,9 +50,6 @@ export type TumblingERow = {
   fullWidthPercent: number;
 };
 
-/**
- * Exact intrinsic pixel measurements from the 447x447 Tumbling E chart asset (tumbling_e_chart.png).
- */
 export const TUMBLING_E_ROWS: TumblingERow[] = [
   { value: '60', yPercent: 2.0, heightPercent: 15.0, symbolsLeftPercent: 42.0, symbolsWidthPercent: 19.0, fullLeftPercent: 32.0, fullWidthPercent: 29.0 },
   { value: '36', yPercent: 24.4, heightPercent: 9.6, symbolsLeftPercent: 37.0, symbolsWidthPercent: 31.5, fullLeftPercent: 25.5, fullWidthPercent: 43.0 },
@@ -66,9 +63,6 @@ export const TUMBLING_E_ROWS: TumblingERow[] = [
   { value: '3',  yPercent: 87.9, heightPercent: 0.9, symbolsLeftPercent: 36.5, symbolsWidthPercent: 32.5, fullLeftPercent: 25.5, fullWidthPercent: 43.0 },
 ];
 
-/**
- * Normalises runtime OOXii line selection values like "Line 4", "Line 0", or "4" into an integer index (0..11).
- */
 export function parseOoxiiLineIndex(value: string | undefined): OoxiiLineIndex | null {
   if (!value) return null;
   const trimmed = value.trim();
@@ -95,23 +89,12 @@ export type RowResolution =
       reason: 'missing-selection' | 'unsupported-app-line' | 'unverified-chart-mapping';
     };
 
-/**
- * Maps OOXii line index (0..11) to Tumbling E chart row metadata.
- * Authoritative mapping per theme.ts:
- * Line 0 -> 6/60 (Printed row 60)
- * Line 4 -> 6/24 (Printed row 24)
- * Line 7 -> 6/12 (Printed row 12)
- * Line 10 -> 6/6 (Printed row 6)
- * Line 11 -> 6/5 (Printed row 5)
- * Unverified mappings return 'unresolved' status to avoid false highlights.
- */
 export function resolveOoxiiLineRow(selectedLineValue: string | undefined): RowResolution {
   const lineIndex = parseOoxiiLineIndex(selectedLineValue);
   if (lineIndex === null) {
     return { status: 'unresolved', reason: 'missing-selection' };
   }
 
-  // Verified 1-to-1 mappings
   const verifiedMap: Record<number, { rowLabel: PrintedChartLabel; nextRowLabel?: PrintedChartLabel }> = {
     0: { rowLabel: '60', nextRowLabel: '36' },
     4: { rowLabel: '24', nextRowLabel: '18' },
@@ -173,7 +156,6 @@ export const APPARATUS_HELP_CONFIGS: Record<string, ApparatusHelpConfig> = {
       widthPercent: 64,
       heightPercent: 44,
     },
-    // No false fixed highlight over an arbitrary row
     highlightRegions: [],
   },
 
@@ -208,16 +190,7 @@ export const APPARATUS_HELP_CONFIGS: Record<string, ApparatusHelpConfig> = {
       widthPercent: 80,
       heightPercent: 50,
     },
-    highlightRegions: [
-      {
-        id: 'near-line-example',
-        xPercent: 16,
-        yPercent: 70,
-        widthPercent: 68,
-        heightPercent: 7.5,
-      },
-    ],
-    highlightCaption: 'Location of N-rating paragraphs on near vision card.',
+    highlightRegions: [],
   },
 
   'distance-glasses-question': {
@@ -250,23 +223,7 @@ export const APPARATUS_HELP_CONFIGS: Record<string, ApparatusHelpConfig> = {
     imageAlt: 'OOXii wheel testing apparatus diagram showing PD scale location',
     assetKind: 'illustration',
     assetNotice: 'Illustration only',
-    highlightRegions: [
-      {
-        id: 'pd-scale',
-        xPercent: 36,
-        yPercent: 28,
-        widthPercent: 28,
-        heightPercent: 10,
-      },
-      {
-        id: 'pd-knob',
-        xPercent: 41,
-        yPercent: 37,
-        widthPercent: 18,
-        heightPercent: 18,
-      },
-    ],
-    highlightCaption: 'Location of PD scale window (top) and adjustment knob (center).',
+    highlightRegions: [],
   },
 
   'wheel-direction': {
@@ -277,16 +234,7 @@ export const APPARATUS_HELP_CONFIGS: Record<string, ApparatusHelpConfig> = {
     imageAlt: 'OOXii testing wheel selector dial diagram with Plus and Minus indicators',
     assetKind: 'illustration',
     assetNotice: 'Illustration only',
-    highlightRegions: [
-      {
-        id: 'plus-minus-dials',
-        xPercent: 22,
-        yPercent: 44,
-        widthPercent: 56,
-        heightPercent: 24,
-      },
-    ],
-    highlightCaption: 'Location of Plus (+) and Minus (-) indicator dials.',
+    highlightRegions: [],
   },
 
   'wheel-power': {
@@ -297,16 +245,7 @@ export const APPARATUS_HELP_CONFIGS: Record<string, ApparatusHelpConfig> = {
     imageAlt: 'OOXii testing wheel lens power dial window diagram',
     assetKind: 'illustration',
     assetNotice: 'Illustration only',
-    highlightRegions: [
-      {
-        id: 'power-window',
-        xPercent: 40,
-        yPercent: 21,
-        widthPercent: 20,
-        heightPercent: 15,
-      },
-    ],
-    highlightCaption: 'Location of dioptre power marking display.',
+    highlightRegions: [],
   },
 
   'wheel-twocolour': {
@@ -317,23 +256,7 @@ export const APPARATUS_HELP_CONFIGS: Record<string, ApparatusHelpConfig> = {
     imageAlt: 'Red and Green duochrome test chart illustration',
     assetKind: 'illustration',
     assetNotice: 'Illustration only',
-    highlightRegions: [
-      {
-        id: 'red-side',
-        xPercent: 6,
-        yPercent: 8,
-        widthPercent: 44,
-        heightPercent: 84,
-      },
-      {
-        id: 'green-side',
-        xPercent: 50,
-        yPercent: 8,
-        widthPercent: 44,
-        heightPercent: 84,
-      },
-    ],
-    highlightCaption: 'Red and Green target panels.',
+    highlightRegions: [],
   },
 
   'wheel-line9': {
@@ -361,16 +284,7 @@ export const APPARATUS_HELP_CONFIGS: Record<string, ApparatusHelpConfig> = {
     imageAlt: 'Wheel apparatus view finder diagram',
     assetKind: 'illustration',
     assetNotice: 'Illustration only',
-    highlightRegions: [
-      {
-        id: 'view-finder',
-        xPercent: 41,
-        yPercent: 47,
-        widthPercent: 18,
-        heightPercent: 18,
-      },
-    ],
-    highlightCaption: 'Location of corrected viewfinder lenses.',
+    highlightRegions: [],
   },
 
   'sunglasses-question': {
@@ -409,42 +323,6 @@ export const APPARATUS_HELP_CONFIGS: Record<string, ApparatusHelpConfig> = {
 
 export function getApparatusHelpConfig(id: string, contextLine?: string): ApparatusHelpConfig | null {
   if (id === 'tumbling-e-letters') {
-    const res = resolveOoxiiLineRow(contextLine);
-
-    if (res.status === 'resolved' && res.nextRow) {
-      const targetRow = res.nextRow;
-      const focusY = Math.max(10, Math.min(60, targetRow.yPercent - 15));
-      const regions: ApparatusHelpHighlight[] = [
-        {
-          id: `row-symbols-${targetRow.value}`,
-          xPercent: targetRow.symbolsLeftPercent - 1.2,
-          yPercent: targetRow.yPercent - 1.0,
-          widthPercent: targetRow.symbolsWidthPercent + 2.4,
-          heightPercent: Math.max(4.0, targetRow.heightPercent + 2.0),
-        },
-      ];
-
-      return {
-        id: 'tumbling-e-letters',
-        title: 'Tumbling E Chart — Letters Correct',
-        instruction: 'On the row immediately below the last fully correct row, count how many letters (0 to 4) the client identified correctly.',
-        imageSrc: tumblingEChart,
-        imageAlt: `Tumbling E distance-vision chart showing complete line ${targetRow.value} row`,
-        assetKind: 'real-photo',
-        preload: true,
-        focusRegion: {
-          xPercent: 18,
-          yPercent: focusY,
-          widthPercent: 64,
-          heightPercent: 44,
-        },
-        highlightRegions: regions,
-        highlights: regions,
-        highlightCaption: 'Count the symbols identified correctly on the highlighted row.',
-      };
-    }
-
-    // Generic safe presentation for unresolved or unverified mappings
     return {
       id: 'tumbling-e-letters',
       title: 'Tumbling E Chart — Letters Correct',
@@ -461,7 +339,6 @@ export function getApparatusHelpConfig(id: string, contextLine?: string): Appara
       },
       highlightRegions: [],
       highlights: [],
-      highlightCaption: 'Count correct symbols across the entire next row.',
     };
   }
 
