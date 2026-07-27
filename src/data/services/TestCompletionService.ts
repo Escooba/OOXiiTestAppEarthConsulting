@@ -28,13 +28,18 @@ export class TestCompletionService {
    */
   async completeTest(
     sessionId: string,
-    finalSections: { type: SectionType; payload: Record<string, unknown> }[]
+    finalSections: { type: SectionType; payload: Record<string, unknown> }[],
+    newClientId?: string
   ): Promise<{ carrotsAwarded: number; newBadges: string[] }> {
     return this.db.transaction(async () => {
       const session = await this.sessionRepo.getById(sessionId);
       if (!session) throw new Error('Session not found');
       if (session.status === 'completed') {
         return { carrotsAwarded: 0, newBadges: [] }; // Idempotency
+      }
+
+      if (newClientId) {
+        await this.sessionRepo.updateClientId(sessionId, newClientId);
       }
 
       // 1. Save final sections

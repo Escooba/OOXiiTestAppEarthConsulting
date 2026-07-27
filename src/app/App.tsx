@@ -114,8 +114,9 @@ function AppInner() {
   const [isSubmittingPatch, setIsSubmittingPatch] = useState(false);
 
   // Client-search flow state
-  const [viewingClient, setViewingClient] = useState<ClientRecord | null>(null);
+  const [viewingClient, setViewingClient] = useState<any>(null);
   const [returnToAfterProfile, setReturnToAfterProfile] = useState<ScreenId>('home');
+  const [pendingClientDraft, setPendingClientDraft] = useState<any>(null);
   const [signupState, setSignupState] = useState<any>({});
 
   // Route protection & auth synchronization
@@ -399,9 +400,9 @@ function AppInner() {
           <ClientInfo
             onCancel={() => nav('home')}
             onStart={async (d) => {
-              if (!tester || !testerRepo || !clientRepo || !workflowService) return;
+              if (!tester || !workflowService) return;
               try {
-                const newClient = await clientRepo.create({
+                const draft = {
                   ooxiiClientId: d.ooxiiId,
                   yearOfBirth: parseInt(d.yearOfBirth) || 0,
                   gender: d.gender,
@@ -410,16 +411,17 @@ function AppInner() {
                   stateProvince: tester.stateProvince,
                   city: tester.city,
                   createdByTesterId: tester.localId,
-                });
+                };
+                setPendingClientDraft(draft);
                 
-                await workflowService.startNewTest(tester.localId, newClient.localId);
-                setClient({ localId: newClient.localId, ...d });
+                await workflowService.startNewTest(tester.localId, d.ooxiiId);
+                setClient({ localId: d.ooxiiId, ...d });
                 setResults({});
                 await refreshSession();
                 nav('glasses-question');
               } catch (err) {
-                console.error('Failed to start test session:', err);
-                alert('Could not start test session. Please try again.');
+                console.error('Failed to start new test:', err);
+                setSaveError('Failed to start test. Please try again.');
               }
             }}
           />
@@ -1048,9 +1050,19 @@ function AppInner() {
               
               if (activeSession && completionService) {
                 try {
-                  await completionService.completeTest(activeSession.localId, [
-                    { type: 'completion', payload: { ...updatedResults, additionalDetails: d } }
-                  ]);
+                  let finalClientId = activeSession.clientId;
+                  if (pendingClientDraft && clientRepo) {
+                    const newClient = await clientRepo.create(pendingClientDraft);
+                    finalClientId = newClient.localId;
+                    setPendingClientDraft(null);
+                  }
+
+                  await completionService.completeTest(
+                    activeSession.localId,
+                    [{ type: 'completion', payload: { ...updatedResults, additionalDetails: d } }],
+                    finalClientId
+                  );
+
                   await refreshSession();
                   setResults({});
                   resultsRef.current = {};

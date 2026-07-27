@@ -74,7 +74,10 @@ export function Garden({ onNav }: { onNav: (s: ScreenId) => void }) {
         <div className="flex items-start justify-between">
           <div>
             <div className="text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)]">Personal & Community</div>
-            <h1 className="text-3xl font-bold text-[var(--text)] leading-tight">{t('garden.title')}</h1>
+            <h1 className="text-3xl font-bold text-[var(--text)] leading-tight flex items-center gap-2">
+              <span className="text-2xl">🥕</span>
+              <span>{t('garden.title')}</span>
+            </h1>
           </div>
           <div className={`px-3 py-1.5 rounded-full border text-xs font-semibold flex items-center gap-1.5 transition-all ${
             isOnline
@@ -168,15 +171,6 @@ export function Garden({ onNav }: { onNav: (s: ScreenId) => void }) {
               })}
             </svg>
           </div>
-
-          <div className="w-full flex justify-between items-center px-4 py-2 border-t border-[var(--card-border)] mt-2">
-            <span className="text-xs text-[var(--text-muted)] font-medium">
-              Planted carrots: <strong className="text-[var(--text)]">{plantedCarrots} / 36</strong>
-            </span>
-            <span className="text-xs text-[var(--primary)] font-semibold">
-              {completedTests} tests done
-            </span>
-          </div>
         </div>
 
         {/* Explanation Card */}
@@ -191,24 +185,21 @@ export function Garden({ onNav }: { onNav: (s: ScreenId) => void }) {
         </div>
 
         {/* Stats Section */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--card)] p-4 flex flex-col gap-1">
-            <span className="text-xs text-[var(--text-muted)] font-medium">Completed Tests</span>
-            <span className="text-2xl font-bold text-[var(--primary)]">{completedTests}</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--card)] p-4 flex justify-between items-center shadow-sm">
+            <div>
+              <span className="text-xs text-[var(--text-muted)] font-semibold uppercase tracking-wider">Collected Carrots</span>
+              <div className="text-2xl font-bold text-[#FF9F45] mt-0.5">{totalCarrots}</div>
+            </div>
+            <span className="text-3xl">🥕</span>
           </div>
-          <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--card)] p-4 flex flex-col gap-1">
-            <span className="text-xs text-[var(--text-muted)] font-medium">Collected Carrots</span>
-            <span className="text-2xl font-bold text-[#FF9F45]">{totalCarrots}</span>
+          <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--card)] p-4 flex justify-between items-center shadow-sm">
+            <div>
+              <span className="text-xs text-[var(--text-muted)] font-semibold uppercase tracking-wider">Global Collection</span>
+              <div className="text-xl font-bold text-[var(--text)] mt-0.5">{communityCarrots.toLocaleString()} carrots</div>
+            </div>
+            <span className="text-3xl">🥕</span>
           </div>
-        </div>
-
-        {/* Global Collection */}
-        <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--card)] p-4 flex justify-between items-center">
-          <div>
-            <div className="text-xs text-[var(--text-muted)] font-semibold uppercase tracking-wider">Global Collection</div>
-            <div className="text-xl font-bold text-[var(--text)] mt-0.5">{communityCarrots.toLocaleString()} carrots</div>
-          </div>
-          <span className="text-xs text-[var(--text-muted)] italic">Last cached</span>
         </div>
       </div>
       <BottomNavigation current="community-garden" onNav={onNav} />

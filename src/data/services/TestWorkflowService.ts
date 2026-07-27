@@ -27,14 +27,21 @@ export class TestWorkflowService {
     const tester = await this.testerRepo.getById(testerId);
     if (!tester) throw new Error('Tester not found');
 
-    const client = await this.clientRepo.findByLocalId(clientId);
-    if (!client) throw new Error('Client not found');
-
     return this.sessionRepo.startTest({
-      clientId: client.localId,
+      clientId,
       testerId: tester.localId,
       clinicId,
     });
+  }
+
+  async completeTest(sessionId: string, sectionData?: Record<string, unknown>, newClientId?: string): Promise<void> {
+    if (newClientId) {
+      await this.sessionRepo.updateClientId(sessionId, newClientId);
+    }
+    if (sectionData) {
+      await this.sessionRepo.saveSectionPatch(sessionId, 'completion', sectionData);
+    }
+    await this.sessionRepo.setStatus(sessionId, 'completed');
   }
 
   async resumeActiveTest(testerId: string): Promise<TestSession | null> {

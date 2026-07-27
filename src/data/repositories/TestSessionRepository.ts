@@ -136,6 +136,14 @@ export class TestSessionRepository {
     return rows.map(rowToSession);
   }
 
+  async updateClientId(sessionId: string, clientId: string): Promise<void> {
+    const now = nowUtcMs();
+    await this.db.run(
+      'UPDATE test_sessions SET client_id = ?, updated_at = ? WHERE local_id = ?',
+      [clientId, now, sessionId]
+    );
+  }
+
   async setStatus(sessionId: string, status: SessionStatus): Promise<void> {
     const now = nowUtcMs();
     const session = await this.getById(sessionId);
