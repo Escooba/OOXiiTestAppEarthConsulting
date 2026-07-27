@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 
-export function useAutoAdvance(delayMs: number = 500) {
+export function useAutoAdvance(delayMs: number = 750) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMounted = useRef(true);
 
