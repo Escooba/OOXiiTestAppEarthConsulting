@@ -147,7 +147,7 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
           className="flex-1 flex flex-col"
           initial={{ opacity: 0 }}
           animate={{ opacity: isFading ? 0 : 1 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.15 }}
         >
           {children}
         </motion.div>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 
-export function useAutoAdvance(delayMs: number = 700, fadeDurationMs: number = 200) {
+export function useAutoAdvance(delayMs: number = 500, fadeDurationMs: number = 150) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fadeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMounted = useRef(true);
