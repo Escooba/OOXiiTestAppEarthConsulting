@@ -6,10 +6,54 @@ export const migration009: Migration = {
   up: `
 UPDATE tester_profiles SET first_name = 'John', last_name = 'Pork';
 
-DELETE FROM carrot_ledger WHERE source_entity_id LIKE '%john_pork_260%' OR source_entity_id LIKE '%grant_260%';
+WITH RECURSIVE cnt(x) AS (
+  SELECT 1
+  UNION ALL
+  SELECT x + 1 FROM cnt WHERE x < 260
+)
+INSERT OR IGNORE INTO test_sessions (
+  local_id, client_id, tester_id, display_test_number, status, is_group_testing, test_schema_version, started_at, completed_at, created_at, updated_at, record_version, sync_state
+)
+SELECT 
+  'session_john_pork_' || t.local_id || '_' || c.x,
+  'client_john_pork_' || t.local_id || '_' || c.x,
+  t.local_id,
+  '#' || (100 + c.x),
+  'completed',
+  0,
+  1,
+  1700000000000 + (c.x * 1000),
+  1700000000000 + (c.x * 1000) + 300000,
+  1700000000000 + (c.x * 1000),
+  1700000000000 + (c.x * 1000),
+  1,
+  'local'
+FROM tester_profiles t
+CROSS JOIN cnt c;
 
-INSERT INTO carrot_ledger (local_id, tester_id, event_type, quantity, source_entity_type, source_entity_id, reason, earned_at, created_at, sync_state)
-SELECT 'carrot_grant_260_' || local_id, local_id, 'admin_reward_260', 259, 'admin_grant', 'grant_260_id_' || local_id, '260 Carrots for John Pork', 1700000000000, 1700000000000, 'local'
-FROM tester_profiles;
+WITH RECURSIVE cnt(x) AS (
+  SELECT 1
+  UNION ALL
+  SELECT x + 1 FROM cnt WHERE x < 260
+)
+INSERT OR IGNORE INTO clients (
+  local_id, ooxii_client_id, year_of_birth, gender, cataract_surgery, country, state_province, city, created_by_tester_id, created_at, updated_at, record_version, sync_state
+)
+SELECT
+  'client_john_pork_' || t.local_id || '_' || c.x,
+  CAST(82000 + c.x AS TEXT),
+  1970 + (c.x % 30),
+  CASE WHEN c.x % 2 = 0 THEN 'Male' ELSE 'Female' END,
+  'No',
+  'Australia',
+  'NSW',
+  'Sydney',
+  t.local_id,
+  1700000000000 + (c.x * 1000),
+  1700000000000 + (c.x * 1000),
+  1,
+  'local'
+FROM tester_profiles t
+CROSS JOIN cnt c;
 `,
 };

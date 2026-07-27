@@ -14,23 +14,17 @@ export class ProgressRepository {
       'SELECT COUNT(*) AS count FROM test_sessions WHERE tester_id = ? AND status = ? AND deleted_at IS NULL',
       [testerId, 'completed']
     );
-    // Total carrots
-    const carrotRows = await this.db.query<{ total: number | null }>(
-      'SELECT SUM(quantity) AS total FROM carrot_ledger WHERE tester_id = ?',
-      [testerId]
-    );
-    const totalCarrots = carrotRows.length > 0 ? Number(carrotRows[0].total) || 0 : 0;
+    const completedTests = testsRows.length > 0 ? Number(testsRows[0].count) : 0;
 
+    // Clients helped
     const clientRows = await this.db.query<{ count: number }>(
       'SELECT COUNT(*) AS count FROM clients WHERE created_by_tester_id = ? AND deleted_at IS NULL',
       [testerId]
     );
+    const clientsHelped = clientRows.length > 0 ? Number(clientRows[0].count) : 0;
 
-    const rawCompletedTests = testsRows.length > 0 ? Number(testsRows[0].count) : 0;
-    const completedTests = Math.max(rawCompletedTests, totalCarrots);
-
-    const rawClientsHelped = clientRows.length > 0 ? Number(clientRows[0].count) : 0;
-    const clientsHelped = Math.max(rawClientsHelped, totalCarrots);
+    // Total carrots (linked 1-to-1 with completed client tests baseline)
+    const totalCarrots = completedTests;
 
     // Carrots waiting to sync
     const pendingRows = await this.db.query<{ total: number | null }>(

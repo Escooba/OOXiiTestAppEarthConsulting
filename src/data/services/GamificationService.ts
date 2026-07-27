@@ -38,17 +38,8 @@ export class GamificationService {
     const lockedBadges = await this.badgeRepo.getLockedBadges(testerId);
     if (lockedBadges.length === 0) return newlyAwarded;
 
-    const carrotRows = await this.db.query<{ total: number | null }>(
-      'SELECT SUM(quantity) AS total FROM carrot_ledger WHERE tester_id = ?',
-      [testerId]
-    );
-    const totalCarrots = carrotRows.length > 0 ? (Number(carrotRows[0].total) || 0) : 0;
-
-    const rawCompleted = await this.sessionRepo.getCompletedTestCount(testerId);
-    const rawClients = await this.sessionRepo.getDistinctClientCount(testerId);
-
-    const completedTests = Math.max(rawCompleted, totalCarrots);
-    const distinctClients = Math.max(rawClients, totalCarrots);
+    const completedTests = await this.sessionRepo.getCompletedTestCount(testerId);
+    const distinctClients = await this.sessionRepo.getDistinctClientCount(testerId);
     
     // Distinct testing days
     const daysRows = await this.db.query<{ count: number }>(
