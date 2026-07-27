@@ -15,6 +15,7 @@ import { VisionLineSelectionScreen } from './screens/VisionLineSelectionScreen';
 import { VisionLettersScreen } from './screens/VisionLettersScreen';
 import { VisionResultScreen } from './screens/VisionResultScreen';
 import { WheelPDScreen } from './screens/WheelPDScreen';
+import { OnboardingGuide } from './components/OnboardingGuide';
 import { WheelDirectionScreen } from './screens/WheelDirectionScreen';
 import { WheelPowerScreen } from './screens/WheelPowerScreen';
 import { WheelTwoColourScreen } from './screens/WheelTwoColourScreen';
@@ -118,6 +119,7 @@ function AppInner() {
   const [returnToAfterProfile, setReturnToAfterProfile] = useState<ScreenId>('home');
   const [pendingClientDraft, setPendingClientDraft] = useState<any>(null);
   const [signupState, setSignupState] = useState<any>({});
+  const [showOnboardingGuide, setShowOnboardingGuide] = useState(false);
 
   // Route protection & auth synchronization
   useEffect(() => {
@@ -312,6 +314,18 @@ function AppInner() {
         </div>
       )}
       {renderScreen()}
+      {showOnboardingGuide && (
+        <OnboardingGuide
+          onNav={setScreen}
+          onComplete={async () => {
+            setShowOnboardingGuide(false);
+            if (testerRepo && tester) {
+              await testerRepo.updateGuideCompleted(tester.localId, true);
+            }
+            setScreen('home');
+          }}
+        />
+      )}
     </ShellNavProvider>
   );
 
@@ -358,10 +372,10 @@ function AppInner() {
                   role: d.role,
                   experienceLevel: d.experience,
                   organisation: d.organisation,
-                  firstLoginGuideCompleted: d.experience !== 'New tester',
+                  firstLoginGuideCompleted: false,
                   remoteId: null
                 });
-                setShowGuide(d.experience === 'New tester');
+                setShowOnboardingGuide(true);
                 setScreen('home');
               } catch (e: any) {
                 alert(e.message || 'Signup failed');
