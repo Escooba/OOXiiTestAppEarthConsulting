@@ -205,15 +205,14 @@ export function BottomBar({
   hideBack?: boolean;
   hideNext?: boolean;
 }) {
-  const grad = 'from-[var(--bg)] via-[var(--bg)] to-transparent';
-  const backCls = 'border-[var(--card-border)] text-[var(--text)] hover:bg-[var(--card-active)]';
+  const grad = 'from-[#250177] via-[#250177]/95 to-transparent';
   return (
     <div className={`fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t ${grad} z-40 flex justify-center pointer-events-none pb-safe`}>
       <div className="w-full max-w-[430px] flex gap-3 pointer-events-auto">
         {!hideBack && (
           <button
             onClick={onBack}
-            className={`flex-1 max-w-[110px] min-h-[52px] rounded-2xl border font-medium flex items-center justify-center gap-2 active:scale-95 transition-all ${backCls}`}
+            className="flex-1 max-w-[110px] min-h-[52px] rounded-2xl border border-white/20 bg-[#140047]/90 text-white font-semibold text-base flex items-center justify-center gap-2 active:scale-[0.98] hover:bg-[#180054] hover:border-[#3BE0D4]/40 transition-all shadow-md"
           >
             {backLabel}
           </button>
@@ -222,10 +221,10 @@ export function BottomBar({
           <button
             onClick={onNext}
             disabled={nextDisabled}
-            className={`flex-[2] min-h-[52px] rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg ${
+            className={`flex-[2] min-h-[52px] rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${
               nextDisabled
-                ? 'bg-[var(--card)] text-[var(--text-muted)] cursor-not-allowed border border-[var(--card-border)]'
-                : 'bg-[var(--primary)] text-[var(--bg)] hover:brightness-110 shadow-[var(--primary)]/20'
+                ? 'bg-[#140047] text-white/35 border border-white/10 cursor-not-allowed'
+                : 'bg-gradient-to-r from-[#3BE0D4] to-[#2DD4BF] text-[#091522] border border-[#3BE0D4]/50 hover:brightness-110 shadow-[0_4px_20px_rgba(59,224,212,0.35)]'
             }`}
           >
             {nextLabel}

@@ -66,24 +66,25 @@ export function FindClient({
         <h1 className="text-2xl font-light">Find a client</h1>
 
         <div className="flex items-center gap-2">
-          <div className="flex-1 flex items-center gap-3 bg-white rounded-2xl px-4 py-3 border border-white/10 text-[#2A0730]">
-            <Search size={18} className="text-[#6A608A]" />
+          <div className="flex-1 flex items-center gap-3 bg-[#140047] rounded-2xl px-4 py-3 border border-white/15 text-white">
+            <Search size={18} className="text-[#3BE0D4]" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Quick search for a client"
-              className="flex-1 bg-transparent outline-none text-sm placeholder-[#9B93BA]"
+              className="flex-1 bg-transparent outline-none text-sm placeholder-white/50 text-white"
             />
           </div>
           <button
             aria-label="Refresh client list"
-            className="w-12 h-12 rounded-2xl bg-[#22193B] border border-white/10 flex items-center justify-center text-white hover:border-[#A984FF]/40"
+            onClick={refresh}
+            className="w-12 h-12 rounded-2xl bg-[#140047] border border-white/15 flex items-center justify-center text-[#3BE0D4] hover:border-[#3BE0D4]/60 transition-colors"
           >
             <RotateCw size={18} />
           </button>
         </div>
 
-        <div className="text-xs text-[#9B93BA] uppercase tracking-wider font-semibold">
+        <div className="text-xs text-[var(--text-muted)] uppercase tracking-wider font-semibold">
           {filtered.length} client{filtered.length === 1 ? '' : 's'}
         </div>
 
@@ -92,19 +93,19 @@ export function FindClient({
             <button
               key={c.clientId}
               onClick={() => onOpenProfile(c)}
-              className="text-left bg-[#22193B] border border-white/10 rounded-2xl p-4 hover:border-[#A984FF]/40 transition-colors"
+              className="text-left bg-[#140047]/90 border border-white/10 rounded-2xl p-4 hover:border-[#3BE0D4]/50 transition-colors"
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <div className="text-xs text-[#9B93BA]">Tester: {c.testerName}</div>
+                  <div className="text-xs text-[var(--text-muted)]">Tester: {c.testerName}</div>
                   <div className="text-lg font-medium text-white mt-0.5">Client ID: {c.clientId}</div>
                 </div>
-                <ChevronRight size={18} className="text-[#6A608A] mt-1" />
+                <ChevronRight size={18} className="text-[#3BE0D4] mt-1" />
               </div>
               <div className="text-sm text-white/80 mt-2">{c.gender}, {c.yearOfBirth}</div>
-              <div className="text-xs text-[#9B93BA] mt-1">Cataract surgery: {c.cataractSurgery}</div>
-              <div className="text-xs text-[#9B93BA] mt-1 flex items-center gap-1">
-                <MapPin size={11} /> {c.region}
+              <div className="text-xs text-[var(--text-muted)] mt-1">Cataract surgery: {c.cataractSurgery}</div>
+              <div className="text-xs text-[var(--text-muted)] mt-1 flex items-center gap-1">
+                <MapPin size={11} className="text-[#3BE0D4]" /> {c.region}
               </div>
             </button>
           ))}
