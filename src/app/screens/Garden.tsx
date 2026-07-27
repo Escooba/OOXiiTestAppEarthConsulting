@@ -37,8 +37,8 @@ export function getPlotSlotOrder(maxSize: number): { row: number; col: number }[
   return slots;
 }
 
-export function getPlotConfig(completedTests: number) {
-  const plantedCarrots = Math.min(36, Math.floor(completedTests / 10));
+export function getPlotConfig(carrots: number) {
+  const plantedCarrots = Math.min(36, Math.floor(carrots / 10));
   let size = 3;
   if (plantedCarrots >= 26) size = 6;
   else if (plantedCarrots >= 17) size = 5;
@@ -58,7 +58,7 @@ export function Garden({ onNav }: { onNav: (s: ScreenId) => void }) {
   const totalCarrots = progress?.totalCarrots ?? 0;
   const communityCarrots = cache?.totalCommunityCarrots ?? 0;
 
-  const { plantedCarrots, size } = useMemo(() => getPlotConfig(completedTests), [completedTests]);
+  const { plantedCarrots, size } = useMemo(() => getPlotConfig(totalCarrots), [totalCarrots]);
   const slotOrder = useMemo(() => getPlotSlotOrder(size), [size]);
 
   // Determine render bounds for SVG
