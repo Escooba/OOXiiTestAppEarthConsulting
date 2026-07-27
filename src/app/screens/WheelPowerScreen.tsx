@@ -22,7 +22,7 @@ export function WheelPowerScreen({
 }: Props) {
   const [power, setPower] = useState(initialValue);
   const [error, setError] = useState(false);
-  const { commitAndAdvance, isAdvancing } = useAutoAdvance(750);
+  const { commitAndAdvance, isAdvancing } = useAutoAdvance(1200);
 
   const handleNext = () => {
     if (!power) {
