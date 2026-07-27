@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Shell, BottomBar } from '../components/Shell';
 import { RadioGroup, InlineError, InstructionCard } from './common';
 import { RabbitBubble } from '../components/RabbitBubble';
+import { HelpButton } from '../components/HelpButton';
+import { useAutoScrollInput } from '../hooks/useAutoScrollInput';
 
 const SUNGLASS_TYPES = ['OOXii black/red', 'OOXii black', 'OOXii metal frame mirrored', 'Other brand'];
 
@@ -10,6 +12,7 @@ export function SunglassesSelection({
 }: { onBack: () => void; onNext: (type: string) => void }) {
   const [value, setValue] = useState('OOXii metal frame mirrored');
   const [error, setError] = useState(false);
+  const inputCardRef = useAutoScrollInput();
 
   const submit = () => {
     if (!value) return setError(true);
@@ -27,8 +30,11 @@ export function SunglassesSelection({
           type={error ? 'error' : value ? 'success' : 'default'}
         />
 
-        <div className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4">
-          <label className="text-[15px] font-medium leading-snug">Sunglass type</label>
+        <div ref={inputCardRef} className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4 scroll-mt-20">
+          <div className="flex items-center justify-between gap-3">
+            <label className="text-[15px] font-medium leading-snug flex-1">Sunglass type</label>
+            <HelpButton configId="sunglasses-selection" />
+          </div>
           <RadioGroup
             value={value}
             onChange={(v) => { setValue(v); setError(false); }}

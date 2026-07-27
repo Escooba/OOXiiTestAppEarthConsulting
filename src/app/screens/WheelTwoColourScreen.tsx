@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { Shell, BottomBar } from '../components/Shell';
 import { RabbitBubble } from '../components/RabbitBubble';
 import { RadioGroup, InlineError } from './common';
+import { HelpButton } from '../components/HelpButton';
 import { useAutoAdvance } from '../hooks/useAutoAdvance';
+import { useAutoScrollInput } from '../hooks/useAutoScrollInput';
 
 interface Props {
   side: 'right' | 'left';
@@ -18,6 +20,7 @@ export function WheelTwoColourScreen({
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState(false);
   const { commitAndAdvance, isFading } = useAutoAdvance();
+  const inputCardRef = useAutoScrollInput();
 
   const handleNext = () => {
     if (!value) {
@@ -39,10 +42,13 @@ export function WheelTwoColourScreen({
           type={error ? 'error' : value ? 'success' : 'default'}
         />
 
-        <div className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4">
-          <label className="text-sm font-medium block mb-2">
-            Now do 2-colour test. Which letters look sharper, darker, easier to read?
-          </label>
+        <div ref={inputCardRef} className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4 scroll-mt-20">
+          <div className="flex items-center justify-between gap-3">
+            <label className="text-sm font-medium block flex-1">
+              Now do 2-colour test. Which letters look sharper, darker, easier to read?
+            </label>
+            <HelpButton configId="wheel-twocolour" />
+          </div>
           <RadioGroup
             value={value}
             onChange={(v) => {

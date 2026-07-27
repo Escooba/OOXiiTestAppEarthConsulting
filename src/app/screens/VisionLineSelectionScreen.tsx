@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Shell, BottomBar } from '../components/Shell';
 import { LineSlider } from '../components/LineSlider';
 import { RabbitBubble } from '../components/RabbitBubble';
 import { InstructionCard, ImagePanel, InlineError } from './common';
+import { HelpButton } from '../components/HelpButton';
 import { useAutoAdvance } from '../hooks/useAutoAdvance';
+import { useAutoScrollInput } from '../hooks/useAutoScrollInput';
+import { preloadTumblingEChart } from '../help/apparatusHelpConfig';
 
 interface Props {
   title: string;
@@ -15,14 +18,23 @@ interface Props {
   initialValue?: string;
   onNext: (line: string) => void;
   onBack: () => void;
+  helpConfigId?: string;
 }
 
 export function VisionLineSelectionScreen({
-  title, subtitle, instruction, imageCaption, imageMarker, progress, initialValue = '', onNext, onBack
+  title, subtitle, instruction, imageCaption, imageMarker, progress, initialValue = '', onNext, onBack, helpConfigId
 }: Props) {
   const [line, setLine] = useState(initialValue);
   const [error, setError] = useState(false);
   const { commitAndAdvance, clearAdvance, isFading } = useAutoAdvance();
+  const inputCardRef = useAutoScrollInput();
+
+  useEffect(() => {
+    preloadTumblingEChart();
+  }, []);
+
+  const isNear = title.toLowerCase().includes('near');
+  const resolvedHelpId = helpConfigId || (isNear ? 'near-vision-line' : 'tumbling-e-line');
 
   const handleNext = () => {
     if (!line) {
@@ -48,10 +60,13 @@ export function VisionLineSelectionScreen({
           type={error ? 'error' : line ? 'success' : 'default'}
         />
 
-        <div className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4">
-          <label className="text-[15px] font-semibold text-white leading-snug">
-            Select the smallest OOXii line number
-          </label>
+        <div ref={inputCardRef} className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4 scroll-mt-20">
+          <div className="flex items-center justify-between gap-3">
+            <label className="text-[15px] font-semibold text-white leading-snug flex-1">
+              Select the smallest OOXii line number
+            </label>
+            <HelpButton configId={resolvedHelpId} />
+          </div>
           <div className="px-2">
             <LineSlider
               value={line}

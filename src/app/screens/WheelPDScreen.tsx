@@ -5,6 +5,7 @@ import { InlineError, InstructionCard, ImagePanel } from './common';
 import { RabbitBubble } from '../components/RabbitBubble';
 import { HelpButton } from '../components/HelpButton';
 import { useAutoAdvance } from '../hooks/useAutoAdvance';
+import { useAutoScrollInput } from '../hooks/useAutoScrollInput';
 
 interface Props {
   progress: number;
@@ -17,6 +18,7 @@ export function WheelPDScreen({ progress, initialValue = '', onNext, onBack }: P
   const [pd, setPd] = useState(initialValue);
   const [error, setError] = useState<string | null>(null);
   const { commitAndAdvance, isFading } = useAutoAdvance();
+  const inputCardRef = useAutoScrollInput();
 
   const handleBlurOrEnter = () => {
     const n = parseInt(pd);
@@ -40,7 +42,7 @@ export function WheelPDScreen({ progress, initialValue = '', onNext, onBack }: P
         <InstructionCard text="To improve distance vision" />
         <RabbitBubble text={error ? 'Enter a PD between 52 and 78.' : pd ? 'Nice. Press Next to continue.' : "You're here. Complete this step to keep going."} type={error ? 'error' : pd ? 'success' : 'default'} />
 
-        <div className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-3">
+        <div ref={inputCardRef} className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-3 scroll-mt-20">
           <Field label="Pupillary distance (PD)">
             <div className="flex items-start gap-2">
               <input
@@ -57,10 +59,7 @@ export function WheelPDScreen({ progress, initialValue = '', onNext, onBack }: P
                 placeholder="e.g. 62"
                 className={inputCls(!!error) + ' flex-1'}
               />
-              <HelpButton
-                title="How to read pupillary distance"
-                description="Read the number from the scale next to the knob on the wheel."
-              />
+              <HelpButton configId="wheel-pd" />
             </div>
           </Field>
           <p className="text-xs text-[#9B93BA] leading-relaxed">

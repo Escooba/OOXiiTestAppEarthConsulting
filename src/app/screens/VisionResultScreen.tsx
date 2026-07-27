@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Flag } from 'lucide-react';
 import { Shell, BottomBar } from '../components/Shell';
 import { ReadonlyField } from './common';
+import { HelpButton } from '../components/HelpButton';
+import { preloadTumblingEChart } from '../help/apparatusHelpConfig';
 
 interface Props {
   title: string;
@@ -12,17 +14,25 @@ interface Props {
   snellen: string;
   onNext: () => void;
   onBack: () => void;
+  helpConfigId?: string;
 }
 
 export function VisionResultScreen({
-  title, subtitle, progress, snellenLabel, snellen, onNext, onBack
+  title, subtitle, progress, snellenLabel, snellen, onNext, onBack, helpConfigId = 'tumbling-e-result'
 }: Props) {
+  useEffect(() => {
+    preloadTumblingEChart();
+  }, []);
+
   return (
     <Shell progress={progress}>
       <div className="px-5 pt-2 pb-32 flex flex-col gap-5">
-        <div>
-          <h1 className="text-2xl font-light">{title}</h1>
-          {subtitle && <h2 className="text-lg font-medium text-[#A984FF] mt-1">{subtitle}</h2>}
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-light">{title}</h1>
+            {subtitle && <h2 className="text-lg font-medium text-[#A984FF] mt-1">{subtitle}</h2>}
+          </div>
+          <HelpButton configId={helpConfigId} />
         </div>
 
         <ReadonlyField label={snellenLabel} value={snellen ? `${snellen} (Calculated)` : 'N/A'} placeholder="" />

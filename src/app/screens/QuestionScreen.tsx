@@ -4,6 +4,7 @@ import { RadioGroup, InlineError } from './common';
 import { RabbitBubble } from '../components/RabbitBubble';
 import { HelpButton } from '../components/HelpButton';
 import { useAutoAdvance } from '../hooks/useAutoAdvance';
+import { useAutoScrollInput } from '../hooks/useAutoScrollInput';
 
 interface Props {
   title: string;
@@ -14,6 +15,7 @@ interface Props {
   initialValue?: string;
   onNext: (value: string) => void;
   onBack: () => void;
+  helpConfigId?: string;
   helpTitle?: string;
   helpBody?: string;
   errorText?: string;
@@ -29,6 +31,7 @@ export function QuestionScreen({
   initialValue = '',
   onNext,
   onBack,
+  helpConfigId,
   helpTitle,
   helpBody,
   errorText = 'Select Yes or No before continuing.',
@@ -37,6 +40,7 @@ export function QuestionScreen({
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState(false);
   const { commitAndAdvance, isFading } = useAutoAdvance();
+  const inputCardRef = useAutoScrollInput();
 
   const submit = () => {
     if (!value) {
@@ -65,10 +69,10 @@ export function QuestionScreen({
           type={error ? 'error' : value ? 'success' : 'default'}
         />
 
-        <div className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4">
-          <div className="flex items-start justify-between gap-3">
-            <p className="font-medium text-[15px] leading-snug">{question}</p>
-            {helpTitle && helpBody && <HelpButton title={helpTitle} description={helpBody} />}
+        <div ref={inputCardRef} className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4 scroll-mt-20">
+          <div className="flex items-center justify-between gap-3">
+            <p className="font-medium text-[15px] leading-snug flex-1">{question}</p>
+            <HelpButton configId={helpConfigId} title={helpTitle} description={helpBody} />
           </div>
           <RadioGroup
             value={value}

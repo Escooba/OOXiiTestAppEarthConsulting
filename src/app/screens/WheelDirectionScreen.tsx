@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { Shell, BottomBar } from '../components/Shell';
 import { RabbitBubble } from '../components/RabbitBubble';
 import { RadioGroup, InlineError, ImagePanel } from './common';
+import { HelpButton } from '../components/HelpButton';
 import { useAutoAdvance } from '../hooks/useAutoAdvance';
+import { useAutoScrollInput } from '../hooks/useAutoScrollInput';
 
 interface Props {
   side: 'right' | 'left';
@@ -18,6 +20,7 @@ export function WheelDirectionScreen({
   const [direction, setDirection] = useState(initialValue);
   const [error, setError] = useState(false);
   const { commitAndAdvance, isFading } = useAutoAdvance();
+  const inputCardRef = useAutoScrollInput();
 
   const opposite = side === 'right' ? 'left' : 'right';
 
@@ -45,8 +48,11 @@ export function WheelDirectionScreen({
           type={error ? 'error' : direction ? 'success' : 'default'}
         />
 
-        <div className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4">
-          <label className="text-sm font-medium block">Best {side} lens is:</label>
+        <div ref={inputCardRef} className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4 scroll-mt-20">
+          <div className="flex items-center justify-between gap-3">
+            <label className="text-sm font-medium block flex-1">Best {side} lens is:</label>
+            <HelpButton configId="wheel-direction" />
+          </div>
           <RadioGroup
             value={direction}
             onChange={(v) => {

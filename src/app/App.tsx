@@ -414,9 +414,9 @@ function AppInner() {
           <ClientInfo
             onCancel={() => nav('home')}
             onStart={async (d) => {
-              if (!tester || !workflowService) return;
+              if (!tester || !clientRepo || !workflowService) return;
               try {
-                const draft = {
+                const newClient = await clientRepo.create({
                   ooxiiClientId: d.ooxiiId,
                   yearOfBirth: parseInt(d.yearOfBirth) || 0,
                   gender: d.gender,
@@ -425,11 +425,10 @@ function AppInner() {
                   stateProvince: tester.stateProvince,
                   city: tester.city,
                   createdByTesterId: tester.localId,
-                };
-                setPendingClientDraft(draft);
+                });
                 
-                await workflowService.startNewTest(tester.localId, d.ooxiiId);
-                setClient({ localId: d.ooxiiId, ...d });
+                await workflowService.startNewTest(tester.localId, newClient.localId);
+                setClient({ localId: newClient.localId, ooxiiId: d.ooxiiId, yearOfBirth: d.yearOfBirth, gender: d.gender, cataract: d.cataract });
                 setResults({});
                 await refreshSession();
                 nav('glasses-question');
@@ -448,6 +447,7 @@ function AppInner() {
             title="Glasses"
             question="Does the client currently have a pair of distance glasses?"
             options={['Yes', 'No']}
+            helpConfigId="distance-glasses-question"
             initialValue={results.hasDistanceGlasses}
             onBack={handleClinicalBack}
             onNext={(v) => {
@@ -487,6 +487,7 @@ function AppInner() {
             title="Distance vision"
             subtitle="Right eye"
             initialValue={results.distanceRightLetters}
+            selectedLine={results.distanceRightLine}
             onBack={handleClinicalBack}
             onNext={(v) => {
               saveResultPatchAndNavigate({
@@ -541,6 +542,7 @@ function AppInner() {
             title="Distance vision"
             subtitle="Left eye"
             initialValue={results.distanceLeftLetters}
+            selectedLine={results.distanceLeftLine}
             onBack={handleClinicalBack}
             onNext={(v) => {
               saveResultPatchAndNavigate({
@@ -595,6 +597,7 @@ function AppInner() {
             title="Distance vision"
             subtitle="Own glasses, both eyes open"
             initialValue={results.distanceBothGlassesLetters}
+            selectedLine={results.distanceBothGlassesLine}
             onBack={handleClinicalBack}
             onNext={(v) => {
               saveResultPatchAndNavigate({
@@ -667,6 +670,7 @@ function AppInner() {
             subtitle="Reading glasses"
             question="Does the client currently have a pair of reading glasses?"
             options={['Yes', 'No']}
+            helpConfigId="reading-glasses-question"
             initialValue={results.hasReadingGlasses}
             onBack={handleClinicalBack}
             onNext={(v) => {
@@ -865,6 +869,7 @@ function AppInner() {
             progress={getProgressForRoute(screen)}
             title="Right distance vision at the wheel"
             initialValue={results.wheelRightDistanceLetters}
+            selectedLine={results.wheelRightDistanceLine}
             onBack={handleClinicalBack}
             onNext={(v) => {
               saveResultPatchAndNavigate({
@@ -997,6 +1002,7 @@ function AppInner() {
             title="Sunglasses"
             question="Were sunglasses dispensed to this client?"
             options={['Yes', 'No']}
+            helpConfigId="sunglasses-question"
             errorText="Select Yes or No before continuing."
             initialValue={results.sunglassesDispensed === true ? 'Yes' : (results.sunglassesDispensed === false ? 'No' : undefined)}
             onBack={handleClinicalBack}

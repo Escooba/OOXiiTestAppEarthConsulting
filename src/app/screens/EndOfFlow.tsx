@@ -5,6 +5,8 @@ import { Shell, BottomBar } from '../components/Shell';
 import { RabbitBubble } from '../components/RabbitBubble';
 import { RadioGroup, InlineError } from './common';
 import { Field, inputCls } from './SignupEmail';
+import { HelpButton } from '../components/HelpButton';
+import { useAutoScrollInput } from '../hooks/useAutoScrollInput';
 
 // ============================================================================
 // GLASSES DISPENSED REVIEW
@@ -14,6 +16,7 @@ export function GlassesDispensedReview({
 }: { onBack: () => void; onNext: (totalPaid: string) => void; sunglassesDispensed: boolean }) {
   const [price, setPrice] = useState('1000');
   const [error, setError] = useState<string | null>(null);
+  const inputCardRef = useAutoScrollInput();
 
   const submit = () => {
     if (!price) return setError('Enter the total amount paid, or enter 0 if there was no payment.');
@@ -29,11 +32,14 @@ export function GlassesDispensedReview({
   return (
     <Shell progress={94}>
       <div className="px-5 pt-2 pb-32 flex flex-col gap-5">
-        <div>
-          <h1 className="text-2xl font-light">Glasses Dispensed Review</h1>
-          <p className="text-sm text-[#9B93BA] mt-1">
-            Review by dispensed type, then enter the total amount paid.
-          </p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-light">Glasses Dispensed Review</h1>
+            <p className="text-sm text-[#9B93BA] mt-1">
+              Review by dispensed type, then enter the total amount paid.
+            </p>
+          </div>
+          <HelpButton configId="dispensed-review" />
         </div>
 
         <div className="flex flex-col gap-3">
@@ -55,7 +61,7 @@ export function GlassesDispensedReview({
           ))}
         </div>
 
-        <div className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-3">
+        <div ref={inputCardRef} className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-3 scroll-mt-20">
           <Field label="Total price paid" error={error || undefined}>
             <div className="flex items-stretch gap-2">
               <div className="flex items-center px-4 rounded-xl bg-[#2A0730] border border-white/10 text-[#9B93BA] text-sm font-medium">

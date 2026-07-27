@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Shell, BottomBar } from '../components/Shell';
 import { RabbitBubble } from '../components/RabbitBubble';
 import { RadioGroup, InlineError } from './common';
+import { HelpButton } from '../components/HelpButton';
 import { useAutoAdvance } from '../hooks/useAutoAdvance';
+import { useAutoScrollInput } from '../hooks/useAutoScrollInput';
+import { preloadTumblingEChart } from '../help/apparatusHelpConfig';
 
 interface Props {
   side: 'right' | 'left';
@@ -18,6 +21,11 @@ export function WheelLine9Screen({
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState(false);
   const { commitAndAdvance, isFading } = useAutoAdvance();
+  const inputCardRef = useAutoScrollInput();
+
+  useEffect(() => {
+    preloadTumblingEChart();
+  }, []);
 
   const handleNext = () => {
     if (!value) {
@@ -39,8 +47,11 @@ export function WheelLine9Screen({
           type={error ? 'error' : value ? 'success' : 'default'}
         />
 
-        <div className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4">
-          <label className="text-sm font-medium block mb-2">Can the person read line 9 or smaller?</label>
+        <div ref={inputCardRef} className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4 scroll-mt-20">
+          <div className="flex items-center justify-between gap-3">
+            <label className="text-sm font-medium block flex-1">Can the person read line 9 or smaller?</label>
+            <HelpButton configId="wheel-line9" />
+          </div>
           <RadioGroup
             value={value}
             onChange={(v) => {
