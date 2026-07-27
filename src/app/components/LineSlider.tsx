@@ -108,7 +108,7 @@ export function LineSlider({ value, onChange, onChangeEnd, onDragStart, error, d
               ? `linear-gradient(to right, ${error ? '#FF5C5C' : '#A984FF'} ${pct}%, #3A3059 ${pct}%)`
               : '#3A3059',
           }}
-          aria-label="Smallest OOXii line number"
+          aria-label="Select the smallest OOXii line number"
         />
 
         {/* Interval ticks — one per line number */}

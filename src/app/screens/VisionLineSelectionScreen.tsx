@@ -44,13 +44,13 @@ export function VisionLineSelectionScreen({
         <InstructionCard text={instruction} />
 
         <RabbitBubble
-          text={error ? 'Select a line before continuing.' : line ? 'Nice.' : 'Select the smallest OOXii line number with all letters correct.'}
+          text={error ? 'Select a line before continuing.' : line ? 'Nice.' : 'Select the smallest OOXii line number where all letters were read correctly.'}
           type={error ? 'error' : line ? 'success' : 'default'}
         />
 
         <div className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4">
-          <label className="text-[15px] font-medium leading-snug">
-            Smallest OOXii line number
+          <label className="text-[15px] font-semibold text-white leading-snug">
+            Select the smallest OOXii line number
           </label>
           <div className="px-2">
             <LineSlider
