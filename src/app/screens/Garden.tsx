@@ -184,19 +184,19 @@ export function Garden({ onNav }: { onNav: (s: ScreenId) => void }) {
           </div>
         </div>
 
-        {/* Stats Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Stats Section — 1 row each */}
+        <div className="flex flex-col gap-3">
           <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--card)] p-4 flex justify-between items-center shadow-sm">
             <div>
               <span className="text-xs text-[var(--text-muted)] font-semibold uppercase tracking-wider">Collected Carrots</span>
-              <div className="text-2xl font-bold text-[#FF9F45] mt-0.5">{totalCarrots}</div>
+              <div className="text-2xl font-bold text-[#FF9F45] mt-0.5">{totalCarrots} {totalCarrots === 1 ? 'carrot' : 'carrots'}</div>
             </div>
             <span className="text-3xl">🥕</span>
           </div>
           <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--card)] p-4 flex justify-between items-center shadow-sm">
             <div>
               <span className="text-xs text-[var(--text-muted)] font-semibold uppercase tracking-wider">Global Collection</span>
-              <div className="text-xl font-bold text-[var(--text)] mt-0.5">{communityCarrots.toLocaleString()} carrots</div>
+              <div className="text-2xl font-bold text-[var(--text)] mt-0.5">{communityCarrots.toLocaleString()} carrots</div>
             </div>
             <span className="text-3xl">🥕</span>
           </div>
