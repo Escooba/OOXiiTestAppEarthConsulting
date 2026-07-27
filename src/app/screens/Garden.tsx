@@ -22,15 +22,15 @@ export function getPlotSlotOrder(maxSize: number): { row: number; col: number }[
   ];
 
   for (let sz = 4; sz <= maxSize; sz++) {
-    const newRightCol: { row: number; col: number }[] = [];
-    for (let r = 0; r < sz - 1; r++) {
-      newRightCol.push({ row: r, col: sz - 1 });
-    }
     const newBottomRow: { row: number; col: number }[] = [];
     for (let c = 0; c < sz; c++) {
       newBottomRow.push({ row: sz - 1, col: c });
     }
-    slots = [...slots, ...newRightCol, ...newBottomRow];
+    const newRightCol: { row: number; col: number }[] = [];
+    for (let r = 0; r < sz - 1; r++) {
+      newRightCol.push({ row: r, col: sz - 1 });
+    }
+    slots = [...slots, ...newBottomRow, ...newRightCol];
   }
 
   return slots;
