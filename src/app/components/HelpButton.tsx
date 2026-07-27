@@ -44,6 +44,7 @@ export function HelpButton({
       instruction: description,
       imageSrc: imageSrc || '',
       imageAlt: title,
+      assetKind: 'illustration',
       highlights: [],
     };
   }

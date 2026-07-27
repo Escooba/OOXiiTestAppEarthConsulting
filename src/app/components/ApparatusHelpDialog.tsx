@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Hand, X, CheckCircle2, ZoomIn, ZoomOut, RotateCcw, Maximize2, Minimize2 } from 'lucide-react';
+import { Hand, X, CheckCircle2, ZoomIn, ZoomOut, RotateCcw, Maximize2, Minimize2, Info } from 'lucide-react';
 import type { ApparatusHelpConfig } from '../help/apparatusHelpConfig';
+import { calculateFocusTransform, clampPanOffset, type Size } from '../help/cropGeometry';
 
 interface Props {
   open: boolean;
@@ -11,20 +12,53 @@ interface Props {
 
 export function ApparatusHelpDialog({ open, onClose, config }: Props) {
   const [viewMode, setViewMode] = useState<'focused' | 'full'>('focused');
-  const [zoomLevel, setZoomLevel] = useState(1);
+  const [userZoom, setUserZoom] = useState(1);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const dragStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [imageSize, setImageSize] = useState<Size>({ width: 447, height: 447 });
+  const [viewportSize, setViewportSize] = useState<Size>({ width: 360, height: 270 });
 
-  // Reset state when modal opens or config changes
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const dragStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
+
+  // Reset state and trap focus on modal open
   useEffect(() => {
     if (open) {
+      triggerRef.current = document.activeElement as HTMLElement;
       setViewMode(config?.focusRegion ? 'focused' : 'full');
-      setZoomLevel(1);
+      setUserZoom(1);
       setPanOffset({ x: 0, y: 0 });
+
+      // Disable body scrolling while modal is open
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+
+      // Focus close button inside modal
+      setTimeout(() => closeButtonRef.current?.focus(), 50);
+
+      return () => {
+        document.body.style.overflow = prevOverflow;
+        triggerRef.current?.focus();
+      };
     }
   }, [open, config]);
+
+  // Update viewport size measurement on resize
+  useEffect(() => {
+    if (!open || !viewportRef.current) return;
+    const updateSize = () => {
+      if (viewportRef.current) {
+        const rect = viewportRef.current.getBoundingClientRect();
+        setViewportSize({ width: rect.width || 360, height: rect.height || 270 });
+      }
+    };
+    updateSize();
+
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, [open]);
 
   // Keyboard Escape listener
   useEffect(() => {
@@ -40,26 +74,26 @@ export function ApparatusHelpDialog({ open, onClose, config }: Props) {
 
   if (!open || !config) return null;
 
-  const hasFocusRegion = !!config.focusRegion;
+  const hasFocusRegion = !!config.focusRegion && config.focusRegion.widthPercent > 0;
   const isFocusedMode = viewMode === 'focused' && hasFocusRegion;
 
   // Zoom actions
-  const handleZoomIn = () => setZoomLevel((z) => Math.min(3, z + 0.5));
+  const handleZoomIn = () => setUserZoom((z) => Math.min(2.5, z + 0.3));
   const handleZoomOut = () => {
-    setZoomLevel((z) => {
-      const next = Math.max(1, z - 0.5);
+    setUserZoom((z) => {
+      const next = Math.max(1, z - 0.3);
       if (next === 1) setPanOffset({ x: 0, y: 0 });
       return next;
     });
   };
   const handleResetZoom = () => {
-    setZoomLevel(1);
+    setUserZoom(1);
     setPanOffset({ x: 0, y: 0 });
   };
 
-  // Pointer drag handlers for panning when zoomed
+  // Pointer drag handlers for panning
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (zoomLevel <= 1 && !isFocusedMode) return;
+    if (userZoom <= 1 && !isFocusedMode) return;
     setIsDragging(true);
     dragStartRef.current = {
       x: e.clientX,
@@ -74,37 +108,48 @@ export function ApparatusHelpDialog({ open, onClose, config }: Props) {
     if (!isDragging) return;
     const dx = e.clientX - dragStartRef.current.x;
     const dy = e.clientY - dragStartRef.current.y;
-    setPanOffset({
+    const rawOffset = {
       x: dragStartRef.current.panX + dx,
       y: dragStartRef.current.panY + dy,
-    });
+    };
+
+    const baseScale = isFocusedMode && config.focusRegion
+      ? calculateFocusTransform(imageSize, viewportSize, config.focusRegion).scale
+      : 1;
+
+    const scaledImageSize = {
+      width: viewportSize.width * baseScale * userZoom,
+      height: viewportSize.height * baseScale * userZoom,
+    };
+
+    setPanOffset(clampPanOffset(rawOffset, scaledImageSize, viewportSize));
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
     if (isDragging) {
       setIsDragging(false);
-      (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
+      try {
+        (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
+      } catch {
+        // Ignore if pointer capture release throws
+      }
     }
   };
 
-  // Calculate crop transform for focused mode
-  const focus = config.focusRegion;
-  let transformStyle: React.CSSProperties = {};
-
-  if (isFocusedMode && focus) {
-    const scale = 100 / focus.widthPercent;
-    const originX = focus.xPercent + focus.widthPercent / 2;
-    const originY = focus.yPercent + focus.heightPercent / 2;
-
-    transformStyle = {
-      transformOrigin: `${originX}% ${originY}%`,
-      transform: `scale(${scale * zoomLevel}) translate(${panOffset.x / scale}px, ${panOffset.y / scale}px)`,
-    };
-  } else {
-    transformStyle = {
-      transform: `scale(${zoomLevel}) translate(${panOffset.x}px, ${panOffset.y}px)`,
-    };
+  // Calculate base focus transform
+  let baseTransform = { scale: 1, translateX: 0, translateY: 0 };
+  if (isFocusedMode && config.focusRegion) {
+    baseTransform = calculateFocusTransform(imageSize, viewportSize, config.focusRegion);
   }
+
+  const finalScale = baseTransform.scale * userZoom;
+  const finalX = baseTransform.translateX + panOffset.x;
+  const finalY = baseTransform.translateY + panOffset.y;
+
+  const stageStyle: React.CSSProperties = {
+    transform: `translate(${finalX}px, ${finalY}px) scale(${finalScale})`,
+    transformOrigin: 'center center',
+  };
 
   const highlights = config.highlightRegions || config.highlights || [];
 
@@ -119,26 +164,28 @@ export function ApparatusHelpDialog({ open, onClose, config }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="apparatus-help-title"
+        aria-describedby="apparatus-help-instruction"
       >
         <motion.div
-          initial={{ scale: 0.92, y: 16 }}
+          initial={{ scale: 0.94, y: 12 }}
           animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.92, y: 16 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          exit={{ scale: 0.94, y: 12 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 26 }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-[440px] bg-[var(--card)] text-[var(--text)] rounded-3xl overflow-hidden border border-[var(--card-border)] shadow-2xl flex flex-col max-h-[92vh]"
+          className="w-full max-w-[440px] bg-[var(--card)] text-[var(--text)] rounded-3xl overflow-hidden border border-[var(--card-border)] shadow-2xl flex flex-col max-h-[92vh] safe-area-padding"
         >
           {/* Dialog Header */}
-          <div className="p-3.5 sm:p-4 flex justify-between items-center border-b border-[var(--card-border)] bg-[var(--bg)]/50">
-            <div className="flex items-center gap-2.5 min-w-0 pr-2">
+          <div className="p-3.5 sm:p-4 flex justify-between items-center border-b border-[var(--card-border)] bg-[var(--bg)]/50 gap-2">
+            <div className="flex items-center gap-2.5 min-w-0 pr-1">
               <div className="w-8 h-8 rounded-full bg-[var(--primary)]/15 border border-[var(--primary)]/40 flex items-center justify-center text-[var(--primary)] shrink-0">
                 <Hand size={16} />
               </div>
-              <h3 id="apparatus-help-title" className="font-semibold text-[var(--text)] text-base truncate">
+              <h3 id="apparatus-help-title" className="font-semibold text-[var(--text)] text-base leading-tight break-words">
                 {config.title}
               </h3>
             </div>
             <button
+              ref={closeButtonRef}
               type="button"
               aria-label="Close help modal"
               onClick={onClose}
@@ -150,6 +197,14 @@ export function ApparatusHelpDialog({ open, onClose, config }: Props) {
 
           {/* Dialog Content Area */}
           <div className="p-3.5 sm:p-4 flex-1 overflow-y-auto flex flex-col gap-3.5">
+            {/* Asset Notice Badge for Illustrations */}
+            {config.assetNotice && (
+              <div className="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold flex items-center gap-2">
+                <Info size={14} className="shrink-0" />
+                <span>{config.assetNotice}</span>
+              </div>
+            )}
+
             {/* Toolbar for View Mode & Zoom Controls */}
             <div className="flex items-center justify-between gap-2 flex-wrap bg-[var(--bg)]/60 p-2 rounded-2xl border border-[var(--card-border)]">
               {/* View Toggle */}
@@ -160,61 +215,63 @@ export function ApparatusHelpDialog({ open, onClose, config }: Props) {
                     setViewMode(isFocusedMode ? 'full' : 'focused');
                     handleResetZoom();
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--card)] border border-[var(--primary)]/40 text-[var(--primary)] text-xs font-bold hover:bg-[var(--card-active)] transition-colors min-h-[36px]"
+                  className="flex items-center gap-1.5 px-3.5 min-h-[44px] rounded-xl bg-[var(--card)] border border-[var(--primary)]/40 text-[var(--primary)] text-xs font-bold hover:bg-[var(--card-active)] transition-colors"
                 >
-                  {isFocusedMode ? <Maximize2 size={13} /> : <Minimize2 size={13} />}
+                  {isFocusedMode ? <Maximize2 size={14} /> : <Minimize2 size={14} />}
                   <span>{isFocusedMode ? 'View full chart' : 'Focused view'}</span>
                 </button>
               )}
 
-              {/* Zoom controls */}
+              {/* Zoom controls (Touch target min 44x44px) */}
               <div className="flex items-center gap-1 ml-auto">
                 <button
                   type="button"
                   aria-label="Zoom out"
-                  disabled={zoomLevel <= 1}
+                  disabled={userZoom <= 1}
                   onClick={handleZoomOut}
-                  className="w-9 h-9 rounded-xl bg-[var(--card)] border border-[var(--card-border)] text-[var(--text)] flex items-center justify-center disabled:opacity-30 hover:border-[var(--primary)] transition-colors"
+                  className="min-w-[44px] min-h-[44px] rounded-xl bg-[var(--card)] border border-[var(--card-border)] text-[var(--text)] flex items-center justify-center disabled:opacity-30 hover:border-[var(--primary)] transition-colors"
                 >
-                  <ZoomOut size={15} />
+                  <ZoomOut size={16} />
                 </button>
-                <span className="text-xs font-mono font-bold text-[var(--text-muted)] px-1.5">
-                  {Math.round(zoomLevel * 100)}%
+                <span className="text-xs font-mono font-bold text-[var(--text-muted)] px-1">
+                  {Math.round(userZoom * 100)}%
                 </span>
                 <button
                   type="button"
                   aria-label="Zoom in"
-                  disabled={zoomLevel >= 3}
+                  disabled={userZoom >= 2.5}
                   onClick={handleZoomIn}
-                  className="w-9 h-9 rounded-xl bg-[var(--card)] border border-[var(--card-border)] text-[var(--text)] flex items-center justify-center disabled:opacity-30 hover:border-[var(--primary)] transition-colors"
+                  className="min-w-[44px] min-h-[44px] rounded-xl bg-[var(--card)] border border-[var(--card-border)] text-[var(--text)] flex items-center justify-center disabled:opacity-30 hover:border-[var(--primary)] transition-colors"
                 >
-                  <ZoomIn size={15} />
+                  <ZoomIn size={16} />
                 </button>
-                {zoomLevel > 1 && (
+                {userZoom > 1 && (
                   <button
                     type="button"
                     aria-label="Reset zoom"
                     onClick={handleResetZoom}
-                    className="w-9 h-9 rounded-xl bg-[var(--card)] border border-[var(--card-border)] text-[var(--text)] flex items-center justify-center hover:border-[var(--primary)] transition-colors ml-1"
+                    className="min-w-[44px] min-h-[44px] rounded-xl bg-[var(--card)] border border-[var(--card-border)] text-[var(--text)] flex items-center justify-center hover:border-[var(--primary)] transition-colors ml-0.5"
                   >
-                    <RotateCcw size={14} />
+                    <RotateCcw size={15} />
                   </button>
                 )}
               </div>
             </div>
 
-            {/* Apparatus Image Box */}
+            {/* Apparatus Crop Viewport */}
             <div
-              ref={containerRef}
+              ref={viewportRef}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
-              className={`relative w-full aspect-[4/3] bg-white rounded-2xl border border-[var(--card-border)] overflow-hidden flex items-center justify-center select-none ${
-                zoomLevel > 1 || isFocusedMode ? 'cursor-grab active:cursor-grabbing' : ''
+              onPointerCancel={handlePointerUp}
+              className={`relative w-full aspect-[4/3] bg-white rounded-2xl border border-[var(--card-border)] overflow-hidden flex items-center justify-center select-none touch-none ${
+                userZoom > 1 || isFocusedMode ? 'cursor-grab active:cursor-grabbing' : ''
               }`}
             >
+              {/* Image Stage */}
               <div
-                style={transformStyle}
+                style={stageStyle}
                 className="relative w-full h-full flex items-center justify-center transition-transform duration-150 ease-out"
               >
                 <div className="relative inline-block max-w-full max-h-full">
@@ -223,10 +280,16 @@ export function ApparatusHelpDialog({ open, onClose, config }: Props) {
                     alt={config.imageAlt}
                     decoding="async"
                     fetchPriority="high"
+                    onLoad={(e) => {
+                      const img = e.currentTarget;
+                      if (img.naturalWidth && img.naturalHeight) {
+                        setImageSize({ width: img.naturalWidth, height: img.naturalHeight });
+                      }
+                    }}
                     className="w-auto h-auto max-w-full max-h-full block object-contain"
                   />
 
-                  {/* High-Contrast Red Highlight Bounding Boxes (No Text Overlaying Symbols, No Blurry Glows) */}
+                  {/* High-Contrast Overlay Bounding Boxes */}
                   {highlights.map((h) => (
                     <div
                       key={h.id}
@@ -243,10 +306,10 @@ export function ApparatusHelpDialog({ open, onClose, config }: Props) {
               </div>
             </div>
 
-            {/* External Caption (Rendered outside the chart canvas) */}
+            {/* External Caption Box */}
             {config.highlightCaption && (
               <div className="px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0 animate-pulse" />
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" />
                 <span>{config.highlightCaption}</span>
               </div>
             )}
@@ -257,7 +320,7 @@ export function ApparatusHelpDialog({ open, onClose, config }: Props) {
                 <CheckCircle2 size={13} />
                 Tester Instructions
               </span>
-              <p className="text-sm text-[var(--text)] leading-relaxed font-normal">
+              <p id="apparatus-help-instruction" className="text-sm text-[var(--text)] leading-relaxed font-normal">
                 {config.instruction}
               </p>
             </div>
@@ -268,7 +331,7 @@ export function ApparatusHelpDialog({ open, onClose, config }: Props) {
             <button
               type="button"
               onClick={onClose}
-              className="w-full min-h-[48px] rounded-2xl bg-[var(--primary)] text-[#091522] font-bold text-base hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_4px_16px_rgba(59,224,212,0.3)]"
+              className="w-full min-h-[48px] rounded-2xl bg-[var(--primary)] text-[#091522] font-bold text-base hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_4px_16px_rgba(59,224,212,0.25)]"
             >
               Got it
             </button>
