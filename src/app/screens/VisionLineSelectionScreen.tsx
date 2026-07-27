@@ -22,7 +22,7 @@ export function VisionLineSelectionScreen({
 }: Props) {
   const [line, setLine] = useState(initialValue);
   const [error, setError] = useState(false);
-  const { commitAndAdvance, clearAdvance, isAdvancing } = useAutoAdvance();
+  const { commitAndAdvance, clearAdvance, isFading } = useAutoAdvance();
 
   const handleNext = () => {
     if (!line) {
@@ -33,7 +33,7 @@ export function VisionLineSelectionScreen({
   };
 
   return (
-    <Shell progress={progress} isAdvancing={isAdvancing}>
+    <Shell progress={progress} isFading={isFading}>
       <div className="px-5 pt-2 pb-32 flex flex-col gap-5">
         <div>
           <h1 className="text-2xl font-light">{title}</h1>

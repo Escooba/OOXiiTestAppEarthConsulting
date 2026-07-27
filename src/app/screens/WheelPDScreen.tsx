@@ -16,7 +16,7 @@ interface Props {
 export function WheelPDScreen({ progress, initialValue = '', onNext, onBack }: Props) {
   const [pd, setPd] = useState(initialValue);
   const [error, setError] = useState<string | null>(null);
-  const { commitAndAdvance, isAdvancing } = useAutoAdvance();
+  const { commitAndAdvance, isFading } = useAutoAdvance();
 
   const handleBlurOrEnter = () => {
     const n = parseInt(pd);
@@ -33,7 +33,7 @@ export function WheelPDScreen({ progress, initialValue = '', onNext, onBack }: P
   };
 
   return (
-    <Shell progress={progress} isAdvancing={isAdvancing}>
+    <Shell progress={progress} isFading={isFading}>
       <div className="px-5 pt-2 pb-32 flex flex-col gap-5">
         <h1 className="text-2xl font-light">Wheel test</h1>
         <ImagePanel caption="Client faces vision chart" marker="3m" />

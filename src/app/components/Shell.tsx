@@ -27,9 +27,10 @@ interface ShellProps {
   showProgress?: boolean;
   onHome?: () => void;
   isAdvancing?: boolean;
+  isFading?: boolean;
 }
 
-export function Shell({ children, progress = 0, showProgress = true, onHome, isAdvancing = false }: ShellProps) {
+export function Shell({ children, progress = 0, showProgress = true, onHome, isAdvancing = false, isFading = false }: ShellProps) {
   const { tokens, mode } = useTheme();
   const { onNav, hasInProgressTest, onCancelTest } = useContext(ShellNavContext);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -145,8 +146,8 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
         <motion.div
           className="flex-1 flex flex-col"
           initial={{ opacity: 0 }}
-          animate={{ opacity: isAdvancing ? 0 : 1 }}
-          transition={{ duration: 0.4 }}
+          animate={{ opacity: isFading ? 0 : 1 }}
+          transition={{ duration: 0.2 }}
         >
           {children}
         </motion.div>

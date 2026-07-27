@@ -36,7 +36,7 @@ export function QuestionScreen({
 }: Props) {
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState(false);
-  const { commitAndAdvance, isAdvancing } = useAutoAdvance();
+  const { commitAndAdvance, isFading } = useAutoAdvance();
 
   const submit = () => {
     if (!value) {
@@ -47,7 +47,7 @@ export function QuestionScreen({
   };
 
   return (
-    <Shell progress={progress} isAdvancing={isAdvancing}>
+    <Shell progress={progress} isFading={isFading}>
       <div className="px-5 pt-2 pb-32 flex flex-col gap-5">
         <div>
           <h1 className="text-2xl font-light">{title}</h1>
