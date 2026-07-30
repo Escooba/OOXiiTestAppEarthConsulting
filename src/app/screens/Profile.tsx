@@ -132,7 +132,7 @@ export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
                 {nextBadge.iconKey}
               </div>
               <div>
-                <div className="font-medium text-[var(--text)] text-sm">{nextBadge.displayName}</div>
+                <div className="font-medium text-[var(--text)] text-sm">{getBadgeName(nextBadge.badgeCode, nextBadge.displayName)}</div>
                 <div className="text-xs text-[var(--text-muted)] mt-0.5">{t('profile.more_to_unlock', { count: REMAINING })}</div>
               </div>
             </div>
@@ -182,9 +182,9 @@ export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
                   </span>
                 )}
                 <span className={`text-3xl leading-none ${!isEarned ? 'grayscale' : ''}`}>{b.iconKey}</span>
-                <div className="text-xs font-semibold text-[var(--text)] line-clamp-1">{b.displayName}</div>
+                <div className="text-xs font-semibold text-[var(--text)] line-clamp-1">{getBadgeName(b.badgeCode, b.displayName)}</div>
                 <div className="text-[10px] text-[var(--text-muted)]">
-                  {isEarned ? 'Unlocked' : `${currentMetric}/${b.targetValue}`}
+                  {isEarned ? t('profile.earned') : `${currentMetric}/${b.targetValue}`}
                 </div>
               </button>
             );
@@ -198,7 +198,7 @@ export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
             className="flex items-center justify-center gap-2 min-h-[44px] px-6 py-3 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors font-medium border border-red-500/20"
           >
             <LogOut size={18} />
-            <span>Log out</span>
+            <span>{t('profile.logout')}</span>
           </button>
         </div>
       </div>
@@ -222,7 +222,7 @@ export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
               className="relative w-full max-w-md max-h-[80vh] rounded-3xl border border-[var(--card-border)] bg-[var(--card)] p-5 shadow-2xl flex flex-col"
             >
               <div className="flex justify-between items-center pb-3 border-b border-[var(--card-border)]">
-                <h3 className="text-lg font-bold text-[var(--text)]">All Badges ({enabledBadges.length})</h3>
+                <h3 className="text-lg font-bold text-[var(--text)]">{t('profile.all_badges', { count: enabledBadges.length })}</h3>
                 <button
                   aria-label="Close badges"
                   onClick={() => setShowAllBadges(false)}
@@ -257,12 +257,12 @@ export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <span className="font-semibold text-sm text-[var(--text)] truncate">{b.displayName}</span>
+                          <span className="font-semibold text-sm text-[var(--text)] truncate">{getBadgeName(b.badgeCode, b.displayName)}</span>
                           <span className={`text-xs font-semibold ${isEarned ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'}`}>
-                            {isEarned ? 'Earned' : `${currentVal} / ${b.targetValue}`}
+                            {isEarned ? t('profile.earned') : `${currentVal} / ${b.targetValue}`}
                           </span>
                         </div>
-                        <p className="text-xs text-[var(--text-muted)] truncate mt-0.5">{b.description}</p>
+                        <p className="text-xs text-[var(--text-muted)] truncate mt-0.5">{getBadgeDesc(b.badgeCode, b.description)}</p>
                         {!isEarned && (
                           <div className="w-full h-1.5 rounded-full bg-[var(--card)] mt-2 overflow-hidden">
                             <div className="h-full bg-[var(--primary)] rounded-full" style={{ width: `${badgePct}%` }} />
@@ -307,20 +307,15 @@ export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
                 <span className={`text-6xl ${earnedMap.has(selectedBadge.badgeCode) ? '' : 'grayscale'}`}>
                   {selectedBadge.iconKey}
                 </span>
-                <h3 className="text-xl font-bold text-[var(--text)]">{selectedBadge.displayName}</h3>
-                <p className="text-sm text-[var(--text-muted)] leading-relaxed">{selectedBadge.description}</p>
+                <h3 className="text-xl font-bold text-[var(--text)]">{getBadgeName(selectedBadge.badgeCode, selectedBadge.displayName)}</h3>
+                <p className="text-sm text-[var(--text-muted)] leading-relaxed">{getBadgeDesc(selectedBadge.badgeCode, selectedBadge.description)}</p>
 
                 <div className="mt-4 w-full rounded-2xl bg-[var(--bg)] p-4 border border-[var(--card-border)]">
                   <div className="text-xs uppercase tracking-wider text-[var(--text-muted)] font-semibold mb-2">
-                    Unlock Condition
+                    {t('profile.unlock_condition')}
                   </div>
                   <div className="text-sm text-[var(--text)] font-medium">
-                    {selectedBadge.ruleType === 'completed_tests' && `Complete ${selectedBadge.targetValue} vision tests`}
-                    {selectedBadge.ruleType === 'clients_helped' && `Help ${selectedBadge.targetValue} distinct clients`}
-                    {selectedBadge.ruleType === 'distinct_testing_days' && `Test on ${selectedBadge.targetValue} different days`}
-                    {selectedBadge.ruleType === 'carrots_earned' && `Earn ${selectedBadge.targetValue} carrots`}
-                    {selectedBadge.ruleType === 'eye_festivals_attended' && `Attend ${selectedBadge.targetValue} Eye Festivals`}
-                    {selectedBadge.ruleType === 'custom_counter' && `Reach milestone of ${selectedBadge.targetValue}`}
+                    {getUnlockRuleText(selectedBadge.ruleType, selectedBadge.targetValue)}
                   </div>
                 </div>
               </div>
@@ -353,7 +348,7 @@ export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
                 </div>
                 <h3 className="text-xl font-bold text-[var(--text)]">{t('profile.logout')}?</h3>
                 <p className="text-sm text-[var(--text-muted)]">
-                  Are you sure you want to log out of your account? Your local clinical records and progress will remain saved on this device.
+                  {t('profile.logout_confirm_body')}
                 </p>
                 <div className="flex gap-3 w-full mt-2">
                   <button
