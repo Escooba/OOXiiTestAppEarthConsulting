@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { AlertCircle, User, Eye } from 'lucide-react';
+import { useTheme } from '../lib/ThemeContext';
 
 export function RadioGroup({
   value,
@@ -13,6 +14,28 @@ export function RadioGroup({
   options: string[];
   err?: boolean;
 }) {
+  const { t } = useTheme();
+  const getDisplayLabel = (opt: string) => {
+    if (opt === 'Yes') return t('ui.yes');
+    if (opt === 'No') return t('ui.no');
+    if (opt === 'Yes, right eye') return t('clients.yes_right_eye');
+    if (opt === 'Yes, left eye') return t('clients.yes_left_eye');
+    if (opt === 'Yes, both eyes') return t('clients.yes_both_eyes');
+    if (opt === 'Female') return t('ui.female');
+    if (opt === 'Male') return t('ui.male');
+    if (opt === 'Non-binary') return t('ui.non_binary');
+    if (opt === 'Prefer not to say') return t('ui.prefer_not_to_say');
+    if (opt === 'Other') return t('ui.other');
+    if (opt === 'None') return t('ui.none');
+    if (opt === 'Plus (+)' || opt === 'Plus') return t('wheel.plus');
+    if (opt === 'Minus (-)' || opt === 'Minus') return t('wheel.minus');
+    if (opt === 'Neither / Equal' || opt === 'Neither plus nor minus lenses improve vision') return t('wheel.neither');
+    if (opt === 'Red' || opt === 'Letters on red side') return t('wheel.red');
+    if (opt === 'Green' || opt === 'Letters on green side') return t('wheel.green');
+    if (opt === 'Equal / Same' || opt === 'Letters look the same') return t('wheel.equal');
+    return opt;
+  };
+
   return (
     <div className="flex flex-col gap-2">
       {options.map((o) => {
@@ -37,7 +60,7 @@ export function RadioGroup({
             >
               {active && <span className="w-2.5 h-2.5 rounded-full bg-[#A984FF]" />}
             </span>
-            <span className="text-sm">{o}</span>
+            <span className="text-sm">{getDisplayLabel(o)}</span>
           </button>
         );
       })}

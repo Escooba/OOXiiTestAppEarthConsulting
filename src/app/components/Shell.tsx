@@ -31,7 +31,7 @@ interface ShellProps {
 }
 
 export function Shell({ children, progress = 0, showProgress = true, onHome, isAdvancing = false, isFading = false }: ShellProps) {
-  const { tokens, mode } = useTheme();
+  const { tokens, mode, t } = useTheme();
   const { onNav, hasInProgressTest, onCancelTest } = useContext(ShellNavContext);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -77,14 +77,14 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${tokens.navPillBg} ${tokens.text} border-[var(--primary)]/30 hover:border-[var(--primary)]`}
             >
               <HomeIcon size={13} />
-              Home
+              {t('ui.home')}
             </button>
             <button
               onClick={() => setSettingsOpen(true)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${tokens.navPillBg} ${tokens.text} border-[var(--primary)]/30 hover:border-[var(--primary)]`}
             >
               <SettingsIcon size={13} />
-              Settings
+              {t('ui.settings')}
             </button>
             {hasInProgressTest && onCancelTest && (
               <button
@@ -92,7 +92,7 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
               >
                 <XCircle size={13} />
-                Cancel Test
+                {t('ui.cancel_test')}
               </button>
             )}
             <div className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${
@@ -101,7 +101,7 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
                 : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
             }`}>
               <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-              <span>{isOnline ? 'Online' : 'Offline mode'}</span>
+              <span>{isOnline ? t('ui.online') : t('ui.offline_mode')}</span>
             </div>
           </div>
         </div>
@@ -109,7 +109,7 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
         {showProgress && (
           <div className={`sticky top-0 z-30 pt-4 pb-6 px-6 bg-gradient-to-b from-[var(--bg)] via-[var(--bg)] to-transparent`}>
             <div className="flex justify-between items-end mb-2 pr-8">
-              <span className={`text-xs ${tokens.textMuted} font-semibold uppercase tracking-wider`}>Overall Progress</span>
+              <span className={`text-xs ${tokens.textMuted} font-semibold uppercase tracking-wider`}>{t('ui.overall_progress')}</span>
               <span className="text-[var(--primary)] font-bold text-sm">{progress}%</span>
             </div>
             <div className="relative w-[calc(100%-32px)] mt-2">
@@ -160,16 +160,16 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
               <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center text-red-400">
                 <XCircle size={32} />
               </div>
-              <h3 className="text-xl font-bold text-[var(--text)]">Cancel Test Session?</h3>
+              <h3 className="text-xl font-bold text-[var(--text)]">{t('ui.cancel_test_title')}</h3>
               <p className="text-sm text-[var(--text-muted)] leading-relaxed">
-                Are you sure you want to cancel this in-progress test? All unsaved test data for this session will be discarded.
+                {t('ui.cancel_test_body')}
               </p>
               <div className="flex gap-3 w-full mt-2">
                 <button
                   onClick={() => setShowCancelConfirm(false)}
                   className="flex-1 py-3 rounded-xl bg-[var(--bg)] text-[var(--text)] font-medium border border-[var(--card-border)]"
                 >
-                  Keep Testing
+                  {t('ui.keep_testing')}
                 </button>
                 <button
                   onClick={() => {
@@ -178,7 +178,7 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
                   }}
                   className="flex-1 py-3 rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
                 >
-                  Cancel Test
+                  {t('ui.cancel_test')}
                 </button>
               </div>
             </div>
@@ -192,8 +192,8 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
 export function BottomBar({
   onNext,
   onBack,
-  nextLabel = 'Next',
-  backLabel = 'Back',
+  nextLabel,
+  backLabel,
   nextDisabled = false,
   hideBack = false,
   hideNext = false,
@@ -206,6 +206,9 @@ export function BottomBar({
   hideBack?: boolean;
   hideNext?: boolean;
 }) {
+  const { t } = useTheme();
+  const effectiveNextLabel = nextLabel || t('ui.next');
+  const effectiveBackLabel = backLabel || t('ui.back');
   const grad = 'from-[#250177] via-[#250177]/95 to-transparent';
   return (
     <div className={`fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t ${grad} z-40 flex justify-center pointer-events-none pb-safe`}>
@@ -215,7 +218,7 @@ export function BottomBar({
             onClick={onBack}
             className="flex-1 max-w-[110px] min-h-[52px] rounded-2xl border border-white/20 bg-[#140047]/90 text-white font-semibold text-base flex items-center justify-center gap-2 active:scale-[0.98] hover:bg-[#180054] hover:border-[#3BE0D4]/40 transition-all shadow-md"
           >
-            {backLabel}
+            {effectiveBackLabel}
           </button>
         )}
         {!hideNext && (
@@ -228,7 +231,7 @@ export function BottomBar({
                 : 'bg-gradient-to-r from-[#3BE0D4] to-[#2DD4BF] text-[#091522] border border-[#3BE0D4]/50 hover:brightness-110 shadow-[0_4px_20px_rgba(59,224,212,0.35)]'
             }`}
           >
-            {nextLabel}
+            {effectiveNextLabel}
           </button>
         )}
       </div>

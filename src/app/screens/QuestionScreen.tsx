@@ -22,6 +22,8 @@ interface Props {
   autoAdvance?: boolean;
 }
 
+import { useTheme } from '../lib/ThemeContext';
+
 export function QuestionScreen({
   title,
   subtitle,
@@ -34,13 +36,16 @@ export function QuestionScreen({
   helpConfigId,
   helpTitle,
   helpBody,
-  errorText = 'Select Yes or No before continuing.',
+  errorText,
   autoAdvance = true,
 }: Props) {
+  const { t } = useTheme();
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState(false);
   const { commitAndAdvance, isFading } = useAutoAdvance();
   const inputCardRef = useAutoScrollInput();
+
+  const activeErrorText = errorText || t('error.select_option');
 
   const submit = () => {
     if (!value) {
@@ -61,10 +66,10 @@ export function QuestionScreen({
         <RabbitBubble
           text={
             error
-              ? 'Finish this field first, then we can move forward.'
+              ? t('mascot.error_generic')
               : value
-              ? 'Nice. ' + (autoAdvance ? '' : 'Press Next to continue.')
-              : "You're here. Complete this step to keep going."
+              ? t('mascot.success_generic')
+              : t('mascot.default_generic')
           }
           type={error ? 'error' : value ? 'success' : 'default'}
         />
@@ -86,7 +91,7 @@ export function QuestionScreen({
             options={options}
             err={error && !value}
           />
-          {error && !value && <InlineError text={errorText} />}
+          {error && !value && <InlineError text={activeErrorText} />}
         </div>
       </div>
       <BottomBar onNext={submit} onBack={onBack} hideNext={autoAdvance} />

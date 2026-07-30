@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ScreenId, calcSnellen } from './lib/theme';
-import { ThemeProvider } from './lib/ThemeContext';
+import { ThemeProvider, useTheme } from './lib/ThemeContext';
 import { AuthProvider, useAuthContext } from './lib/AuthProvider';
 import { ShellNavProvider } from './components/Shell';
 import { Login } from './screens/Login';
@@ -92,6 +92,7 @@ export default function App() {
 }
 
 function AppInner() {
+  const { t } = useTheme();
   const { testerRepo, clientRepo, workflowService, completionService } = useData();
   const { account, tester, isLoading: isAuthLoading, signup, linkAccount } = useAuthContext();
   const { session: activeSession, refresh: refreshSession } = useActiveSession();
@@ -444,8 +445,8 @@ function AppInner() {
         return (
           <QuestionScreen
             progress={getProgressForRoute(screen)}
-            title="Glasses"
-            question="Does the client currently have a pair of distance glasses?"
+            title={t('clinical.glasses_title')}
+            question={t('clinical.distance_glasses_q')}
             options={['Yes', 'No']}
             helpConfigId="distance-glasses-question"
             initialValue={results.hasDistanceGlasses}
@@ -666,9 +667,9 @@ function AppInner() {
         return (
           <QuestionScreen
             progress={getProgressForRoute(screen)}
-            title="Near vision"
-            subtitle="Reading glasses"
-            question="Does the client currently have a pair of reading glasses?"
+            title={t('clinical.near_vision')}
+            subtitle={t('clinical.glasses_title')}
+            question={t('clinical.reading_glasses_q')}
             options={['Yes', 'No']}
             helpConfigId="reading-glasses-question"
             initialValue={results.hasReadingGlasses}

@@ -6,6 +6,7 @@ import { Eye, Search, MapPin, PlayCircle, BookOpen, User, Flag, ArrowRight, User
 import { SelectField } from './TesterInfo';
 import { COUNTRIES } from './TesterInfo';
 import { RabbitMascot } from '../components/RabbitMascot';
+import { useTheme } from '../lib/ThemeContext';
 
 interface Props {
   onNav: (s: ScreenId) => void;
@@ -19,13 +20,14 @@ interface Props {
 }
 
 export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region, inProgressTest, onResumeTest, onCancelTest }: Props) {
+  const { t } = useTheme();
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   return (
     <Shell showProgress={false}>
       <div className={`px-6 pt-4 pb-32 flex flex-col gap-5 ${showRegionModal ? 'blur-sm pointer-events-none select-none' : ''}`}>
         {/* welcome + region */}
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-light text-white/90">Welcome {testerName}</h1>
+          <h1 className="text-lg font-light text-white/90">{t('home.welcome', { name: testerName })}</h1>
           <div className="flex items-center gap-1.5 text-xs text-[#9B93BA]">
             <MapPin size={12} /> {region}
           </div>
@@ -47,11 +49,11 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
             <Eye size={36} className="relative text-[#3BE0D4]" strokeWidth={1.8} />
           </motion.div>
           <div>
-            <h2 className="text-3xl font-bold text-white leading-tight">Vision Testing</h2>
-            <h2 className="text-3xl font-bold text-[#3BE0D4] leading-tight">Field App</h2>
+            <h2 className="text-3xl font-bold text-white leading-tight">{t('home.hero_title_1')}</h2>
+            <h2 className="text-3xl font-bold text-[#3BE0D4] leading-tight">{t('home.hero_title_2')}</h2>
           </div>
           <p className="text-sm text-[#9B93BA] leading-relaxed max-w-[300px]">
-            A guided, step-by-step tool for community vision testers. Bun the rabbit will guide you through every screen.
+            {t('home.hero_subtitle')}
           </p>
         </div>
 
@@ -65,9 +67,9 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
             <RabbitMascot size={24} />
           </motion.div>
           <div>
-            <div className="text-sm font-semibold text-white">Hi! I'm Bun, your testing guide.</div>
+            <div className="text-sm font-semibold text-white">{t('home.bun_intro_title')}</div>
             <div className="text-xs text-[#9B93BA] mt-1 leading-relaxed">
-              I will point to the next field, remind you when you need help, and celebrate every completed client test with a carrot.
+              {t('home.bun_intro_body')}
             </div>
           </div>
         </div>
@@ -82,9 +84,9 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
             <div className="flex items-center gap-3">
               <PlayCircle size={24} className="text-[var(--primary)] shrink-0" />
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-[var(--text)]">Test in progress</div>
+                <div className="text-sm font-bold text-[var(--text)]">{t('home.test_in_progress')}</div>
                 <div className="text-xs text-[var(--text-muted)] truncate mt-0.5">
-                  Client ID: {inProgressTest.clientId} · {inProgressTest.step}
+                  {t('clients.client_id', { id: inProgressTest.clientId })} · {inProgressTest.step}
                 </div>
               </div>
             </div>
@@ -95,7 +97,7 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
                   onClick={() => setShowCancelConfirm(true)}
                   className="flex-1 min-h-[44px] px-3 rounded-2xl border border-red-500/40 bg-red-500/10 text-red-400 text-xs font-semibold hover:bg-red-500/20 transition-colors"
                 >
-                  Cancel test
+                  {t('ui.cancel_test')}
                 </button>
               )}
               <button
@@ -103,7 +105,7 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
                 onClick={onResumeTest}
                 className="flex-1 min-h-[44px] px-3 rounded-2xl bg-[var(--primary)] text-[var(--bg)] text-xs font-bold flex items-center justify-center gap-1.5 hover:brightness-110 transition-all shadow-md"
               >
-                <span>Resume</span>
+                <span>{t('ui.resume')}</span>
                 <ArrowRight size={14} />
               </button>
             </div>
@@ -113,16 +115,16 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
         {/* Info boxes */}
         <HomeCard
           icon={<UserPlus size={22} />}
-          title="New Client"
-          body="Conduct a test for a new client and set up their profile."
-          cta="Start new test"
+          title={t('home.new_client_title')}
+          body={t('home.new_client_body')}
+          cta={t('home.new_client_cta')}
           onClick={() => onNav('client-info')}
         />
         <HomeCard
           icon={<Search size={22} />}
-          title="Search Client Info"
-          body="Find a client using their OOXii ID and review saved test information."
-          cta="Search client"
+          title={t('home.search_client_title')}
+          body={t('home.search_client_body')}
+          cta={t('home.search_client_cta')}
           onClick={() => onNav('find-client')}
         />
       </div>
@@ -135,16 +137,16 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
               <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center text-red-400">
                 <PlayCircle size={32} />
               </div>
-              <h3 className="text-xl font-bold text-[var(--text)]">Cancel Test Session?</h3>
+              <h3 className="text-xl font-bold text-[var(--text)]">{t('ui.cancel_test_title')}</h3>
               <p className="text-sm text-[var(--text-muted)] leading-relaxed">
-                Are you sure you want to cancel the test session for Client ID: {inProgressTest?.clientId}? All unsaved test data will be discarded.
+                {t('ui.cancel_test_body')}
               </p>
               <div className="flex gap-3 w-full mt-2">
                 <button
                   onClick={() => setShowCancelConfirm(false)}
                   className="flex-1 min-h-[44px] rounded-xl bg-[var(--bg)] text-[var(--text)] font-medium border border-[var(--card-border)]"
                 >
-                  Keep Testing
+                  {t('ui.keep_testing')}
                 </button>
                 <button
                   onClick={() => {
@@ -153,7 +155,7 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
                   }}
                   className="flex-1 min-h-[44px] rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
                 >
-                  Cancel Test
+                  {t('ui.cancel_test')}
                 </button>
               </div>
             </div>
@@ -191,9 +193,8 @@ function HomeCard({
   );
 }
 
-
-
 function RegionModal({ onSaved, defaultRegion }: { onSaved: (region: string) => void; defaultRegion: string }) {
+  const { t } = useTheme();
   const [choice, setChoice] = useState<'tester' | 'other'>('tester');
   const [country, setCountry] = useState('');
   const [state, setState] = useState('');
@@ -209,37 +210,37 @@ function RegionModal({ onSaved, defaultRegion }: { onSaved: (region: string) => 
         initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }}
         className="w-full max-w-[380px] bg-[#22193B] rounded-3xl border border-white/10 shadow-2xl p-6 flex flex-col gap-4"
       >
-        <h2 className="text-xl font-medium">Confirm your region</h2>
+        <h2 className="text-xl font-medium">{t('home.confirm_region_title')}</h2>
 
         <label className="flex items-start gap-3 p-3 rounded-2xl border border-white/10 bg-[#2A0730] cursor-pointer">
           <input type="radio" checked={choice === 'tester'} onChange={() => setChoice('tester')} className="accent-[#A984FF] mt-1" />
           <div>
-            <div className="text-sm font-medium">Tester Region</div>
-            <div className="text-xs text-[#9B93BA] mt-1">Use the region set on your profile</div>
+            <div className="text-sm font-medium">{t('home.tester_region')}</div>
+            <div className="text-xs text-[#9B93BA] mt-1">{t('home.tester_region_sub')}</div>
           </div>
         </label>
         <label className="flex items-start gap-3 p-3 rounded-2xl border border-white/10 bg-[#2A0730] cursor-pointer">
           <input type="radio" checked={choice === 'other'} onChange={() => setChoice('other')} className="accent-[#A984FF] mt-1" />
           <div className="flex-1">
-            <div className="text-sm font-medium">Other Region</div>
-            <div className="text-xs text-[#9B93BA] mt-1">Choose manually for outreach visits</div>
+            <div className="text-sm font-medium">{t('home.other_region')}</div>
+            <div className="text-xs text-[#9B93BA] mt-1">{t('home.other_region_sub')}</div>
           </div>
         </label>
 
         {choice === 'tester' ? (
           <div className="rounded-2xl border border-[#A984FF]/30 bg-[#A984FF]/10 p-4">
-            <div className="text-xs uppercase text-[#A984FF] font-semibold tracking-wider">Current tester region</div>
+            <div className="text-xs uppercase text-[#A984FF] font-semibold tracking-wider">{t('home.current_tester_region')}</div>
             <div className="text-sm mt-1 text-white">{defaultRegion}</div>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            <SelectField value={country} onChange={(v) => { setCountry(v); setState(''); setCity(''); }} placeholder="Country" options={Object.keys(COUNTRIES)} />
-            <SelectField value={state} onChange={(v) => { setState(v); setCity(''); }} placeholder="State / Province" options={country ? Object.keys(COUNTRIES[country]) : []} disabled={!country} />
-            <SelectField value={city} onChange={setCity} placeholder="City / Town" options={country && state ? COUNTRIES[country][state] || [] : []} disabled={!state} />
+            <SelectField value={country} onChange={(v) => { setCountry(v); setState(''); setCity(''); }} placeholder={t('auth.country')} options={Object.keys(COUNTRIES)} />
+            <SelectField value={state} onChange={(v) => { setState(v); setCity(''); }} placeholder={t('auth.state')} options={country ? Object.keys(COUNTRIES[country]) : []} disabled={!country} />
+            <SelectField value={city} onChange={setCity} placeholder={t('auth.city')} options={country && state ? COUNTRIES[country][state] || [] : []} disabled={!state} />
             <input
               value={village}
               onChange={(e) => setVillage(e.target.value)}
-              placeholder="Optional village / site name"
+              placeholder={t('home.optional_village')}
               className="w-full bg-[#2A0730] border border-white/10 rounded-xl py-3 px-4 text-sm outline-none focus:border-[#A984FF]"
             />
           </div>
@@ -253,7 +254,7 @@ function RegionModal({ onSaved, defaultRegion }: { onSaved: (region: string) => 
             onSaved(parts.join(', '));
           }
         }} className="mt-2 h-12 rounded-2xl bg-[#A984FF] text-[#2A0730] font-bold">
-          Save
+          {t('ui.save')}
         </button>
       </motion.div>
     </motion.div>

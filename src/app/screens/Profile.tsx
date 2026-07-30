@@ -7,6 +7,7 @@ import { RabbitMascot } from '../components/RabbitMascot';
 import { useProgress, useBadges } from '../../data/hooks';
 import { useAuthContext } from '../lib/AuthProvider';
 import { useTheme } from '../lib/ThemeContext';
+import type { TranslationKey } from '../lib/i18n';
 
 export function getBadgeMetricValue(ruleType: string, progress: any): number {
   if (!progress) return 0;
@@ -30,7 +31,29 @@ export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
   const { progress } = useProgress();
   const { definitions, earned } = useBadges();
   const { tester, logout } = useAuthContext();
-  const { tokens } = useTheme();
+  const { tokens, t } = useTheme();
+
+  const getBadgeName = (badgeCode: string, fallback: string) => {
+    const code = badgeCode.toLowerCase();
+    const key = `badge.${code}.name` as TranslationKey;
+    const val = t(key);
+    return val !== key ? val : fallback;
+  };
+
+  const getBadgeDesc = (badgeCode: string, fallback: string) => {
+    const code = badgeCode.toLowerCase();
+    const key = `badge.${code}.desc` as TranslationKey;
+    const val = t(key);
+    return val !== key ? val : fallback;
+  };
+
+  const getUnlockRuleText = (ruleType: string, targetValue: number) => {
+    if (ruleType === 'completed_tests') return t('badge.rule.completed_tests', { target: targetValue });
+    if (ruleType === 'clients_helped') return t('badge.rule.clients_helped', { target: targetValue });
+    if (ruleType === 'distinct_testing_days') return t('badge.rule.distinct_testing_days', { target: targetValue });
+    if (ruleType === 'carrots_earned') return t('badge.rule.carrots_earned', { target: targetValue });
+    return `Complete ${targetValue} steps`;
+  };
 
   const [selectedBadge, setSelectedBadge] = useState<any>(null);
   const [showAllBadges, setShowAllBadges] = useState(false);
@@ -61,7 +84,7 @@ export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
         {/* Title row */}
         <div className="flex items-start justify-between">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)]">Tester Profile</div>
+            <div className="text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)]">{t('profile.tester_profile_subtitle')}</div>
             <h1 className="text-3xl font-bold text-[var(--text)] leading-tight">{name}</h1>
             <div className="text-xs text-[var(--text-muted)] mt-0.5">{tester?.role || 'Community Health Tester'}</div>
           </div>
@@ -79,7 +102,7 @@ export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
           <div className="w-14 h-14 rounded-2xl bg-[#FF9F45]/10 flex items-center justify-center text-3xl">🥕</div>
           <div>
             <div className="text-3xl font-bold text-[#FF9F45] leading-none">{CARROTS}</div>
-            <div className="text-sm text-[var(--text-muted)] mt-1">Total carrots collected</div>
+            <div className="text-sm text-[var(--text-muted)] mt-1">{t('profile.total_carrots')}</div>
           </div>
         </div>
 
@@ -88,12 +111,12 @@ export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
           <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-3xl p-4 flex flex-col items-center gap-1 text-center">
             <Users size={20} className="text-[var(--primary)]" />
             <div className="text-2xl font-bold text-[var(--text)] leading-none mt-1">{CLIENTS}</div>
-            <div className="text-xs text-[var(--text-muted)]">Clients tested</div>
+            <div className="text-xs text-[var(--text-muted)]">{t('profile.clients_tested')}</div>
           </div>
           <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-3xl p-4 flex flex-col items-center gap-1 text-center">
             <Star size={20} className="text-[#EAB308]" />
             <div className="text-2xl font-bold text-[var(--text)] leading-none mt-1">{BADGES_EARNED}</div>
-            <div className="text-xs text-[var(--text-muted)]">Badges earned</div>
+            <div className="text-xs text-[var(--text-muted)]">{t('profile.badges_earned')}</div>
           </div>
         </div>
 
@@ -101,7 +124,7 @@ export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
         {nextBadge && (
           <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-3xl p-5 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-[var(--text)] text-sm">Next Badge</span>
+              <span className="font-semibold text-[var(--text)] text-sm">{t('profile.next_badge')}</span>
               <span className="text-xs text-[var(--text-muted)]">{CLIENTS} / {NEXT_BADGE_TARGET}</span>
             </div>
             <div className="flex items-center gap-3">
@@ -110,7 +133,7 @@ export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
               </div>
               <div>
                 <div className="font-medium text-[var(--text)] text-sm">{nextBadge.displayName}</div>
-                <div className="text-xs text-[var(--text-muted)] mt-0.5">{REMAINING} more to unlock</div>
+                <div className="text-xs text-[var(--text-muted)] mt-0.5">{t('profile.more_to_unlock', { count: REMAINING })}</div>
               </div>
             </div>
             <div className="w-full h-2 rounded-full bg-[var(--bg)] overflow-hidden">
@@ -126,12 +149,12 @@ export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
 
         {/* Badge Collection Section Header */}
         <div className="flex items-center justify-between mt-1">
-          <h2 className="text-lg font-semibold text-[var(--text)]">Badge Collection</h2>
+          <h2 className="text-lg font-semibold text-[var(--text)]">{t('profile.badge_collection')}</h2>
           <button
             onClick={() => setShowAllBadges(true)}
             className="text-xs font-semibold text-[var(--primary)] hover:underline min-h-[44px] px-2 flex items-center"
           >
-            View all ({enabledBadges.length})
+            {t('profile.view_all', { count: enabledBadges.length })}
           </button>
         </div>
 
@@ -328,7 +351,7 @@ export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
                 <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-2">
                   <LogOut size={32} />
                 </div>
-                <h3 className="text-xl font-bold text-[var(--text)]">Log out?</h3>
+                <h3 className="text-xl font-bold text-[var(--text)]">{t('profile.logout')}?</h3>
                 <p className="text-sm text-[var(--text-muted)]">
                   Are you sure you want to log out of your account? Your local clinical records and progress will remain saved on this device.
                 </p>
@@ -337,13 +360,13 @@ export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
                     onClick={() => setShowLogoutConfirm(false)}
                     className="flex-1 min-h-[44px] rounded-xl bg-[var(--bg)] text-[var(--text)] font-medium border border-[var(--card-border)]"
                   >
-                    Cancel
+                    {t('ui.cancel')}
                   </button>
                   <button
                     onClick={handleLogout}
                     className="flex-1 min-h-[44px] rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
                   >
-                    Log out
+                    {t('profile.logout')}
                   </button>
                 </div>
               </div>

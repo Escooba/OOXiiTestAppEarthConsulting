@@ -54,21 +54,21 @@ export function SettingsModal({ open, onClose }: Props) {
 
             <div className="p-5 flex flex-col gap-5 max-h-[70vh] overflow-y-auto">
               <div>
-                <div className="text-xs uppercase tracking-wider text-[#A984FF] font-semibold mb-2">Language</div>
+                <div className="text-xs uppercase tracking-wider text-[#A984FF] font-semibold mb-2">{t('ui.language')}</div>
                 <SelectField
                   value={LANGUAGES[draftLang]}
                   onChange={(v) => {
                     const code = Object.keys(LANGUAGES).find(k => LANGUAGES[k as LanguageCode] === v) as LanguageCode;
                     if (code) setDraftLang(code);
                   }}
-                  placeholder="Select language"
+                  placeholder={t('ui.select_language')}
                   options={Object.values(LANGUAGES)}
                 />
               </div>
 
               {/* Theme Settings */}
               <section className="flex flex-col gap-3">
-                <h3 className="text-sm font-semibold text-[#A984FF] uppercase tracking-wider">Display Mode</h3>
+                <h3 className="text-sm font-semibold text-[#A984FF] uppercase tracking-wider">{t('ui.display_mode')}</h3>
                 <div className="flex gap-2 p-1 bg-[var(--card)] rounded-xl border border-[var(--card-border)] shadow-sm">
                   <button
                     onClick={() => setDraftMode('ooxii')}
@@ -79,7 +79,7 @@ export function SettingsModal({ open, onClose }: Props) {
                     }`}
                   >
                     <Sparkles size={16} />
-                    OOXii Default
+                    {t('ui.theme_ooxii')}
                   </button>
                   <button
                     onClick={() => setDraftMode('light')}
@@ -90,7 +90,7 @@ export function SettingsModal({ open, onClose }: Props) {
                     }`}
                   >
                     <Sun size={16} />
-                    Light Mode
+                    {t('ui.theme_light')}
                   </button>
                 </div>
               </section>

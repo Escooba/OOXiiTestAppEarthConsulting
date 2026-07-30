@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Hand, X, CheckCircle2, ZoomIn, ZoomOut, RotateCcw, Maximize2, Minimize2, Info } from 'lucide-react';
 import type { ApparatusHelpConfig } from '../help/apparatusHelpConfig';
 import { calculateFocusTransform, clampPanOffset, type Size } from '../help/cropGeometry';
+import { useTheme } from '../lib/ThemeContext';
 
 interface Props {
   open: boolean;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function ApparatusHelpDialog({ open, onClose, config }: Props) {
+  const { t } = useTheme();
   const [viewMode, setViewMode] = useState<'focused' | 'full'>('focused');
   const [userZoom, setUserZoom] = useState(1);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
@@ -218,7 +220,7 @@ export function ApparatusHelpDialog({ open, onClose, config }: Props) {
                   className="flex items-center gap-1.5 px-3.5 min-h-[44px] rounded-xl bg-[var(--card)] border border-[var(--primary)]/40 text-[var(--primary)] text-xs font-bold hover:bg-[var(--card-active)] transition-colors"
                 >
                   {isFocusedMode ? <Maximize2 size={14} /> : <Minimize2 size={14} />}
-                  <span>{isFocusedMode ? 'View full chart' : 'Focused view'}</span>
+                  <span>{isFocusedMode ? t('ui.view_full_chart') : t('ui.focused_view')}</span>
                 </button>
               )}
 
@@ -318,7 +320,7 @@ export function ApparatusHelpDialog({ open, onClose, config }: Props) {
             <div className="bg-[var(--bg)] border border-[var(--card-border)] rounded-2xl p-4 flex flex-col gap-1.5">
               <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--primary)] flex items-center gap-1.5">
                 <CheckCircle2 size={13} />
-                Tester Instructions
+                {t('ui.tester_instructions')}
               </span>
               <p id="apparatus-help-instruction" className="text-sm text-[var(--text)] leading-relaxed font-normal">
                 {config.instruction}
@@ -333,7 +335,7 @@ export function ApparatusHelpDialog({ open, onClose, config }: Props) {
               onClick={onClose}
               className="w-full min-h-[48px] rounded-2xl bg-[var(--primary)] text-[#091522] font-bold text-base hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_4px_16px_rgba(59,224,212,0.25)]"
             >
-              Got it
+              {t('ui.got_it')}
             </button>
           </div>
         </motion.div>

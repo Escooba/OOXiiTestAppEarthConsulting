@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Shell, BottomBar } from '../components/Shell';
 import { Eye, EyeOff, AlertCircle, Check } from 'lucide-react';
+import { useTheme } from '../lib/ThemeContext';
 
 interface Props {
   onNext: (email: string, pw: string) => void;
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export function SignupEmail({ onNext, onLogin }: Props) {
+  const { t } = useTheme();
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
@@ -15,16 +17,16 @@ export function SignupEmail({ onNext, onLogin }: Props) {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const rules = [
-    { label: 'At least 8 characters', ok: pw.length >= 8 },
-    { label: 'At least 1 uppercase letter (A–Z)', ok: /[A-Z]/.test(pw) },
-    { label: 'At least 1 special character (e.g. !@#$)', ok: /[^\w\s]/.test(pw) },
+    { label: t('auth.rule_min_8'), ok: pw.length >= 8 },
+    { label: t('auth.rule_uppercase'), ok: /[A-Z]/.test(pw) },
+    { label: t('auth.rule_special'), ok: /[^\w\s]/.test(pw) },
   ];
 
   const submit = () => {
     const e: Record<string, string> = {};
-    if (!/^\S+@\S+\.\S+$/.test(email)) e.email = 'Enter a valid email address.';
-    if (!rules.every((r) => r.ok)) e.pw = 'Password does not meet the rules below.';
-    if (pw !== pw2) e.pw2 = 'Passwords do not match.';
+    if (!/^\S+@\S+\.\S+$/.test(email)) e.email = t('auth.err_email_invalid');
+    if (!rules.every((r) => r.ok)) e.pw = t('error.required');
+    if (pw !== pw2) e.pw2 = t('error.required');
     setErrors(e);
     if (Object.keys(e).length === 0) onNext(email, pw);
   };
@@ -32,19 +34,19 @@ export function SignupEmail({ onNext, onLogin }: Props) {
   return (
     <Shell progress={20}>
       <div className="px-6 pt-2 pb-32 flex flex-col gap-5">
-        <h1 className="text-2xl font-light mt-4">Create an account</h1>
+        <h1 className="text-2xl font-light mt-4">{t('auth.sign_up_title')}</h1>
 
-        <Field label="Your email" error={errors.email}>
+        <Field label={t('auth.email')} error={errors.email}>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
+            placeholder={t('auth.email_placeholder')}
             className={inputCls(!!errors.email)}
           />
         </Field>
 
-        <Field label="Password" error={errors.pw}>
+        <Field label={t('auth.password')} error={errors.pw}>
           <div className="relative">
             <input
               type={showPw ? 'text' : 'password'}
@@ -60,7 +62,7 @@ export function SignupEmail({ onNext, onLogin }: Props) {
               {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
-          <div className="mt-2 text-xs text-[#9B93BA]">It should include:</div>
+          <div className="mt-2 text-xs text-[#9B93BA]">{t('auth.should_include')}</div>
           <ul className="mt-1 space-y-1">
             {rules.map((r) => (
               <li key={r.label} className="flex items-center gap-2 text-xs">
@@ -77,7 +79,7 @@ export function SignupEmail({ onNext, onLogin }: Props) {
           </ul>
         </Field>
 
-        <Field label="Confirm password" error={errors.pw2}>
+        <Field label={t('auth.confirm_password')} error={errors.pw2}>
           <input
             type={showPw ? 'text' : 'password'}
             value={pw2}
@@ -87,11 +89,11 @@ export function SignupEmail({ onNext, onLogin }: Props) {
         </Field>
 
         <div className="text-center text-xs text-[#9B93BA] mt-4">
-          Already registered?{' '}
-          <button type="button" onClick={onLogin} className="text-[#A984FF] font-medium">Login to your account</button>
+          {t('auth.already_registered')}{' '}
+          <button type="button" onClick={onLogin} className="text-[#A984FF] font-medium">{t('auth.login_to_account')}</button>
         </div>
       </div>
-      <BottomBar onNext={submit} hideBack nextLabel="Next" />
+      <BottomBar onNext={submit} hideBack nextLabel={t('ui.next')} />
     </Shell>
   );
 }

@@ -176,9 +176,9 @@ export function Garden({ onNav }: { onNav: (s: ScreenId) => void }) {
         <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--card)] p-4 flex items-start gap-3">
           <span className="text-2xl leading-none">🥕</span>
           <div>
-            <div className="text-sm font-semibold text-[var(--text)]">How your garden grows</div>
+            <div className="text-sm font-semibold text-[var(--text)]">{t('garden.carrots_earned')}</div>
             <div className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">
-              Every completed test earns <strong>1 collected carrot</strong>. Every 10 completed tests plants <strong>1 visible carrot</strong> in your plot (up to 36 carrots in a 6x6 grid).
+              Every completed test earns 1 collected carrot. Every 10 completed tests plants 1 visible carrot in your plot.
             </div>
           </div>
         </div>
@@ -187,15 +187,15 @@ export function Garden({ onNav }: { onNav: (s: ScreenId) => void }) {
         <div className="flex flex-col gap-3">
           <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--card)] p-4 flex justify-between items-center shadow-sm">
             <div>
-              <span className="text-xs text-[var(--text-muted)] font-semibold uppercase tracking-wider">Collected Carrots</span>
-              <div className="text-2xl font-bold text-[#FF9F45] mt-0.5">{totalCarrots} {totalCarrots === 1 ? 'carrot' : 'carrots'}</div>
+              <span className="text-xs text-[var(--text-muted)] font-semibold uppercase tracking-wider">{t('garden.carrots_earned')}</span>
+              <div className="text-2xl font-bold text-[#FF9F45] mt-0.5">{totalCarrots}</div>
             </div>
             <span className="text-3xl">🥕</span>
           </div>
           <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--card)] p-4 flex justify-between items-center shadow-sm">
             <div>
-              <span className="text-xs text-[var(--text-muted)] font-semibold uppercase tracking-wider">Global Collection</span>
-              <div className="text-2xl font-bold text-[var(--text)] mt-0.5">{communityCarrots.toLocaleString()} carrots</div>
+              <span className="text-xs text-[var(--text-muted)] font-semibold uppercase tracking-wider">{t('garden.community_plot')}</span>
+              <div className="text-2xl font-bold text-[var(--text)] mt-0.5">{communityCarrots.toLocaleString()}</div>
             </div>
             <span className="text-3xl">🥕</span>
           </div>

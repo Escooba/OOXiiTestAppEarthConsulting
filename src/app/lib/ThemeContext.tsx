@@ -39,7 +39,7 @@ interface Ctx {
   mode: DisplayMode;
   language: LanguageCode;
   tokens: ThemeTokens;
-  t: (key: TranslationKey) => string;
+  t: (key: TranslationKey, params?: Record<string, string | number>) => string;
   setMode: (m: DisplayMode) => void;
   setLanguage: (l: LanguageCode) => void;
 }
@@ -48,7 +48,7 @@ const ThemeCtx = createContext<Ctx>({
   mode: 'ooxii',
   language: 'en',
   tokens: TOKENS,
-  t: (k) => k,
+  t: (k, p) => translate('en', k, p),
   setMode: () => {},
   setLanguage: () => {},
 });
@@ -60,7 +60,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<DisplayMode>('ooxii');
   const [language, setLanguageState] = useState<LanguageCode>('en');
   
-  const t = useMemo(() => (key: TranslationKey) => translate(language, key), [language]);
+  const t = useMemo(
+    () => (key: TranslationKey, params?: Record<string, string | number>) => translate(language, key, params),
+    [language]
+  );
 
   // Load preferences from SQLite on init
   React.useEffect(() => {

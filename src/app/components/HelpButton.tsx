@@ -6,6 +6,8 @@ import {
   type ApparatusHelpConfig,
 } from '../help/apparatusHelpConfig';
 
+import { useTheme } from '../lib/ThemeContext';
+
 export interface HelpButtonProps {
   configId?: string;
   config?: ApparatusHelpConfig;
@@ -25,6 +27,7 @@ export function HelpButton({
   pulse = false,
   contextLine,
 }: HelpButtonProps) {
+  const { t } = useTheme();
   const [open, setOpen] = useState(false);
 
   // Resolve config object
@@ -67,7 +70,7 @@ export function HelpButton({
         <div className="w-5 h-5 rounded-full border border-[var(--primary)]/60 flex items-center justify-center shrink-0 bg-[var(--primary)]/10">
           <Hand size={11} strokeWidth={2.2} />
         </div>
-        <span>Help</span>
+        <span>{t('ui.help')}</span>
       </button>
 
       <ApparatusHelpDialog

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Shell, BottomBar } from '../components/Shell';
 import { Search, RotateCw, ChevronRight, Edit3, MapPin, ChevronLeft } from 'lucide-react';
 import { ScreenId } from '../lib/theme';
+import { useTheme } from '../lib/ThemeContext';
 
 export interface ClientRecord {
   clientId: string;
@@ -37,6 +38,7 @@ export function FindClient({
   onBack: () => void;
   onOpenProfile: (c: any) => void;
 }) {
+  const { t } = useTheme();
   const [query, setQuery] = useState('');
   const { clients, refresh } = useClients();
 
@@ -62,8 +64,8 @@ export function FindClient({
   return (
     <Shell showProgress={false}>
       <div className="px-5 pt-2 pb-32 flex flex-col gap-4">
-        <Breadcrumb path={['Home', 'Clients']} />
-        <h1 className="text-2xl font-light">Find a client</h1>
+        <Breadcrumb path={[t('ui.home'), t('clients.find_title')]} />
+        <h1 className="text-2xl font-light">{t('clients.find_title')}</h1>
 
         <div className="flex items-center gap-2">
           <div className="flex-1 flex items-center gap-3 bg-[#140047] rounded-2xl px-4 py-3 border border-white/15 text-white">
@@ -71,7 +73,7 @@ export function FindClient({
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Quick search for a client"
+              placeholder={t('clients.search_placeholder')}
               className="flex-1 bg-transparent outline-none text-sm placeholder-white/50 text-white"
             />
           </div>
@@ -85,7 +87,7 @@ export function FindClient({
         </div>
 
         <div className="text-xs text-[var(--text-muted)] uppercase tracking-wider font-semibold">
-          {filtered.length} client{filtered.length === 1 ? '' : 's'}
+          {t('clients.count', { count: filtered.length })}
         </div>
 
         <div className="flex flex-col gap-3">
@@ -97,13 +99,13 @@ export function FindClient({
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <div className="text-xs text-[var(--text-muted)]">Tester: {c.testerName}</div>
-                  <div className="text-lg font-medium text-white mt-0.5">Client ID: {c.clientId}</div>
+                  <div className="text-xs text-[var(--text-muted)]">{t('clients.tester_label', { name: c.testerName })}</div>
+                  <div className="text-lg font-medium text-white mt-0.5">{t('clients.client_id', { id: c.clientId })}</div>
                 </div>
-                <ChevronRight size={18} className="text-[#3BE0D4] mt-1" />
+                <ChevronRight size={18} className="text-[#3BE0D4]" />
               </div>
               <div className="text-sm text-white/80 mt-2">{c.gender}, {c.yearOfBirth}</div>
-              <div className="text-xs text-[var(--text-muted)] mt-1">Cataract surgery: {c.cataractSurgery}</div>
+              <div className="text-xs text-[var(--text-muted)] mt-1">{t('clients.cataract_surgery', { status: c.cataractSurgery })}</div>
               <div className="text-xs text-[var(--text-muted)] mt-1 flex items-center gap-1">
                 <MapPin size={11} className="text-[#3BE0D4]" /> {c.region}
               </div>
@@ -111,7 +113,7 @@ export function FindClient({
           ))}
         </div>
       </div>
-      <BottomBar onBack={onBack} nextLabel="New client" onNext={() => onBack()} backLabel="Home" />
+      <BottomBar onBack={onBack} nextLabel={t('home.new_client_title')} onNext={() => onBack()} backLabel={t('ui.home')} />
     </Shell>
   );
 }
