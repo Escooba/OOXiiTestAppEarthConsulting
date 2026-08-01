@@ -284,7 +284,58 @@ export type TranslationKey =
   | 'mascot.default_generic'
   | 'error.required'
   | 'error.invalid_pd'
-  | 'error.select_option';
+  | 'error.select_option'
+
+  // Help Popups
+  | 'help.illustration_only'
+  | 'help.tumbling-e-line.title'
+  | 'help.tumbling-e-line.instruction'
+  | 'help.tumbling-e-letters.title'
+  | 'help.tumbling-e-letters.instruction'
+  | 'help.tumbling-e-result.title'
+  | 'help.tumbling-e-result.instruction'
+  | 'help.near-vision-line.title'
+  | 'help.near-vision-line.instruction'
+  | 'help.distance-glasses-question.title'
+  | 'help.distance-glasses-question.instruction'
+  | 'help.reading-glasses-question.title'
+  | 'help.reading-glasses-question.instruction'
+  | 'help.wheel-pd.title'
+  | 'help.wheel-pd.instruction'
+  | 'help.wheel-direction.title'
+  | 'help.wheel-direction.instruction'
+  | 'help.wheel-power.title'
+  | 'help.wheel-power.instruction'
+  | 'help.wheel-twocolour.title'
+  | 'help.wheel-twocolour.instruction'
+  | 'help.wheel-line9.title'
+  | 'help.wheel-line9.instruction'
+  | 'help.wheel-distance-improved.title'
+  | 'help.wheel-distance-improved.instruction'
+  | 'help.sunglasses-question.title'
+  | 'help.sunglasses-question.instruction'
+  | 'help.sunglasses-selection.title'
+  | 'help.sunglasses-selection.instruction'
+  | 'help.dispensed-review.title'
+  | 'help.dispensed-review.instruction'
+
+  // User Onboarding Guide
+  | 'guide.step_counter'
+  | 'guide.skip'
+  | 'guide.lets_go'
+  | 'guide.step1.title'
+  | 'guide.step1.body'
+  | 'guide.step2.title'
+  | 'guide.step2.sub'
+  | 'guide.step2.body'
+  | 'guide.step3.title'
+  | 'guide.step3.sub'
+  | 'guide.step3.body'
+  | 'guide.step4.title'
+  | 'guide.step4.sub'
+  | 'guide.step4.body'
+  | 'guide.step5.title'
+  | 'guide.step5.body';
 
 type Dictionary = Record<TranslationKey, string>;
 
@@ -567,6 +618,72 @@ const en: Dictionary = {
   'error.required': 'This field is required',
   'error.invalid_pd': 'Enter a PD between 52 and 78',
   'error.select_option': 'Please select an option before continuing.',
+
+  // Help Popups
+  'help.illustration_only': 'Illustration only',
+
+  'help.tumbling-e-line.title': 'Tumbling E Chart — Smallest Line',
+  'help.tumbling-e-line.instruction': 'Ask the client to read down the physical chart. Select the OOXii line corresponding to the smallest row they read completely correctly.',
+
+  'help.tumbling-e-letters.title': 'Tumbling E Chart — Letters Correct',
+  'help.tumbling-e-letters.instruction': 'On the physical chart, move to the row immediately below the last row read completely correctly. Count how many symbols the client identifies correctly.',
+
+  'help.tumbling-e-result.title': 'Distance Result Score',
+  'help.tumbling-e-result.instruction': 'Review the calculated Snellen visual acuity fraction (e.g. 6/12 or 6/6). This score is automatically calculated from the smallest line and letter count.',
+
+  'help.near-vision-line.title': 'Near Vision Test Card',
+  'help.near-vision-line.instruction': 'Hold the near vision card at 33–40 cm from the client. Record the smallest line/N-rating paragraph the client can read comfortably.',
+
+  'help.distance-glasses-question.title': 'Distance Glasses Inspection',
+  'help.distance-glasses-question.instruction': 'Ask if the client currently owns or wears prescription glasses specifically for distance vision (such as driving, watching television, or outdoors).',
+
+  'help.reading-glasses-question.title': 'Reading Glasses Inspection',
+  'help.reading-glasses-question.instruction': 'Ask if the client currently uses near vision or reading glasses for close work, reading books, or examining objects.',
+
+  'help.wheel-pd.title': 'Reading Pupillary Distance (PD)',
+  'help.wheel-pd.instruction': 'Place 0.0 lenses in front of both eyes on the wheel apparatus. Turn the central knob until the viewfinders align with the eyes. Read the PD value (in mm) from the scale above the knob.',
+
+  'help.wheel-direction.title': 'Wheel Test — Plus / Minus Direction',
+  'help.wheel-direction.instruction': 'Cover the non-tested eye. Rotate the lens selector dial on the wheel to test Plus (+), Minus (-), or Neither. Ask the client which lens direction makes the chart clearer.',
+
+  'help.wheel-power.title': 'Wheel Test — Lens Power',
+  'help.wheel-power.instruction': 'Turn the power dial to cycle through lens strengths (+0.5 to +3.0 or -0.5 to -3.0). Choose the lowest lens strength that provides maximum clarity.',
+
+  'help.wheel-twocolour.title': 'Two-Colour (Duochrome) Test',
+  'help.wheel-twocolour.instruction': 'With the selected wheel lens in place, look at the two-colour target. Ask the client whether letters on the RED side or GREEN side look sharper and darker, or if both look equal.',
+
+  'help.wheel-line9.title': 'Wheel Line 9 Verification',
+  'help.wheel-line9.instruction': 'Ask whether the client can read OOXii Line 9 or a smaller line while looking through the corrected lenses.',
+
+  'help.wheel-distance-improved.title': 'Distance Improvement at Wheel',
+  'help.wheel-distance-improved.instruction': 'Measure distance vision looking through the corrected wheel lenses at 3m. Select Yes if visual clarity improved compared to uncorrected vision.',
+
+  'help.sunglasses-question.title': 'Sunglasses Dispensed',
+  'help.sunglasses-question.instruction': 'Confirm whether UV-protective sunglasses were selected and dispensed to the client following testing.',
+
+  'help.sunglasses-selection.title': 'Sunglasses Model Selection',
+  'help.sunglasses-selection.instruction': 'Select the exact model and frame type of the sunglasses being provided to the client.',
+
+  'help.dispensed-review.title': 'Eyewear Dispensed Review',
+  'help.dispensed-review.instruction': 'Verify distance glasses, reading glasses, and sunglasses dispensed before entering the total amount paid.',
+
+  // User Onboarding Guide
+  'guide.step_counter': '{step} of {total}',
+  'guide.skip': 'Skip guide',
+  'guide.lets_go': "Let's go!",
+  'guide.step1.title': "Hi! I'm Bun",
+  'guide.step1.body': "I'll show you around the app so you can start helping clients see better. It only takes a minute!",
+  'guide.step2.title': 'Start Tests Here',
+  'guide.step2.sub': 'See the Home tab below',
+  'guide.step2.body': 'Tap "Start Vision Test" to run a simulation with a client. Complete the steps and log their results.',
+  'guide.step3.title': 'Track Your Progress',
+  'guide.step3.sub': 'See the Profile tab below',
+  'guide.step3.body': "Your Profile shows how many clients you've helped, carrots collected, and badges earned along the way.",
+  'guide.step4.title': 'Grow the Community Garden',
+  'guide.step4.sub': 'See the Garden tab below',
+  'guide.step4.body': 'Every test you complete adds carrots to the global garden. See how your work joins the worldwide effort.',
+  'guide.step5.title': 'Follow the Rabbit!',
+  'guide.step5.body': "During tests, the rabbit points to what you should do next. Look for it when you're unsure.",
 };
 
 const es: Dictionary = {
@@ -848,6 +965,72 @@ const es: Dictionary = {
   'error.required': 'Este campo es obligatorio',
   'error.invalid_pd': 'Ingrese una DIP entre 52 y 78',
   'error.select_option': 'Por favor seleccione una opción antes de continuar.',
+
+  // Help Popups
+  'help.illustration_only': 'Solo ilustración',
+
+  'help.tumbling-e-line.title': 'Tabla Tumbling E — Línea más pequeña',
+  'help.tumbling-e-line.instruction': 'Pida al paciente que lea la tabla física hacia abajo. Seleccione la línea OOXii correspondiente a la fila más pequeña que lea completamente correcta.',
+
+  'help.tumbling-e-letters.title': 'Tabla Tumbling E — Símbolos correctos',
+  'help.tumbling-e-letters.instruction': 'En la tabla física, pase a la fila inmediatamente posterior a la última fila leída totalmente correcta. Cuenté cuántos símbolos identifica correctamente el paciente.',
+
+  'help.tumbling-e-result.title': 'Resultado de agudeza lejana',
+  'help.tumbling-e-result.instruction': 'Revise la fracción de agudeza visual de Snellen calculada (ej. 6/12 o 6/6). Esta puntuación se calcula automáticamente a partir de la línea más pequeña y el conteo de letras.',
+
+  'help.near-vision-line.title': 'Cartilla de visión cercana',
+  'help.near-vision-line.instruction': 'Sostenga la cartilla de visión cercana a 33–40 cm del paciente. Registre la línea/párrafo con clasificación N más pequeña que el paciente lea con comodidad.',
+
+  'help.distance-glasses-question.title': 'Inspección de gafas para lejos',
+  'help.distance-glasses-question.instruction': 'Pregunte si el paciente actualmente posee o usa gafas graduadas específicas para visión lejana (como para conducir, ver televisión o en exteriores).',
+
+  'help.reading-glasses-question.instruction': 'Pregunte si el paciente utiliza actualmente gafas para cerca o de lectura para trabajos cercanos, leer libros o examinar objetos.',
+
+  'help.reading-glasses-question.title': 'Inspección de gafas para cerca',
+  'help.wheel-pd.title': 'Lectura de distancia interpupilar (DIP)',
+  'help.wheel-pd.instruction': 'Coloque lentes 0.0 frente a ambos ojos en el aparato de rueda. Gire la perilla central hasta que los visores se alineen con los ojos. Lea el valor de la DIP (en mm) en la escala sobre la perilla.',
+
+  'help.wheel-direction.title': 'Prueba de rueda — Dirección Más / Menos',
+  'help.wheel-direction.instruction': 'Cubra el ojo no evaluado. Gire el dial selector de lente en la rueda para probar Más (+), Menos (-) o Ninguno. Pregunte al paciente qué dirección de lente hace que la tabla se vea más clara.',
+
+  'help.wheel-power.title': 'Prueba de rueda — Potencia de lente',
+  'help.wheel-power.instruction': 'Gire el dial de potencia para cambiar la graduación del lente (+0.5 a +3.0 o -0.5 a -3.0). Elija la graduación de lente más baja que proporcione la máxima claridad.',
+
+  'help.wheel-twocolour.title': 'Prueba bicromática (Duocroma)',
+  'help.wheel-twocolour.instruction': 'Con el lente seleccionado en la rueda, mire la figura bicromática. Pregunte al paciente si las letras del lado ROJO o VERDE se ven más nítidas y oscuras, o si ambas se ven iguales.',
+
+  'help.wheel-line9.title': 'Verificación de Línea 9 con rueda',
+  'help.wheel-line9.instruction': 'Pregunte si el paciente puede leer la Línea 9 de OOXii o una línea más pequeña al mirar a través de los lentes corregidos.',
+
+  'help.wheel-distance-improved.title': 'Mejora lejana con rueda',
+  'help.wheel-distance-improved.instruction': 'Mida la visión lejana mirando a través de los lentes corregidos de la rueda a 3 m. Seleccione Sí si la claridad visual mejoró en comparación con la visión sin corregir.',
+
+  'help.sunglasses-question.title': 'Gafas de sol entregadas',
+  'help.sunglasses-question.instruction': 'Confirme si se seleccionaron y entregaron gafas de sol con protección UV al paciente después de la evaluación.',
+
+  'help.sunglasses-selection.title': 'Selección de modelo de gafas de sol',
+  'help.sunglasses-selection.instruction': 'Seleccione el modelo exacto y el tipo de montura de las gafas de sol entregadas al paciente.',
+
+  'help.dispensed-review.title': 'Revisión de gafas entregadas',
+  'help.dispensed-review.instruction': 'Verifique las gafas para lejos, gafas de lectura y gafas de sol entregadas antes de ingresar el monto total pagado.',
+
+  // User Onboarding Guide
+  'guide.step_counter': '{step} de {total}',
+  'guide.skip': 'Omitir guía',
+  'guide.lets_go': '¡Vamos!',
+  'guide.step1.title': '¡Hola! Soy Bun',
+  'guide.step1.body': 'Le mostraré la aplicación para que pueda comenzar a ayudar a los pacientes a ver mejor. ¡Solo toma un minuto!',
+  'guide.step2.title': 'Comience las pruebas aquí',
+  'guide.step2.sub': 'Vea la pestaña Inicio abajo',
+  'guide.step2.body': 'Toque "Comenzar Prueba de Visión" para realizar una simulación con un paciente. Complete los pasos y registre sus resultados.',
+  'guide.step3.title': 'Siga su progreso',
+  'guide.step3.sub': 'Vea la pestaña Perfil abajo',
+  'guide.step3.body': 'Su Perfil muestra a cuántos pacientes ha ayudado, las zanahorias recolectadas y las insignias ganadas en el camino.',
+  'guide.step4.title': 'Haga crecer el Jardín Comunitario',
+  'guide.step4.sub': 'Vea la pestaña Jardín abajo',
+  'guide.step4.body': 'Cada prueba que completa agrega zanahorias al jardín global. Vea cómo su trabajo se une al esfuerzo mundial.',
+  'guide.step5.title': '¡Siga al conejo!',
+  'guide.step5.body': 'Durante las pruebas, el conejo le indica lo que debe hacer a continuación. Búsquelo cuando tenga dudas.',
 };
 
 const DICTIONARIES: Record<LanguageCode, Dictionary> = {

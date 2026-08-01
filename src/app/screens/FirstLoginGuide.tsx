@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, X, ChevronRight, Home as HomeIcon, User, Sprout, Sparkles } from 'lucide-react';
 import { RabbitMascot } from '../components/RabbitMascot';
+import { useTheme } from '../lib/ThemeContext';
 
 interface Props {
   onDone: () => void;
@@ -18,57 +19,59 @@ type Step = {
   cta: string;
 };
 
-const STEPS: Step[] = [
-  {
-    title: "Hi! I'm Bun",
-    emoji: '🐰',
-    body: "I'll show you around the app so you can start helping clients see better. It only takes a minute!",
-    gradient: 'from-[#A984FF] to-[#0FB5A8]',
-    icon: <RabbitMascot size={26} />,
-    iconBg: 'bg-white/25',
-    cta: 'Next',
-  },
-  {
-    title: 'Start Tests Here',
-    sub: 'See the Home tab below',
-    body: 'Tap "Start Vision Test" to run a simulation with a client. Complete the steps and log their results.',
-    gradient: 'from-[#3B82F6] to-[#4F6BF0]',
-    icon: <HomeIcon size={24} className="text-white" />,
-    iconBg: 'bg-white/20',
-    cta: 'Next',
-  },
-  {
-    title: 'Track Your Progress',
-    sub: 'See the Profile tab below',
-    body: "Your Profile shows how many clients you've helped, carrots collected, and badges earned along the way.",
-    gradient: 'from-[#A855F7] to-[#8B5CF6]',
-    icon: <User size={24} className="text-white" />,
-    iconBg: 'bg-white/20',
-    cta: 'Next',
-  },
-  {
-    title: 'Grow the Community Garden',
-    sub: 'See the Garden tab below',
-    body: 'Every test you complete adds carrots to the global garden. See how your work joins the worldwide effort.',
-    gradient: 'from-[#22C55E] to-[#16A34A]',
-    icon: <Sprout size={24} className="text-white" />,
-    iconBg: 'bg-white/20',
-    cta: 'Next',
-  },
-  {
-    title: 'Follow the Rabbit!',
-    body: "During tests, the rabbit points to what you should do next. Look for it when you're unsure.",
-    gradient: 'from-[#F97316] to-[#FB923C]',
-    icon: <Sparkles size={24} className="text-white" />,
-    iconBg: 'bg-white/20',
-    cta: "Let's go!",
-  },
-];
-
 export function FirstLoginGuide({ onDone }: Props) {
+  const { t } = useTheme();
   const [i, setI] = useState(0);
-  const step = STEPS[i];
-  const isLast = i === STEPS.length - 1;
+
+  const steps: Step[] = [
+    {
+      title: t('guide.step1.title'),
+      emoji: '🐰',
+      body: t('guide.step1.body'),
+      gradient: 'from-[#A984FF] to-[#0FB5A8]',
+      icon: <RabbitMascot size={26} />,
+      iconBg: 'bg-white/25',
+      cta: t('ui.next'),
+    },
+    {
+      title: t('guide.step2.title'),
+      sub: t('guide.step2.sub'),
+      body: t('guide.step2.body'),
+      gradient: 'from-[#3B82F6] to-[#4F6BF0]',
+      icon: <HomeIcon size={24} className="text-white" />,
+      iconBg: 'bg-white/20',
+      cta: t('ui.next'),
+    },
+    {
+      title: t('guide.step3.title'),
+      sub: t('guide.step3.sub'),
+      body: t('guide.step3.body'),
+      gradient: 'from-[#A855F7] to-[#8B5CF6]',
+      icon: <User size={24} className="text-white" />,
+      iconBg: 'bg-white/20',
+      cta: t('ui.next'),
+    },
+    {
+      title: t('guide.step4.title'),
+      sub: t('guide.step4.sub'),
+      body: t('guide.step4.body'),
+      gradient: 'from-[#22C55E] to-[#16A34A]',
+      icon: <Sprout size={24} className="text-white" />,
+      iconBg: 'bg-white/20',
+      cta: t('ui.next'),
+    },
+    {
+      title: t('guide.step5.title'),
+      body: t('guide.step5.body'),
+      gradient: 'from-[#F97316] to-[#FB923C]',
+      icon: <Sparkles size={24} className="text-white" />,
+      iconBg: 'bg-white/20',
+      cta: t('guide.lets_go'),
+    },
+  ];
+
+  const step = steps[i];
+  const isLast = i === steps.length - 1;
 
   return (
     <div className="fixed inset-0 z-[200] flex items-start justify-center">
@@ -123,7 +126,7 @@ export function FirstLoginGuide({ onDone }: Props) {
 
               <div className="flex items-center justify-between mt-5">
                 <div className="flex items-center gap-2">
-                  {STEPS.map((_, idx) => (
+                  {steps.map((_, idx) => (
                     <motion.span
                       key={idx}
                       animate={{ width: idx === i ? 22 : 8 }}
@@ -131,7 +134,7 @@ export function FirstLoginGuide({ onDone }: Props) {
                     />
                   ))}
                 </div>
-                <span className="text-xs text-[#9B93BA] font-medium">{i + 1} of {STEPS.length}</span>
+                <span className="text-xs text-[#9B93BA] font-medium">{t('guide.step_counter', { step: i + 1, total: steps.length })}</span>
               </div>
 
               <div className="flex gap-3 mt-4">
@@ -139,7 +142,7 @@ export function FirstLoginGuide({ onDone }: Props) {
                   onClick={onDone}
                   className="flex-1 h-12 rounded-2xl border border-white/15 text-[#C7BFE4] font-medium hover:bg-white/5 transition-colors"
                 >
-                  Skip guide
+                  {t('guide.skip')}
                 </button>
                 <button
                   onClick={() => (isLast ? onDone() : setI(i + 1))}

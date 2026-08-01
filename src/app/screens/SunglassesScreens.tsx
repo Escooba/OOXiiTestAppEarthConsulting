@@ -22,7 +22,7 @@ export function SunglassesSelection({
   return (
     <Shell progress={92}>
       <div className="px-5 pt-2 pb-32 flex flex-col gap-5">
-        <h1 className="text-2xl font-light">Sunglasses selection</h1>
+        <h1 className="text-2xl font-light text-[var(--text)]">Sunglasses selection</h1>
         <InstructionCard text="Select a sunglass type." />
 
         <RabbitBubble
@@ -30,9 +30,9 @@ export function SunglassesSelection({
           type={error ? 'error' : value ? 'success' : 'default'}
         />
 
-        <div ref={inputCardRef} className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4 scroll-mt-20">
+        <div ref={inputCardRef} className="bg-[var(--card)] border border-[var(--card-border)] rounded-3xl p-5 flex flex-col gap-4 shadow-lg scroll-mt-20">
           <div className="flex items-center justify-between gap-3">
-            <label className="text-[15px] font-medium leading-snug flex-1">Sunglass type</label>
+            <label className="text-[15px] font-bold leading-snug flex-1 text-[var(--text)]">Sunglass type</label>
             <HelpButton configId="sunglasses-selection" />
           </div>
           <RadioGroup

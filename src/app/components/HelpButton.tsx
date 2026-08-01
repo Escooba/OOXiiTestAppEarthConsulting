@@ -54,11 +54,14 @@ export function HelpButton({
 
   if (!resolvedConfig) return null;
 
+  const titleKey = `help.${resolvedConfig.id}.title` as any;
+  const translatedTitle = t(titleKey) !== titleKey ? t(titleKey) : resolvedConfig.title;
+
   return (
     <>
       <button
         type="button"
-        aria-label={`Get help for ${resolvedConfig.title}`}
+        aria-label={`Get help for ${translatedTitle}`}
         onClick={(e) => {
           e.stopPropagation();
           setOpen(true);

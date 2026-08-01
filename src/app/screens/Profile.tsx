@@ -70,9 +70,10 @@ export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
   const BADGES_EARNED = progress?.badgesEarned ?? 0;
   
   const nextBadge = progress?.nextBadge;
+  const CURRENT_BADGE_PROGRESS = nextBadge ? getBadgeMetricValue(nextBadge.ruleType, progress) : 0;
   const NEXT_BADGE_TARGET = nextBadge?.targetValue ?? 50;
-  const REMAINING = Math.max(0, NEXT_BADGE_TARGET - CLIENTS);
-  const pct = nextBadge ? Math.min(100, (CLIENTS / NEXT_BADGE_TARGET) * 100) : 100;
+  const REMAINING = Math.max(0, NEXT_BADGE_TARGET - CURRENT_BADGE_PROGRESS);
+  const pct = nextBadge ? Math.min(100, (CURRENT_BADGE_PROGRESS / NEXT_BADGE_TARGET) * 100) : 100;
 
   const earnedMap = new Map(earned.map(b => [b.badgeCode, b]));
   const enabledBadges = definitions.filter(d => d.enabled).sort((a, b) => a.displayOrder - b.displayOrder);
@@ -125,7 +126,7 @@ export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
           <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-3xl p-5 flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="font-semibold text-[var(--text)] text-sm">{t('profile.next_badge')}</span>
-              <span className="text-xs text-[var(--text-muted)]">{CLIENTS} / {NEXT_BADGE_TARGET}</span>
+              <span className="text-xs text-[var(--text-muted)]">{CURRENT_BADGE_PROGRESS} / {NEXT_BADGE_TARGET}</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-[var(--bg)] border border-[var(--primary)]/40 flex items-center justify-center text-2xl">
@@ -195,7 +196,7 @@ export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
         <div className="pt-4 flex justify-center">
           <button
             onClick={() => setShowLogoutConfirm(true)}
-            className="flex items-center justify-center gap-2 min-h-[44px] px-6 py-3 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors font-medium border border-red-500/20"
+            className="flex items-center justify-center gap-2 min-h-[44px] px-6 py-3 rounded-2xl bg-red-500/25 hover:bg-red-500/40 text-white font-semibold border border-red-400/50 shadow-md transition-all active:scale-[0.98]"
           >
             <LogOut size={18} />
             <span>{t('profile.logout')}</span>

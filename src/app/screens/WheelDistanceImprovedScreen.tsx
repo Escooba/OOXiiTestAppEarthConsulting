@@ -44,9 +44,9 @@ export function WheelDistanceImprovedScreen({
           type={error ? 'error' : value ? 'success' : 'default'}
         />
 
-        <div ref={inputCardRef} className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4 scroll-mt-20">
+        <div ref={inputCardRef} className="bg-[var(--card)] border border-[var(--card-border)] rounded-3xl p-5 flex flex-col gap-4 shadow-lg scroll-mt-20">
           <div className="flex items-center justify-between gap-3">
-            <label className="text-sm font-medium block flex-1">Did vision improve with lenses at the wheel?</label>
+            <label className="text-sm font-bold block flex-1 text-[var(--text)]">Did vision improve with lenses at the wheel?</label>
             <HelpButton configId="wheel-distance-improved" />
           </div>
           <RadioGroup

@@ -59,8 +59,8 @@ export function QuestionScreen({
     <Shell progress={progress} isFading={isFading}>
       <div className="px-5 pt-2 pb-32 flex flex-col gap-5">
         <div>
-          <h1 className="text-2xl font-light">{title}</h1>
-          {subtitle && <h2 className="text-lg font-medium text-[#A984FF] mt-1">{subtitle}</h2>}
+          <h1 className="text-2xl font-light text-[var(--text)]">{title}</h1>
+          {subtitle && <h2 className="text-lg font-bold text-[var(--primary)] mt-1">{subtitle}</h2>}
         </div>
 
         <RabbitBubble
@@ -74,9 +74,9 @@ export function QuestionScreen({
           type={error ? 'error' : value ? 'success' : 'default'}
         />
 
-        <div ref={inputCardRef} className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4 scroll-mt-20">
+        <div ref={inputCardRef} className="bg-[var(--card)] border border-[var(--card-border)] rounded-3xl p-5 flex flex-col gap-4 shadow-lg scroll-mt-20">
           <div className="flex items-center justify-between gap-3">
-            <p className="font-medium text-[15px] leading-snug flex-1">{question}</p>
+            <p className="font-bold text-[15px] leading-snug flex-1 text-[var(--text)]">{question}</p>
             <HelpButton configId={helpConfigId} title={helpTitle} description={helpBody} />
           </div>
           <RadioGroup

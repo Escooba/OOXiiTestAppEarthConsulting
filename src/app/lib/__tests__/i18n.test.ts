@@ -31,6 +31,21 @@ describe('i18n Module Tests', () => {
     expect(translate('es', 'clients.count', { count: 5 })).toBe('5 pacientes');
   });
 
+  it('should translate help popup keys accurately in Spanish', () => {
+    expect(translate('es', 'help.illustration_only')).toBe('Solo ilustración');
+    expect(translate('es', 'help.distance-glasses-question.title')).toBe('Inspección de gafas para lejos');
+    expect(translate('es', 'help.tumbling-e-letters.title')).toBe('Tabla Tumbling E — Símbolos correctos');
+    expect(translate('es', 'help.tumbling-e-letters.instruction')).toContain('En la tabla física, pase a la fila inmediatamente posterior');
+  });
+
+  it('should translate onboarding guide keys accurately in Spanish', () => {
+    expect(translate('es', 'guide.skip')).toBe('Omitir guía');
+    expect(translate('es', 'guide.lets_go')).toBe('¡Vamos!');
+    expect(translate('es', 'guide.step1.title')).toBe('¡Hola! Soy Bun');
+    expect(translate('es', 'guide.step2.title')).toBe('Comience las pruebas aquí');
+    expect(translate('es', 'guide.step_counter', { step: 2, total: 5 })).toBe('2 de 5');
+  });
+
   it('should fallback to English if a key is missing in Spanish dictionary', () => {
     // Cast a key to test fallback behavior
     const result = translate('es', 'non_existent_key' as any);

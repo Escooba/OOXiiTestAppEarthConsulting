@@ -1,6 +1,6 @@
 import React, { ReactNode, useState, createContext, useContext, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { Flag, Wifi, Battery, Signal, Home as HomeIcon, Settings as SettingsIcon, Sprout, User, XCircle } from 'lucide-react';
+import { Flag, Wifi, Battery, Signal, Home as HomeIcon, Settings as SettingsIcon, Sprout, User } from 'lucide-react';
 import { RabbitMascot } from './RabbitMascot';
 import { ScreenId } from '../lib/theme';
 import { useTheme } from '../lib/ThemeContext';
@@ -32,9 +32,8 @@ interface ShellProps {
 
 export function Shell({ children, progress = 0, showProgress = true, onHome, isAdvancing = false, isFading = false }: ShellProps) {
   const { tokens, mode, t } = useTheme();
-  const { onNav, hasInProgressTest, onCancelTest } = useContext(ShellNavContext);
+  const { onNav } = useContext(ShellNavContext);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const isOnline = useOnlineStatus();
 
   const lastProgress = useRef(Number(sessionStorage.getItem('lastProgress') || 0));
@@ -70,37 +69,29 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
         </div>
 
         <div className="px-4 py-2 flex items-center justify-between z-20 gap-2">
-          <div className={`font-bold text-xl tracking-wide ${tokens.text}`}>OOXii</div>
+          <div className="font-bold text-xl tracking-wide text-[var(--text)]">OOXii</div>
           <div className="flex items-center gap-1.5">
             <button
               onClick={goHome}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${tokens.navPillBg} ${tokens.text} border-[var(--primary)]/30 hover:border-[var(--primary)]`}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all bg-[var(--pill-bg)] hover:bg-[var(--pill-hover-bg)] text-[var(--pill-text)] border-[var(--pill-border)] shadow-xs"
             >
               <HomeIcon size={13} />
               {t('ui.home')}
             </button>
             <button
               onClick={() => setSettingsOpen(true)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${tokens.navPillBg} ${tokens.text} border-[var(--primary)]/30 hover:border-[var(--primary)]`}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all bg-[var(--pill-bg)] hover:bg-[var(--pill-hover-bg)] text-[var(--pill-text)] border-[var(--pill-border)] shadow-xs"
             >
               <SettingsIcon size={13} />
               {t('ui.settings')}
             </button>
-            {hasInProgressTest && onCancelTest && (
-              <button
-                onClick={() => setShowCancelConfirm(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
-              >
-                <XCircle size={13} />
-                {t('ui.cancel_test')}
-              </button>
-            )}
+
             <div className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${
               isOnline
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500 dark:text-emerald-400'
+                : 'bg-amber-500/10 border-amber-500/30 text-amber-500 dark:text-amber-400'
             }`}>
-              <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+              <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-500 dark:bg-emerald-400 animate-pulse' : 'bg-amber-500 dark:bg-amber-400'}`} />
               <span>{isOnline ? t('ui.online') : t('ui.offline_mode')}</span>
             </div>
           </div>
@@ -109,13 +100,13 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
         {showProgress && (
           <div className={`sticky top-0 z-30 pt-4 pb-6 px-6 bg-gradient-to-b from-[var(--bg)] via-[var(--bg)] to-transparent`}>
             <div className="flex justify-between items-end mb-2 pr-8">
-              <span className={`text-xs ${tokens.textMuted} font-semibold uppercase tracking-wider`}>{t('ui.overall_progress')}</span>
+              <span className="text-xs text-[var(--text-muted)] font-semibold uppercase tracking-wider">{t('ui.overall_progress')}</span>
               <span className="text-[var(--primary)] font-bold text-sm">{progress}%</span>
             </div>
             <div className="relative w-[calc(100%-32px)] mt-2">
-              <div className={`relative w-full h-3 rounded-full ${tokens.progressTrack} border border-[var(--card-border)] overflow-hidden`}>
+              <div className="relative w-full h-3 rounded-full bg-[var(--progress-track)] border border-[var(--card-border)] overflow-hidden">
                 <motion.div
-                  className="absolute left-0 top-0 h-full rounded-full bg-[var(--primary)] shadow-[0_0_12px_rgba(169,132,255,0.4)]"
+                  className="absolute left-0 top-0 h-full rounded-full bg-[var(--primary)] shadow-[0_0_12px_rgba(126,34,206,0.4)]"
                   initial={{ width: `${lastProgress.current}%` }}
                   animate={{ width: `${progress}%` }}
                   transition={{ type: 'spring', stiffness: 80, damping: 20 }}
@@ -131,13 +122,13 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
                 <motion.div
                   animate={{ y: [0, -5, 0] }}
                   transition={{ repeat: Infinity, duration: 0.8, ease: 'easeInOut' }}
-                  className={`bg-[var(--card)] rounded-full shadow-[0_0_10px_rgba(169,132,255,0.6)] border border-[var(--primary)] flex items-center justify-center w-6 h-6`}
+                  className="bg-[var(--card)] rounded-full shadow-[0_0_10px_rgba(126,34,206,0.4)] border border-[var(--primary)] flex items-center justify-center w-6 h-6"
                 >
                   <RabbitMascot size={14} />
                 </motion.div>
               </motion.div>
               <div className="absolute right-[-32px] top-1/2 -translate-y-1/2 opacity-50">
-                <Flag size={16} className={progress >= 100 ? 'text-[var(--primary)] fill-[var(--primary)]' : ''} />
+                <Flag size={16} className={progress >= 100 ? 'text-[var(--primary)] fill-[var(--primary)]' : 'text-[var(--text-muted)]'} />
               </div>
             </div>
           </div>
@@ -153,37 +144,6 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
         </motion.div>
 
         <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
-
-        {showCancelConfirm && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="w-full max-w-sm rounded-3xl border border-[var(--card-border)] bg-[var(--card)] p-6 shadow-2xl flex flex-col items-center text-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center text-red-400">
-                <XCircle size={32} />
-              </div>
-              <h3 className="text-xl font-bold text-[var(--text)]">{t('ui.cancel_test_title')}</h3>
-              <p className="text-sm text-[var(--text-muted)] leading-relaxed">
-                {t('ui.cancel_test_body')}
-              </p>
-              <div className="flex gap-3 w-full mt-2">
-                <button
-                  onClick={() => setShowCancelConfirm(false)}
-                  className="flex-1 py-3 rounded-xl bg-[var(--bg)] text-[var(--text)] font-medium border border-[var(--card-border)]"
-                >
-                  {t('ui.keep_testing')}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowCancelConfirm(false);
-                    onCancelTest?.();
-                  }}
-                  className="flex-1 py-3 rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
-                >
-                  {t('ui.cancel_test')}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -209,14 +169,13 @@ export function BottomBar({
   const { t } = useTheme();
   const effectiveNextLabel = nextLabel || t('ui.next');
   const effectiveBackLabel = backLabel || t('ui.back');
-  const grad = 'from-[#250177] via-[#250177]/95 to-transparent';
   return (
-    <div className={`fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t ${grad} z-40 flex justify-center pointer-events-none pb-safe`}>
+    <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-[var(--bg)] via-[var(--bg)]/95 to-transparent z-40 flex justify-center pointer-events-none pb-safe">
       <div className="w-full max-w-[430px] flex gap-3 pointer-events-auto">
         {!hideBack && (
           <button
             onClick={onBack}
-            className="flex-1 max-w-[110px] min-h-[52px] rounded-2xl border border-white/20 bg-[#140047]/90 text-white font-semibold text-base flex items-center justify-center gap-2 active:scale-[0.98] hover:bg-[#180054] hover:border-[#3BE0D4]/40 transition-all shadow-md"
+            className="flex-1 max-w-[110px] min-h-[52px] rounded-2xl border border-[var(--card-border)] bg-[var(--card)] text-[var(--text)] font-semibold text-base flex items-center justify-center gap-2 active:scale-[0.98] hover:border-[var(--primary)] transition-all shadow-md"
           >
             {effectiveBackLabel}
           </button>
@@ -227,8 +186,8 @@ export function BottomBar({
             disabled={nextDisabled}
             className={`flex-[2] min-h-[52px] rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${
               nextDisabled
-                ? 'bg-[#140047] text-white/35 border border-white/10 cursor-not-allowed'
-                : 'bg-gradient-to-r from-[#3BE0D4] to-[#2DD4BF] text-[#091522] border border-[#3BE0D4]/50 hover:brightness-110 shadow-[0_4px_20px_rgba(59,224,212,0.35)]'
+                ? 'bg-[var(--card)] text-[var(--text-muted)] opacity-50 border border-[var(--card-border)] cursor-not-allowed'
+                : 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] border border-[var(--primary)] hover:brightness-110 shadow-lg'
             }`}
           >
             {effectiveNextLabel}
@@ -242,7 +201,7 @@ export function BottomBar({
 export function BottomNavigation({ current, onNav }: { current: 'home' | 'community-garden' | 'tester-profile', onNav: (s: import('../lib/theme').ScreenId) => void }) {
   const { t } = useTheme();
   return (
-    <div className="fixed bottom-0 left-0 right-0 py-3 px-4 bg-[#250177]/95 backdrop-blur-md z-40 flex justify-center pb-safe border-t border-white/5">
+    <div className="fixed bottom-0 left-0 right-0 py-3 px-4 bg-[var(--nav-bg)]/95 backdrop-blur-md z-40 flex justify-center pb-safe border-t border-[var(--nav-border)] shadow-2xl">
       <div className="w-full max-w-[430px] flex justify-between items-center gap-2.5">
         <button 
           type="button"
@@ -250,12 +209,12 @@ export function BottomNavigation({ current, onNav }: { current: 'home' | 'commun
           onClick={() => onNav('home')}
           className={`flex-1 flex flex-col items-center justify-center h-16 py-2 px-3 rounded-2xl border transition-all ${
             current === 'home'
-              ? 'bg-[#180054] border-[#3BE0D4]/60 shadow-[0_0_15px_rgba(59,224,212,0.2)]'
-              : 'bg-[#140047]/90 border-white/10 hover:bg-[#180054]'
+              ? 'bg-[var(--nav-item-active-bg)] border-2 border-[var(--nav-item-active-border)] text-[var(--nav-item-active-text)] shadow-lg scale-[1.02]'
+              : 'bg-[var(--nav-item-bg)] border-[var(--card-border)] text-[var(--nav-item-text)] hover:opacity-90 shadow-xs'
           }`}
         >
-          <HomeIcon size={20} className={current === 'home' ? 'text-[#3BE0D4]' : 'text-[#3BE0D4]/75'} strokeWidth={2} />
-          <span className="text-xs font-medium text-white mt-1">{t('ui.home')}</span>
+          <HomeIcon size={20} className={current === 'home' ? 'text-[var(--nav-item-active-text)]' : 'text-[var(--nav-item-text)]'} strokeWidth={2.5} />
+          <span className="text-xs font-semibold mt-1">{t('ui.home')}</span>
         </button>
 
         <button 
@@ -264,12 +223,12 @@ export function BottomNavigation({ current, onNav }: { current: 'home' | 'commun
           onClick={() => onNav('tester-profile')}
           className={`flex-1 flex flex-col items-center justify-center h-16 py-2 px-3 rounded-2xl border transition-all ${
             current === 'tester-profile'
-              ? 'bg-[#180054] border-[#3BE0D4]/60 shadow-[0_0_15px_rgba(59,224,212,0.2)]'
-              : 'bg-[#140047]/90 border-white/10 hover:bg-[#180054]'
+              ? 'bg-[var(--nav-item-active-bg)] border-2 border-[var(--nav-item-active-border)] text-[var(--nav-item-active-text)] shadow-lg scale-[1.02]'
+              : 'bg-[var(--nav-item-bg)] border-[var(--card-border)] text-[var(--nav-item-text)] hover:opacity-90 shadow-xs'
           }`}
         >
-          <User size={20} className={current === 'tester-profile' ? 'text-[#3BE0D4]' : 'text-[#3BE0D4]/75'} strokeWidth={2} />
-          <span className="text-xs font-medium text-white mt-1">{t('ui.profile')}</span>
+          <User size={20} className={current === 'tester-profile' ? 'text-[var(--nav-item-active-text)]' : 'text-[var(--nav-item-text)]'} strokeWidth={2.5} />
+          <span className="text-xs font-semibold mt-1">{t('ui.profile')}</span>
         </button>
 
         <button 
@@ -278,12 +237,12 @@ export function BottomNavigation({ current, onNav }: { current: 'home' | 'commun
           onClick={() => onNav('community-garden')}
           className={`flex-1 flex flex-col items-center justify-center h-16 py-2 px-3 rounded-2xl border transition-all ${
             current === 'community-garden'
-              ? 'bg-[#180054] border-[#3BE0D4]/60 shadow-[0_0_15px_rgba(59,224,212,0.2)]'
-              : 'bg-[#140047]/90 border-white/10 hover:bg-[#180054]'
+              ? 'bg-[var(--nav-item-active-bg)] border-2 border-[var(--nav-item-active-border)] text-[var(--nav-item-active-text)] shadow-lg scale-[1.02]'
+              : 'bg-[var(--nav-item-bg)] border-[var(--card-border)] text-[var(--nav-item-text)] hover:opacity-90 shadow-xs'
           }`}
         >
-          <Flag size={20} className={current === 'community-garden' ? 'text-[#3BE0D4]' : 'text-[#3BE0D4]/75'} strokeWidth={2} />
-          <span className="text-xs font-medium text-white mt-1">{t('ui.garden')}</span>
+          <Flag size={20} className={current === 'community-garden' ? 'text-[var(--nav-item-active-text)]' : 'text-[var(--nav-item-text)]'} strokeWidth={2.5} />
+          <span className="text-xs font-semibold mt-1">{t('ui.garden')}</span>
         </button>
       </div>
     </div>

@@ -297,7 +297,7 @@ function AppInner() {
 
   if (isAuthLoading) {
     return (
-      <div className="min-h-screen bg-[#250177] flex items-center justify-center text-white">
+      <div className="min-h-screen bg-[#551A8B] flex items-center justify-center text-white">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-4 border-white/20 border-t-[#A984FF] rounded-full animate-spin" />
           <span className="text-sm font-medium text-[#BCA9CC]">Loading OOXii...</span>

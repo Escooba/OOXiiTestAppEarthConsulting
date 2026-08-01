@@ -1,4 +1,7 @@
 import tumblingEChart from '../../assets/help/tumbling_e_chart.png';
+import tumblingEChartLine12 from '../../assets/help/tumbling_e_chart_line12.png';
+import tumblingEChartLine9 from '../../assets/help/tumbling_e_chart_line9.png';
+import tumblingEChartLine6 from '../../assets/help/tumbling_e_chart_line6.png';
 import nearVisionCard from '../../assets/help/near_vision_card.svg';
 import wheelPdScale from '../../assets/help/wheel_pd_scale.svg';
 import wheelLensDial from '../../assets/help/wheel_lens_dial.svg';
@@ -146,7 +149,7 @@ export const APPARATUS_HELP_CONFIGS: Record<string, ApparatusHelpConfig> = {
     id: 'tumbling-e-line',
     title: 'Tumbling E Chart — Smallest Line',
     instruction: 'Ask the client to read down the physical chart. Select the OOXii line corresponding to the smallest row they read completely correctly.',
-    imageSrc: tumblingEChart,
+    imageSrc: tumblingEChartLine12,
     imageAlt: 'Tumbling E distance-vision chart with numbered rows of progressively smaller symbols',
     assetKind: 'real-photo',
     preload: true,
@@ -157,13 +160,14 @@ export const APPARATUS_HELP_CONFIGS: Record<string, ApparatusHelpConfig> = {
       heightPercent: 44,
     },
     highlightRegions: [],
+    highlightCaption: 'Red box highlights the example smallest row read completely correctly.',
   },
 
   'tumbling-e-result': {
     id: 'tumbling-e-result',
     title: 'Distance Result Score',
     instruction: 'Review the calculated Snellen visual acuity fraction (e.g. 6/12 or 6/6). This score is automatically calculated from the smallest line and letter count.',
-    imageSrc: tumblingEChart,
+    imageSrc: tumblingEChartLine6,
     imageAlt: 'Tumbling E distance vision Snellen scores',
     assetKind: 'real-photo',
     preload: true,
@@ -174,6 +178,7 @@ export const APPARATUS_HELP_CONFIGS: Record<string, ApparatusHelpConfig> = {
       heightPercent: 44,
     },
     highlightRegions: [],
+    highlightCaption: 'Red box highlights the visual acuity score calculation row.',
   },
 
   'near-vision-line': {
@@ -191,6 +196,7 @@ export const APPARATUS_HELP_CONFIGS: Record<string, ApparatusHelpConfig> = {
       heightPercent: 50,
     },
     highlightRegions: [],
+    highlightCaption: 'Red box highlights the smallest readable N-rating paragraph.',
   },
 
   'distance-glasses-question': {
@@ -224,6 +230,7 @@ export const APPARATUS_HELP_CONFIGS: Record<string, ApparatusHelpConfig> = {
     assetKind: 'illustration',
     assetNotice: 'Illustration only',
     highlightRegions: [],
+    highlightCaption: 'Red box highlights the PD measurement scale window.',
   },
 
   'wheel-direction': {
@@ -235,6 +242,7 @@ export const APPARATUS_HELP_CONFIGS: Record<string, ApparatusHelpConfig> = {
     assetKind: 'illustration',
     assetNotice: 'Illustration only',
     highlightRegions: [],
+    highlightCaption: 'Red boxes highlight the Plus (+) and Minus (-) selector dials.',
   },
 
   'wheel-power': {
@@ -246,6 +254,7 @@ export const APPARATUS_HELP_CONFIGS: Record<string, ApparatusHelpConfig> = {
     assetKind: 'illustration',
     assetNotice: 'Illustration only',
     highlightRegions: [],
+    highlightCaption: 'Red box highlights the lens power readout window.',
   },
 
   'wheel-twocolour': {
@@ -257,13 +266,14 @@ export const APPARATUS_HELP_CONFIGS: Record<string, ApparatusHelpConfig> = {
     assetKind: 'illustration',
     assetNotice: 'Illustration only',
     highlightRegions: [],
+    highlightCaption: 'Red boxes highlight the Red and Green duochrome comparison targets.',
   },
 
   'wheel-line9': {
     id: 'wheel-line9',
     title: 'Wheel Line 9 Verification',
     instruction: 'Ask whether the client can read OOXii Line 9 or a smaller line while looking through the corrected lenses.',
-    imageSrc: tumblingEChart,
+    imageSrc: tumblingEChartLine9,
     imageAlt: 'Tumbling E distance-vision chart',
     assetKind: 'real-photo',
     preload: true,
@@ -274,6 +284,7 @@ export const APPARATUS_HELP_CONFIGS: Record<string, ApparatusHelpConfig> = {
       heightPercent: 44,
     },
     highlightRegions: [],
+    highlightCaption: 'Red box highlights Line 9 to verify 6/9 vision clarity.',
   },
 
   'wheel-distance-improved': {
@@ -327,7 +338,7 @@ export function getApparatusHelpConfig(id: string, contextLine?: string): Appara
       id: 'tumbling-e-letters',
       title: 'Tumbling E Chart — Letters Correct',
       instruction: 'On the physical chart, move to the row immediately below the last row read completely correctly. Count how many symbols the client identifies correctly.',
-      imageSrc: tumblingEChart,
+      imageSrc: tumblingEChartLine9,
       imageAlt: 'Tumbling E distance-vision chart',
       assetKind: 'real-photo',
       preload: true,
@@ -339,11 +350,13 @@ export function getApparatusHelpConfig(id: string, contextLine?: string): Appara
       },
       highlightRegions: [],
       highlights: [],
+      highlightCaption: 'Red box highlights the next row immediately below where you count correct symbols.',
     };
   }
 
   const cfg = APPARATUS_HELP_CONFIGS[id];
   if (!cfg) return null;
+
   const highlights = cfg.highlightRegions || cfg.highlights || [];
   return { ...cfg, highlights, highlightRegions: highlights };
 }

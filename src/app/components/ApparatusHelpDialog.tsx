@@ -76,6 +76,20 @@ export function ApparatusHelpDialog({ open, onClose, config }: Props) {
 
   if (!open || !config) return null;
 
+  const titleKey = `help.${config.id}.title` as any;
+  const instructionKey = `help.${config.id}.instruction` as any;
+  const captionKey = `help.${config.id}.caption` as any;
+
+  const translatedTitle = t(titleKey) !== titleKey ? t(titleKey) : config.title;
+  const translatedInstruction = t(instructionKey) !== instructionKey ? t(instructionKey) : config.instruction;
+  const translatedHighlightCaption = config.highlightCaption
+    ? (t(captionKey) !== captionKey ? t(captionKey) : config.highlightCaption)
+    : undefined;
+
+  const translatedAssetNotice = config.assetNotice
+    ? (config.assetNotice === 'Illustration only' ? t('help.illustration_only') : config.assetNotice)
+    : undefined;
+
   const hasFocusRegion = !!config.focusRegion && config.focusRegion.widthPercent > 0;
   const isFocusedMode = viewMode === 'focused' && hasFocusRegion;
 
@@ -183,7 +197,7 @@ export function ApparatusHelpDialog({ open, onClose, config }: Props) {
                 <Hand size={16} />
               </div>
               <h3 id="apparatus-help-title" className="font-semibold text-[var(--text)] text-base leading-tight break-words">
-                {config.title}
+                {translatedTitle}
               </h3>
             </div>
             <button
@@ -203,7 +217,7 @@ export function ApparatusHelpDialog({ open, onClose, config }: Props) {
             {config.assetNotice && (
               <div className="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold flex items-center gap-2">
                 <Info size={14} className="shrink-0" />
-                <span>{config.assetNotice}</span>
+                <span>{translatedAssetNotice}</span>
               </div>
             )}
 
@@ -301,8 +315,14 @@ export function ApparatusHelpDialog({ open, onClose, config }: Props) {
                         width: `${h.widthPercent}%`,
                         height: `${h.heightPercent}%`,
                       }}
-                      className="absolute border-2 border-red-600 bg-red-500/10 rounded-md pointer-events-none z-10"
-                    />
+                      className="absolute border-2 border-red-600 bg-red-500/20 rounded-md pointer-events-none z-20 shadow-[0_0_10px_rgba(220,38,38,0.7)]"
+                    >
+                      {h.label && (
+                        <div className="absolute -top-6 left-0 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap z-30">
+                          {h.label}
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>
@@ -312,7 +332,7 @@ export function ApparatusHelpDialog({ open, onClose, config }: Props) {
             {config.highlightCaption && (
               <div className="px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" />
-                <span>{config.highlightCaption}</span>
+                <span>{translatedHighlightCaption}</span>
               </div>
             )}
 
@@ -323,7 +343,7 @@ export function ApparatusHelpDialog({ open, onClose, config }: Props) {
                 {t('ui.tester_instructions')}
               </span>
               <p id="apparatus-help-instruction" className="text-sm text-[var(--text)] leading-relaxed font-normal">
-                {config.instruction}
+                {translatedInstruction}
               </p>
             </div>
           </div>

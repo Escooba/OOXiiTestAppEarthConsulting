@@ -16,9 +16,9 @@ export class ProgressRepository {
     );
     const completedTests = testsRows.length > 0 ? Number(testsRows[0].count) : 0;
 
-    // Clients helped
+    // Clients helped (distinct clients with completed test sessions)
     const clientRows = await this.db.query<{ count: number }>(
-      'SELECT COUNT(*) AS count FROM clients WHERE created_by_tester_id = ? AND deleted_at IS NULL',
+      "SELECT COUNT(DISTINCT client_id) AS count FROM test_sessions WHERE tester_id = ? AND status = 'completed' AND deleted_at IS NULL",
       [testerId]
     );
     const clientsHelped = clientRows.length > 0 ? Number(clientRows[0].count) : 0;

@@ -186,7 +186,7 @@ export class TestSessionRepository {
 
   async getDistinctClientCount(testerId: string): Promise<number> {
     const rows = await this.db.query<{ count: number }>(
-      'SELECT COUNT(*) AS count FROM clients WHERE created_by_tester_id = ? AND deleted_at IS NULL',
+      "SELECT COUNT(DISTINCT client_id) AS count FROM test_sessions WHERE tester_id = ? AND status = 'completed' AND deleted_at IS NULL",
       [testerId]
     );
     return rows.length > 0 ? Number(rows[0].count) : 0;

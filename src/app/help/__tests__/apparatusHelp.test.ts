@@ -24,13 +24,14 @@ describe('Apparatus Help Configuration', () => {
     expect(parseOoxiiLineIndex(undefined)).toBeNull();
   });
 
-  it('contains zero red highlights across Tumbling E help configs', () => {
+  it('provides baked highlight images and captions for Tumbling E help configs', () => {
     const lettersConfig = getApparatusHelpConfig('tumbling-e-letters', 'Line 4');
-    expect(lettersConfig?.highlightRegions?.length).toBe(0);
-    expect(lettersConfig?.highlights?.length).toBe(0);
+    expect(lettersConfig?.imageSrc).toContain('tumbling_e_chart');
+    expect(lettersConfig?.highlightCaption).toContain('Red box highlights');
 
     const lineConfig = getApparatusHelpConfig('tumbling-e-line');
-    expect(lineConfig?.highlightRegions?.length).toBe(0);
+    expect(lineConfig?.imageSrc).toContain('tumbling_e_chart_line12');
+    expect(lineConfig?.highlightCaption).toContain('smallest row');
   });
 
   it('provides clean tester instructions without misleading letter phrasing', () => {

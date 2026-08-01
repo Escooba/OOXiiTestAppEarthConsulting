@@ -199,6 +199,11 @@ describe('Database System Tests', () => {
     // First Session
     const session = await workflow.startNewTest(tester.localId, client.localId);
     
+    // Verify Gamification Progress before completion (should be 0)
+    const progressRepo = new (await import('../repositories/ProgressRepository')).ProgressRepository(db);
+    let progress = await progressRepo.getTesterProgress(tester.localId);
+    expect(progress?.clientsHelped).toBe(0);
+
     // Simulate glasses dispensed to get 50 carrots
     const now = Date.now();
     await db.run('INSERT INTO dispensed_items (local_id, test_session_id, item_category, created_at, updated_at) VALUES (?, ?, ?, ?, ?)', [generateLocalId(), session.localId, 'distance_glasses', now, now]);
@@ -206,9 +211,8 @@ describe('Database System Tests', () => {
     // Complete session
     await completion.completeTest(session.localId, [{ type: 'completion', payload: { summary: 'Done' } }]);
 
-    // Verify Gamification Progress
-    const progressRepo = new (await import('../repositories/ProgressRepository')).ProgressRepository(db);
-    const progress = await progressRepo.getTesterProgress(tester.localId);
+    // Verify Gamification Progress after completion (should be 1)
+    progress = await progressRepo.getTesterProgress(tester.localId);
     expect(progress?.clientsHelped).toBe(1);
     expect(progress?.totalCarrots).toBe(1); // 1 for test completion
 

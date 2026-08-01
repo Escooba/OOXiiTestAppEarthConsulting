@@ -1,39 +1,69 @@
 :root {
-  /* OOXii Purple (Default) */
-  --bg: #250177;
-  --card: #1D0E4A;
-  --card-active: #2B166A;
-  --card-border: rgba(255, 255, 255, 0.08);
+  /* OOXii Purple (Default Dark Theme) */
+  --bg: #551A8B;
+  --card: #350B5E;
+  --card-active: #6D1FA8;
+  --card-border: rgba(255, 255, 255, 0.15);
   --text: #ffffff;
-  --text-muted: #BCA9CC;
-  --input: #1D0E4A;
-  --input-border: rgba(255, 255, 255, 0.15);
-  --header-bg: #250177;
-  --overlay: rgba(37, 1, 119, 0.92);
-  --nav-pill-bg: #1D0E4A;
-  --nav-pill-active-text: #250177;
-  --progress-track: #1D0E4A;
-  --primary: #A984FF;
-  --primary-hover: #BBA0FF;
+  --text-muted: #E2D4F2;
+  --input: #350B5E;
+  --input-border: rgba(255, 255, 255, 0.25);
+  --header-bg: #551A8B;
+  --overlay: rgba(85, 26, 139, 0.92);
+  --nav-bg: #2E0B52;
+  --nav-border: rgba(255, 255, 255, 0.15);
+  --nav-item-bg: #3B0E68;
+  --nav-item-text: rgba(255, 255, 255, 0.85);
+  --nav-item-active-bg: linear-gradient(135deg, #7E22CE, #9333EA);
+  --nav-item-active-border: #3BE0D4;
+  --nav-item-active-text: #ffffff;
+  --pill-bg: rgba(255, 255, 255, 0.18);
+  --pill-hover-bg: rgba(255, 255, 255, 0.28);
+  --pill-text: #ffffff;
+  --pill-border: rgba(255, 255, 255, 0.35);
+  --btn-primary-bg: #3BE0D4;
+  --btn-primary-text: #091522;
+  --btn-secondary-bg: #7E22CE;
+  --btn-secondary-text: #ffffff;
+  --progress-track: #350B5E;
+  --primary: #3BE0D4;
+  --primary-purple: #A984FF;
+  --primary-hover: #2DD4BF;
+  --card-hero-title: #3BE0D4;
 }
 
 [data-theme="light"] {
-  /* Light Mode */
-  --bg: #F5F5F7;
+  /* OOXii Light Mode */
+  --bg: #F4F0FA;
   --card: #ffffff;
-  --card-active: #ffffff;
-  --card-border: #E1E1E8;
-  --text: #1A1B3A;
-  --text-muted: #6A6F8A;
+  --card-active: #F8F5FC;
+  --card-border: #E2D8F0;
+  --text: #1E0A38;
+  --text-muted: #6B5B82;
   --input: #ffffff;
-  --input-border: #D0D2DE;
-  --header-bg: #ffffff;
-  --overlay: rgba(255, 255, 255, 0.9);
-  --nav-pill-bg: #EDEDF3;
-  --nav-pill-active-text: #ffffff;
-  --progress-track: #E1E1E8;
-  --primary: #A984FF;
-  --primary-hover: #BBA0FF;
+  --input-border: #D5C8E8;
+  --header-bg: #F4F0FA;
+  --overlay: rgba(244, 240, 250, 0.95);
+  --nav-bg: #ffffff;
+  --nav-border: #E2D8F0;
+  --nav-item-bg: #F0E8F8;
+  --nav-item-text: #551A8B;
+  --nav-item-active-bg: linear-gradient(135deg, #551A8B, #7E22CE);
+  --nav-item-active-border: #551A8B;
+  --nav-item-active-text: #ffffff;
+  --pill-bg: #EAE0F5;
+  --pill-hover-bg: #DDD0F0;
+  --pill-text: #551A8B;
+  --pill-border: #C8B5E0;
+  --btn-primary-bg: #551A8B;
+  --btn-primary-text: #ffffff;
+  --btn-secondary-bg: #EAE0F5;
+  --btn-secondary-text: #551A8B;
+  --progress-track: #E2D8F0;
+  --primary: #551A8B;
+  --primary-purple: #7E22CE;
+  --primary-hover: #431270;
+  --card-hero-title: #551A8B;
 }
 
 body {

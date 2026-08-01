@@ -39,7 +39,7 @@ export function WheelLine9Screen({
     <Shell progress={progress} isFading={isFading}>
       <div className="px-5 pt-2 pb-32 flex flex-col gap-5">
         <div>
-          <h1 className="text-2xl font-light">Wheel test — {side === 'right' ? 'Right' : 'Left'} eye</h1>
+          <h1 className="text-2xl font-light text-[var(--text)]">Wheel test — {side === 'right' ? 'Right' : 'Left'} eye</h1>
         </div>
 
         <RabbitBubble
@@ -47,9 +47,9 @@ export function WheelLine9Screen({
           type={error ? 'error' : value ? 'success' : 'default'}
         />
 
-        <div ref={inputCardRef} className="bg-[#2A2049] border border-[#A984FF]/30 rounded-3xl p-5 flex flex-col gap-4 scroll-mt-20">
+        <div ref={inputCardRef} className="bg-[var(--card)] border border-[var(--card-border)] rounded-3xl p-5 flex flex-col gap-4 shadow-lg scroll-mt-20">
           <div className="flex items-center justify-between gap-3">
-            <label className="text-sm font-medium block flex-1">Can the person read line 9 or smaller?</label>
+            <label className="text-sm font-bold block flex-1 text-[var(--text)]">Can the person read line 9 or smaller?</label>
             <HelpButton configId="wheel-line9" />
           </div>
           <RadioGroup

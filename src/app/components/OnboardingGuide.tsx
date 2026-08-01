@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ScreenId } from '../lib/theme';
 import { X, ArrowRight } from 'lucide-react';
+import { useTheme } from '../lib/ThemeContext';
 
 interface OnboardingGuideProps {
   onNav: (screen: ScreenId) => void;
@@ -19,62 +20,64 @@ interface StepConfig {
   buttonText?: string;
 }
 
-const STEPS: StepConfig[] = [
-  {
-    step: 1,
-    title: "Hi! I'm Bun 🐰",
-    icon: '🐰',
-    bannerGradient: 'bg-gradient-to-r from-[#2DD4BF] to-[#0D9488]',
-    bodyText: "I'll show you around the app so you can start helping clients see better. It only takes a minute!",
-    screenTarget: 'home',
-  },
-  {
-    step: 2,
-    title: 'Start Tests Here',
-    subtitle: '› See the Home tab below',
-    icon: '🏠',
-    bannerGradient: 'bg-gradient-to-r from-[#3B82F6] to-[#1D4ED8]',
-    bodyText: 'Tap "Start Vision Test" to run a simulation with a client. Complete the steps and log their results.',
-    screenTarget: 'home',
-  },
-  {
-    step: 3,
-    title: 'Track Your Progress',
-    subtitle: '› See the Profile tab below',
-    icon: '🐰',
-    bannerGradient: 'bg-gradient-to-r from-[#A855F7] to-[#7E22CE]',
-    bodyText: "Your Profile shows how many clients you've helped, carrots collected, and badges earned along the way.",
-    screenTarget: 'tester-profile',
-  },
-  {
-    step: 4,
-    title: 'Grow the Community Garden',
-    subtitle: '› See the Garden tab below',
-    icon: '🌱',
-    bannerGradient: 'bg-gradient-to-r from-[#22C55E] to-[#15803D]',
-    bodyText: 'Every test you complete adds carrots to the global garden. See how your work joins the worldwide effort.',
-    screenTarget: 'community-garden',
-  },
-  {
-    step: 5,
-    title: 'Follow the Rabbit!',
-    icon: '✨',
-    bannerGradient: 'bg-gradient-to-r from-[#F97316] to-[#C2410C]',
-    bodyText: "During tests, the rabbit points to what you should do next. Look for it when you're unsure.",
-    screenTarget: 'home',
-    buttonText: "Let's go! 🐰",
-  },
-];
-
 export function OnboardingGuide({ onNav, onComplete }: OnboardingGuideProps) {
+  const { t } = useTheme();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const currentStep = STEPS[currentStepIndex];
+
+  const steps: StepConfig[] = [
+    {
+      step: 1,
+      title: `${t('guide.step1.title')} 🐰`,
+      icon: '🐰',
+      bannerGradient: 'bg-gradient-to-r from-[#2DD4BF] to-[#0D9488]',
+      bodyText: t('guide.step1.body'),
+      screenTarget: 'home',
+    },
+    {
+      step: 2,
+      title: t('guide.step2.title'),
+      subtitle: `› ${t('guide.step2.sub')}`,
+      icon: '🏠',
+      bannerGradient: 'bg-gradient-to-r from-[#3B82F6] to-[#1D4ED8]',
+      bodyText: t('guide.step2.body'),
+      screenTarget: 'home',
+    },
+    {
+      step: 3,
+      title: t('guide.step3.title'),
+      subtitle: `› ${t('guide.step3.sub')}`,
+      icon: '🐰',
+      bannerGradient: 'bg-gradient-to-r from-[#A855F7] to-[#7E22CE]',
+      bodyText: t('guide.step3.body'),
+      screenTarget: 'tester-profile',
+    },
+    {
+      step: 4,
+      title: t('guide.step4.title'),
+      subtitle: `› ${t('guide.step4.sub')}`,
+      icon: '🌱',
+      bannerGradient: 'bg-gradient-to-r from-[#22C55E] to-[#15803D]',
+      bodyText: t('guide.step4.body'),
+      screenTarget: 'community-garden',
+    },
+    {
+      step: 5,
+      title: t('guide.step5.title'),
+      icon: '✨',
+      bannerGradient: 'bg-gradient-to-r from-[#F97316] to-[#C2410C]',
+      bodyText: t('guide.step5.body'),
+      screenTarget: 'home',
+      buttonText: `${t('guide.lets_go')} 🐰`,
+    },
+  ];
+
+  const currentStep = steps[currentStepIndex];
 
   const handleNext = () => {
-    if (currentStepIndex < STEPS.length - 1) {
+    if (currentStepIndex < steps.length - 1) {
       const nextIndex = currentStepIndex + 1;
       setCurrentStepIndex(nextIndex);
-      onNav(STEPS[nextIndex].screenTarget);
+      onNav(steps[nextIndex].screenTarget);
     } else {
       onComplete();
     }
@@ -146,7 +149,7 @@ export function OnboardingGuide({ onNav, onComplete }: OnboardingGuideProps) {
               {/* Dots + Counter */}
               <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
-                  {STEPS.map((s, idx) => (
+                  {steps.map((s, idx) => (
                     <div
                       key={s.step}
                       className={`h-2 rounded-full transition-all duration-300 ${
@@ -158,7 +161,7 @@ export function OnboardingGuide({ onNav, onComplete }: OnboardingGuideProps) {
                   ))}
                 </div>
                 <span className="text-xs font-semibold text-slate-400">
-                  {currentStep.step} of {STEPS.length}
+                  {t('guide.step_counter', { step: currentStep.step, total: steps.length })}
                 </span>
               </div>
 
@@ -168,13 +171,13 @@ export function OnboardingGuide({ onNav, onComplete }: OnboardingGuideProps) {
                   onClick={handleSkip}
                   className="flex-1 py-3 px-4 rounded-full border border-slate-700/80 hover:bg-slate-800/50 text-slate-300 text-sm font-semibold transition-all text-center"
                 >
-                  Skip guide
+                  {t('guide.skip')}
                 </button>
                 <button
                   onClick={handleNext}
                   className="flex-1 py-3 px-4 rounded-full bg-[#2DD4BF] hover:bg-[#25B8A7] text-[#091522] text-sm font-bold transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-[#2DD4BF]/20"
                 >
-                  <span>{currentStep.buttonText || 'Next'}</span>
+                  <span>{currentStep.buttonText || t('ui.next')}</span>
                   {!currentStep.buttonText && <ArrowRight size={16} />}
                 </button>
               </div>
