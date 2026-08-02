@@ -1,217 +1,322 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Shell } from '../components/Shell';
+import { Shell, BottomNavigation } from '../components/Shell';
 import { ScreenId } from '../lib/theme';
-import { Users, Star, TrendingUp, Check, LogOut, Lock, ArrowLeft } from 'lucide-react';
+import { Users, Star, LogOut, X, Check } from 'lucide-react';
 import { RabbitMascot } from '../components/RabbitMascot';
 import { useProgress, useBadges } from '../../data/hooks';
-import { useData } from '../../data/DataProvider';
+import { useAuthContext } from '../lib/AuthProvider';
+import { useTheme } from '../lib/ThemeContext';
+import type { TranslationKey } from '../lib/i18n';
 
-export function Profile({ onNav, tester }: { onNav: (s: ScreenId) => void; tester: any }) {
+export function getBadgeMetricValue(ruleType: string, progress: any): number {
+  if (!progress) return 0;
+  switch (ruleType) {
+    case 'completed_tests':
+      return progress.completedTests ?? 0;
+    case 'clients_helped':
+      return progress.clientsHelped ?? 0;
+    case 'distinct_testing_days':
+      return progress.distinctTestingDays ?? 0;
+    case 'carrots_earned':
+      return progress.totalCarrots ?? 0;
+    case 'eye_festivals_attended':
+      return 0;
+    default:
+      return progress.completedTests ?? 0;
+  }
+}
+
+export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
   const { progress } = useProgress();
   const { definitions, earned } = useBadges();
-  const [selectedBadge, setSelectedBadge] = useState<any>(null);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const { db } = useData();
+  const { tester, logout } = useAuthContext();
+  const { tokens, t } = useTheme();
 
-  const handleLogout = async () => {
-    localStorage.removeItem('ooxii_logged_in');
-    sessionStorage.removeItem('region_modal_shown');
-    sessionStorage.removeItem('active_region');
-    window.location.reload();
+  const getBadgeName = (badgeCode: string, fallback: string) => {
+    const code = badgeCode.toLowerCase();
+    const key = `badge.${code}.name` as TranslationKey;
+    const val = t(key);
+    return val !== key ? val : fallback;
   };
 
-  const name = `${tester?.firstName ?? 'Alex'} ${tester?.lastName ?? 'Chen'}`.trim();
+  const getBadgeDesc = (badgeCode: string, fallback: string) => {
+    const code = badgeCode.toLowerCase();
+    const key = `badge.${code}.desc` as TranslationKey;
+    const val = t(key);
+    return val !== key ? val : fallback;
+  };
+
+  const getUnlockRuleText = (ruleType: string, targetValue: number) => {
+    if (ruleType === 'completed_tests') return t('badge.rule.completed_tests', { target: targetValue });
+    if (ruleType === 'clients_helped') return t('badge.rule.clients_helped', { target: targetValue });
+    if (ruleType === 'distinct_testing_days') return t('badge.rule.distinct_testing_days', { target: targetValue });
+    if (ruleType === 'carrots_earned') return t('badge.rule.carrots_earned', { target: targetValue });
+    return `Complete ${targetValue} steps`;
+  };
+
+  const [selectedBadge, setSelectedBadge] = useState<any>(null);
+  const [showAllBadges, setShowAllBadges] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
+  const name = `${tester?.firstName ?? 'Tester'} ${tester?.lastName ?? ''}`.trim();
   
   const CARROTS = progress?.totalCarrots ?? 0;
   const CLIENTS = progress?.clientsHelped ?? 0;
   const BADGES_EARNED = progress?.badgesEarned ?? 0;
   
   const nextBadge = progress?.nextBadge;
+  const CURRENT_BADGE_PROGRESS = nextBadge ? getBadgeMetricValue(nextBadge.ruleType, progress) : 0;
   const NEXT_BADGE_TARGET = nextBadge?.targetValue ?? 50;
-  const REMAINING = Math.max(0, NEXT_BADGE_TARGET - CLIENTS);
-  const pct = nextBadge ? Math.min(100, (CLIENTS / NEXT_BADGE_TARGET) * 100) : 100;
+  const REMAINING = Math.max(0, NEXT_BADGE_TARGET - CURRENT_BADGE_PROGRESS);
+  const pct = nextBadge ? Math.min(100, (CURRENT_BADGE_PROGRESS / NEXT_BADGE_TARGET) * 100) : 100;
 
-  const earnedSet = new Set(earned.map(b => b.badgeCode));
+  const earnedMap = new Map(earned.map(b => [b.badgeCode, b]));
+  const enabledBadges = definitions.filter(d => d.enabled).sort((a, b) => a.displayOrder - b.displayOrder);
+  const previewBadges = enabledBadges.slice(0, 3);
 
   return (
     <Shell showProgress={false}>
       <div className="px-5 pt-2 pb-32 flex flex-col gap-4">
         {/* Title row */}
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <button onClick={() => onNav('home')} className="p-2 -ml-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors mt-0.5">
-              <ArrowLeft size={20} />
-            </button>
-            <div>
-              <div className="text-[11px] uppercase tracking-[0.15em] text-[#7E92B5]">Tester Profile</div>
-              <h1 className="text-3xl font-bold text-white leading-tight">{name}</h1>
-              <div className="text-xs text-[#9BB0D1] mt-0.5">{tester?.role || 'Community Health Tester'}</div>
-            </div>
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)]">{t('profile.tester_profile_subtitle')}</div>
+            <h1 className="text-3xl font-bold text-[var(--text)] leading-tight">{name}</h1>
+            <div className="text-xs text-[var(--text-muted)] mt-0.5">{tester?.role || 'Community Health Tester'}</div>
           </div>
           <motion.div
-            animate={{ y: [0, -5, 0] }}
+            animate={{ y: [0, -4, 0] }}
             transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
-            className="w-12 h-12 rounded-2xl bg-[#22314D] border border-white/10 flex items-center justify-center shrink-0 mt-1"
+            className="w-12 h-12 rounded-2xl bg-[var(--card)] border border-[var(--card-border)] flex items-center justify-center shrink-0 mt-1"
           >
             <RabbitMascot size={26} />
           </motion.div>
         </div>
 
         {/* Carrot card */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-[#1A2338] border border-white/5 rounded-3xl p-5 flex items-center gap-4 mt-2"
-        >
+        <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-3xl p-5 flex items-center gap-4">
           <div className="w-14 h-14 rounded-2xl bg-[#FF9F45]/10 flex items-center justify-center text-3xl">🥕</div>
           <div>
             <div className="text-3xl font-bold text-[#FF9F45] leading-none">{CARROTS}</div>
-            <div className="text-sm text-[#9BB0D1] mt-1">Total carrots collected</div>
+            <div className="text-sm text-[var(--text-muted)] mt-1">{t('profile.total_carrots')}</div>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Stats row */}
-        <div className="bg-[#1A2338] border border-white/5 rounded-3xl p-4 flex items-center">
-          <Stat icon={<Users size={18} className="text-[#5B8DEF]" />} value={String(CLIENTS)} label="Clients tested" />
-          <Divider />
-          <Stat icon={<Star size={18} className="text-[#EAB308]" />} value={String(BADGES_EARNED)} label="Badges earned" />
-          <Divider />
-          <Stat icon={<TrendingUp size={18} className="text-[#22C55E]" />} value="#46" label="Local rank" />
+        {/* Balanced two-column statistics section */}
+        <div data-tour="profile-card" className="grid grid-cols-2 gap-3">
+          <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-3xl p-4 flex flex-col items-center gap-1 text-center">
+            <Users size={20} className="text-[var(--primary)]" />
+            <div className="text-2xl font-bold text-[var(--text)] leading-none mt-1">{CLIENTS}</div>
+            <div className="text-xs text-[var(--text-muted)]">{t('profile.clients_tested')}</div>
+          </div>
+          <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-3xl p-4 flex flex-col items-center gap-1 text-center">
+            <Star size={20} className="text-[#EAB308]" />
+            <div className="text-2xl font-bold text-[var(--text)] leading-none mt-1">{BADGES_EARNED}</div>
+            <div className="text-xs text-[var(--text-muted)]">{t('profile.badges_earned')}</div>
+          </div>
         </div>
 
         {/* Next Badge */}
         {nextBadge && (
-          <div className="bg-[#1A2338] border border-white/5 rounded-3xl p-5 flex flex-col gap-4">
+          <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-3xl p-5 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-white">Next Badge</span>
-              <span className="text-sm text-[#9BB0D1]">{CLIENTS} / {NEXT_BADGE_TARGET}</span>
+              <span className="font-semibold text-[var(--text)] text-sm">{t('profile.next_badge')}</span>
+              <span className="text-xs text-[var(--text-muted)]">{CURRENT_BADGE_PROGRESS} / {NEXT_BADGE_TARGET}</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-[#122E2C] border border-[#00D1C1]/40 flex items-center justify-center text-xl">
+              <div className="w-12 h-12 rounded-2xl bg-[var(--bg)] border border-[var(--primary)]/40 flex items-center justify-center text-2xl">
                 {nextBadge.iconKey}
               </div>
               <div>
-                <div className="font-medium text-white">{nextBadge.displayName}</div>
-                <div className="text-xs text-[#9BB0D1] mt-0.5">{REMAINING} more clients to unlock</div>
+                <div className="font-medium text-[var(--text)] text-sm">{getBadgeName(nextBadge.badgeCode, nextBadge.displayName)}</div>
+                <div className="text-xs text-[var(--text-muted)] mt-0.5">{t('profile.more_to_unlock', { count: REMAINING })}</div>
               </div>
             </div>
-            <div className="w-full h-2.5 rounded-full bg-[#2A3550] overflow-hidden">
+            <div className="w-full h-2 rounded-full bg-[var(--bg)] overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${pct}%` }}
                 transition={{ duration: 0.9, ease: 'easeOut' }}
-                className="h-full rounded-full bg-gradient-to-r from-[#00D1C1] to-[#3BE0D4]"
+                className="h-full rounded-full bg-[var(--primary)]"
               />
             </div>
           </div>
         )}
 
-        {/* Rabbit encouragement */}
-        <div className="bg-[#12251E] border border-[#22C55E]/25 rounded-3xl p-4 flex items-start gap-3">
-          <motion.div
-            animate={{ y: [0, -4, 0] }}
-            transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
-            className="shrink-0"
+        {/* Badge Collection Section Header */}
+        <div className="flex items-center justify-between mt-1">
+          <h2 className="text-lg font-semibold text-[var(--text)]">{t('profile.badge_collection')}</h2>
+          <button
+            onClick={() => setShowAllBadges(true)}
+            className="text-xs font-semibold text-[var(--primary)] hover:underline min-h-[44px] px-2 flex items-center"
           >
-            <RabbitMascot size={26} />
-          </motion.div>
-          <div>
-            <div className="text-[#4ADE80] font-semibold text-sm leading-snug">
-              Every completed test helps someone see better.
-            </div>
-            {nextBadge && (
-              <div className="text-[#5FA97F] text-xs mt-1">
-                {REMAINING} clients away from the "{nextBadge.displayName}" badge.
-              </div>
-            )}
-          </div>
+            {t('profile.view_all', { count: enabledBadges.length })}
+          </button>
         </div>
 
-        {/* Badge Collection */}
-        <h2 className="text-lg font-semibold text-white mt-1">Badge Collection</h2>
+        {/* Exactly 3 Badge Previews */}
         <div className="grid grid-cols-3 gap-3">
-          {definitions.map((b, idx) => {
-            const isEarned = earnedSet.has(b.badgeCode);
-            const isNext = nextBadge?.badgeCode === b.badgeCode;
-            
-            // Re-apply static tint logic per badge
-            let tint = 'bg-[#151D2E] border-white/5';
-            if (isEarned) {
-              if (b.badgeCode === 'FIRST_VISION') tint = 'bg-[#1B3A5B]/60 border-[#3B82F6]/50';
-              else if (b.badgeCode === 'TEN_HELPERS') tint = 'bg-[#4A3A12]/60 border-[#EAB308]/60';
-              else if (b.badgeCode === 'VISION_GUIDE') tint = 'bg-[#122E2C]/60 border-[#00D1C1]';
-              else tint = 'bg-[#2D1B3A]/60 border-[#A855F7]/50'; // Default earned
-            } else if (isNext) {
-              tint = 'bg-[#1E293B]/80 border-[#475569] border-dashed';
-            }
+          {previewBadges.map((b) => {
+            const earnedItem = earnedMap.get(b.badgeCode);
+            const isEarned = !!earnedItem;
+            const currentMetric = getBadgeMetricValue(b.ruleType, progress);
 
             return (
-              <motion.div
+              <button
                 key={b.badgeCode}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: idx * 0.05 }}
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.95 }}
+                type="button"
                 onClick={() => setSelectedBadge(b)}
-                className={`relative rounded-2xl border p-3 flex flex-col items-center text-center gap-1.5 aspect-[3/3.4] justify-center cursor-pointer transition-colors ${tint}`}
+                className={`relative rounded-2xl border p-3 flex flex-col items-center text-center gap-1.5 aspect-[3/3.4] justify-center cursor-pointer transition-all ${
+                  isEarned
+                    ? 'bg-[var(--card-active)] border-[var(--primary)]/50'
+                    : 'bg-[var(--card)] border-[var(--card-border)] opacity-70'
+                }`}
               >
                 {isEarned && (
-                  <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#00D1C1] flex items-center justify-center">
-                    <Check size={12} className="text-[#0B0817]" strokeWidth={3} />
+                  <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[var(--primary)] flex items-center justify-center">
+                    <Check size={10} className="text-[var(--bg)]" strokeWidth={3} />
                   </span>
                 )}
-
-                <span className={`text-3xl leading-none ${!isEarned ? 'grayscale opacity-70' : ''}`}>{b.iconKey}</span>
-                <div className={`text-xs font-semibold ${!isEarned ? 'text-[#64748B]' : 'text-white'}`}>
-                  {b.displayName}
+                <span className={`text-3xl leading-none ${!isEarned ? 'grayscale' : ''}`}>{b.iconKey}</span>
+                <div className="text-xs font-semibold text-[var(--text)] line-clamp-1">{getBadgeName(b.badgeCode, b.displayName)}</div>
+                <div className="text-[10px] text-[var(--text-muted)]">
+                  {isEarned ? t('profile.earned') : `${currentMetric}/${b.targetValue}`}
                 </div>
-                <div className="text-[10px] text-[#7E8AA5]">{b.targetValue}</div>
-              </motion.div>
+              </button>
             );
           })}
         </div>
+
+        {/* Logout Button */}
+        <div className="pt-4 flex justify-center">
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className="flex items-center justify-center gap-2 min-h-[44px] px-6 py-3 rounded-2xl bg-red-500/25 hover:bg-red-500/40 text-white font-semibold border border-red-400/50 shadow-md transition-all active:scale-[0.98]"
+          >
+            <LogOut size={18} />
+            <span>{t('profile.logout')}</span>
+          </button>
+        </div>
       </div>
 
-      {/* Badge Popup */}
+      {/* View All Badges Modal */}
       <AnimatePresence>
-        {selectedBadge && (
+        {showAllBadges && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setSelectedBadge(null)}
-              className="absolute inset-0 bg-[#0B0817]/80 backdrop-blur-sm"
+              onClick={() => setShowAllBadges(false)}
+              className="absolute inset-0 bg-[var(--overlay)] backdrop-blur-sm"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative w-full max-w-sm rounded-3xl border border-white/10 bg-[#162032] p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-md max-h-[80vh] rounded-3xl border border-[var(--card-border)] bg-[var(--card)] p-5 shadow-2xl flex flex-col"
             >
-              <button 
+              <div className="flex justify-between items-center pb-3 border-b border-[var(--card-border)]">
+                <h3 className="text-lg font-bold text-[var(--text)]">{t('profile.all_badges', { count: enabledBadges.length })}</h3>
+                <button
+                  aria-label="Close badges"
+                  onClick={() => setShowAllBadges(false)}
+                  className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)]"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto py-4 flex flex-col gap-3 pr-1">
+                {enabledBadges.map((b) => {
+                  const earnedItem = earnedMap.get(b.badgeCode);
+                  const isEarned = !!earnedItem;
+                  const currentVal = getBadgeMetricValue(b.ruleType, progress);
+                  const badgePct = Math.min(100, Math.round((currentVal / b.targetValue) * 100));
+
+                  return (
+                    <div
+                      key={b.badgeCode}
+                      onClick={() => {
+                        setShowAllBadges(false);
+                        setSelectedBadge(b);
+                      }}
+                      className={`p-3 rounded-2xl border flex items-center gap-3 cursor-pointer transition-colors ${
+                        isEarned
+                          ? 'bg-[var(--card-active)] border-[var(--primary)]/40'
+                          : 'bg-[var(--bg)] border-[var(--card-border)]'
+                      }`}
+                    >
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 ${!isEarned ? 'grayscale opacity-60' : ''}`}>
+                        {b.iconKey}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-sm text-[var(--text)] truncate">{getBadgeName(b.badgeCode, b.displayName)}</span>
+                          <span className={`text-xs font-semibold ${isEarned ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'}`}>
+                            {isEarned ? t('profile.earned') : `${currentVal} / ${b.targetValue}`}
+                          </span>
+                        </div>
+                        <p className="text-xs text-[var(--text-muted)] truncate mt-0.5">{getBadgeDesc(b.badgeCode, b.description)}</p>
+                        {!isEarned && (
+                          <div className="w-full h-1.5 rounded-full bg-[var(--card)] mt-2 overflow-hidden">
+                            <div className="h-full bg-[var(--primary)] rounded-full" style={{ width: `${badgePct}%` }} />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Single Badge Detail Dialog */}
+      <AnimatePresence>
+        {selectedBadge && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedBadge(null)}
+              className="absolute inset-0 bg-[var(--overlay)] backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-sm rounded-3xl border border-[var(--card-border)] bg-[var(--card)] p-6 shadow-2xl"
+            >
+              <button
+                aria-label="Close"
                 onClick={() => setSelectedBadge(null)}
-                className="absolute right-4 top-4 text-[#7E8AA5] hover:text-white"
+                className="absolute right-4 top-4 min-h-[44px] min-w-[44px] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)]"
               >
-                ✕
+                <X size={20} />
               </button>
               <div className="flex flex-col items-center text-center gap-3">
-                <span className={`text-6xl ${earnedSet.has(selectedBadge.badgeCode) ? '' : 'grayscale'}`}>{selectedBadge.iconKey}</span>
-                <h3 className="text-xl font-bold text-white">{selectedBadge.displayName}</h3>
-                <p className="text-sm text-[#9BB0D1] leading-relaxed">
-                  {selectedBadge.description}
-                </p>
-                <div className="mt-4 w-full rounded-2xl bg-[#0B0817]/40 p-4 border border-white/5">
-                  <div className="text-xs uppercase tracking-wider text-[#7E8AA5] font-semibold mb-2">Unlock Condition</div>
-                  <div className="text-sm text-white font-medium">
-                    {selectedBadge.ruleType === 'completed_tests' && `Complete ${selectedBadge.targetValue} vision tests`}
-                    {selectedBadge.ruleType === 'clients_helped' && `Help ${selectedBadge.targetValue} distinct clients`}
-                    {selectedBadge.ruleType === 'distinct_testing_days' && `Test on ${selectedBadge.targetValue} different days`}
-                    {selectedBadge.ruleType === 'carrots_earned' && `Earn ${selectedBadge.targetValue} carrots`}
-                    {selectedBadge.ruleType === 'eye_festivals_attended' && `Attend ${selectedBadge.targetValue} Eye Festivals`}
-                    {selectedBadge.ruleType === 'custom_counter' && `Reach milestone of ${selectedBadge.targetValue}`}
+                <span className={`text-6xl ${earnedMap.has(selectedBadge.badgeCode) ? '' : 'grayscale'}`}>
+                  {selectedBadge.iconKey}
+                </span>
+                <h3 className="text-xl font-bold text-[var(--text)]">{getBadgeName(selectedBadge.badgeCode, selectedBadge.displayName)}</h3>
+                <p className="text-sm text-[var(--text-muted)] leading-relaxed">{getBadgeDesc(selectedBadge.badgeCode, selectedBadge.description)}</p>
+
+                <div className="mt-4 w-full rounded-2xl bg-[var(--bg)] p-4 border border-[var(--card-border)]">
+                  <div className="text-xs uppercase tracking-wider text-[var(--text-muted)] font-semibold mb-2">
+                    {t('profile.unlock_condition')}
+                  </div>
+                  <div className="text-sm text-[var(--text)] font-medium">
+                    {getUnlockRuleText(selectedBadge.ruleType, selectedBadge.targetValue)}
                   </div>
                 </div>
               </div>
@@ -220,43 +325,44 @@ export function Profile({ onNav, tester }: { onNav: (s: ScreenId) => void; teste
         )}
       </AnimatePresence>
 
-      {/* Logout Confirmation Popup */}
+      {/* Logout Confirmation Dialog */}
       <AnimatePresence>
         {showLogoutConfirm && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowLogoutConfirm(false)}
-              className="absolute inset-0 bg-[#0B0817]/80 backdrop-blur-sm"
+              className="absolute inset-0 bg-[var(--overlay)] backdrop-blur-sm"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative w-full max-w-sm rounded-3xl border border-white/10 bg-[#162032] p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-sm rounded-3xl border border-[var(--card-border)] bg-[var(--card)] p-6 shadow-2xl"
             >
               <div className="flex flex-col items-center text-center gap-4">
                 <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-2">
                   <LogOut size={32} />
                 </div>
-                <h3 className="text-xl font-bold text-white">Log out?</h3>
-                <p className="text-sm text-[#9BB0D1]">
-                  Are you sure you want to log out of your account?
+                <h3 className="text-xl font-bold text-[var(--text)]">{t('profile.logout')}?</h3>
+                <p className="text-sm text-[var(--text-muted)]">
+                  {t('profile.logout_confirm_body')}
                 </p>
                 <div className="flex gap-3 w-full mt-2">
                   <button
                     onClick={() => setShowLogoutConfirm(false)}
-                    className="flex-1 py-3 rounded-xl bg-white/10 text-white font-medium hover:bg-white/20 transition-colors"
+                    className="flex-1 min-h-[44px] rounded-xl bg-[var(--bg)] text-[var(--text)] font-medium border border-[var(--card-border)]"
                   >
-                    Cancel
+                    {t('ui.cancel')}
                   </button>
                   <button
                     onClick={handleLogout}
-                    className="flex-1 py-3 rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
+                    className="flex-1 min-h-[44px] rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
                   >
-                    Log out
+                    {t('profile.logout')}
                   </button>
                 </div>
               </div>
@@ -265,29 +371,7 @@ export function Profile({ onNav, tester }: { onNav: (s: ScreenId) => void; teste
         )}
       </AnimatePresence>
 
-      <div className="px-5 pb-8 flex justify-center">
-        <button
-          onClick={() => setShowLogoutConfirm(true)}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors font-medium border border-red-500/20"
-        >
-          <LogOut size={18} />
-          <span>Log out</span>
-        </button>
-      </div>
+      <BottomNavigation current="tester-profile" onNav={onNav} />
     </Shell>
   );
-}
-
-function Stat({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) {
-  return (
-    <div className="flex-1 flex flex-col items-center gap-1 text-center">
-      {icon}
-      <div className="text-lg font-bold text-white leading-none mt-0.5">{value}</div>
-      <div className="text-[10px] text-[#7E8AA5]">{label}</div>
-    </div>
-  );
-}
-
-function Divider() {
-  return <div className="w-px h-10 bg-white/10" />;
 }

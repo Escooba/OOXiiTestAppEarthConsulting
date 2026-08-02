@@ -1,11 +1,11 @@
 export const theme = {
-  bg: 'bg-[#150F26]',
+  bg: 'bg-[#2A0730]',
   card: 'bg-[#22193B]',
   cardActive: 'bg-[#2A2049]',
-  teal: '#00D1C1',
-  tealText: 'text-[#00D1C1]',
-  tealBg: 'bg-[#00D1C1]',
-  tealBorder: 'border-[#00D1C1]',
+  teal: '#A984FF',
+  tealText: 'text-[#A984FF]',
+  tealBg: 'bg-[#A984FF]',
+  tealBorder: 'border-[#A984FF]',
   error: '#FF5C5C',
   errorText: 'text-[#FF5C5C]',
   errorBorder: 'border-[#FF5C5C]',
@@ -38,26 +38,46 @@ export type ScreenId =
   | 'home'
   | 'client-info'
   | 'glasses-question'
-  | 'distance-right'
-  | 'distance-left'
-  | 'distance-both-glasses'
-  | 'near-no-glasses'
+  | 'distance-right-line'
+  | 'distance-right-letters'
+  | 'distance-right-result'
+  | 'distance-left-line'
+  | 'distance-left-letters'
+  | 'distance-left-result'
+  | 'distance-both-glasses-line'
+  | 'distance-both-glasses-letters'
+  | 'distance-both-glasses-result'
+  | 'near-no-glasses-line'
+  | 'near-no-glasses-result'
   | 'reading-glasses-question'
-  | 'near-own-glasses'
+  | 'near-own-glasses-line'
+  | 'near-own-glasses-result'
   | 'wheel-pd'
-  | 'wheel-right-lens'
-  | 'wheel-right-distance'
-  | 'wheel-left-lens'
-  | 'final-summary'
-  | 'tester-profile'
-  | 'community-garden'
-  | 'tutorial'
+  | 'wheel-right-direction'
+  | 'wheel-right-power'
+  | 'wheel-right-two-colour'
+  | 'wheel-right-line-nine'
+  | 'wheel-right-result'
+  | 'wheel-right-distance-improved'
+  | 'wheel-right-distance-line'
+  | 'wheel-right-distance-letters'
+  | 'wheel-right-distance-result'
+  | 'wheel-left-direction'
+  | 'wheel-left-power'
+  | 'wheel-left-two-colour'
+  | 'wheel-left-line-nine'
+  | 'wheel-left-result'
+  | 'distance-glasses-dispensed'
   | 'sunglasses-question'
   | 'sunglasses-selection'
   | 'dispensed-review'
   | 'final-checklist'
   | 'additional-details'
   | 'test-saved'
+  | 'final-summary'
+  | 'tester-profile'
+  | 'community-garden'
+  | 'tutorial'
   | 'find-client'
   | 'client-profile'
   | 'vision-review'

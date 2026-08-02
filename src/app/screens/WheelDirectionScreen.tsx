@@ -1,0 +1,74 @@
+import React, { useState } from 'react';
+import { Shell, BottomBar } from '../components/Shell';
+import { RabbitBubble } from '../components/RabbitBubble';
+import { RadioGroup, InlineError, ImagePanel } from './common';
+import { HelpButton } from '../components/HelpButton';
+import { useAutoAdvance } from '../hooks/useAutoAdvance';
+import { useAutoScrollInput } from '../hooks/useAutoScrollInput';
+
+interface Props {
+  side: 'right' | 'left';
+  progress: number;
+  initialValue?: string;
+  onNext: (direction: string) => void;
+  onBack: () => void;
+}
+
+export function WheelDirectionScreen({
+  side, progress, initialValue = '', onNext, onBack
+}: Props) {
+  const [direction, setDirection] = useState(initialValue);
+  const [error, setError] = useState(false);
+  const { commitAndAdvance, isFading } = useAutoAdvance();
+  const inputCardRef = useAutoScrollInput();
+
+  const opposite = side === 'right' ? 'left' : 'right';
+
+  const handleNext = () => {
+    if (!direction) {
+      setError(true);
+      return;
+    }
+    onNext(direction);
+  };
+
+  return (
+    <Shell progress={progress} isFading={isFading}>
+      <div className="px-5 pt-2 pb-32 flex flex-col gap-5">
+        <div>
+          <h1 className="text-2xl font-light">Wheel test — {side === 'right' ? 'Right' : 'Left'} eye</h1>
+          <p className="text-sm text-[var(--text-muted)] mt-2">
+            Make sure the black lens is covering the {opposite} eye.
+          </p>
+        </div>
+        <ImagePanel caption={`Client occludes ${opposite} eye at wheel`} />
+
+        <RabbitBubble
+          text={error ? 'Choose the best lens before continuing.' : direction ? 'Nice.' : "You're here. Complete this step to keep going."}
+          type={error ? 'error' : direction ? 'success' : 'default'}
+        />
+
+        <div ref={inputCardRef} className="bg-[var(--card)] border border-[var(--card-border)] rounded-3xl p-5 flex flex-col gap-4 shadow-lg scroll-mt-20">
+          <div className="flex items-center justify-between gap-3">
+            <label className="text-sm font-bold block flex-1 text-[var(--text)]">Best {side} lens is:</label>
+            <HelpButton configId="wheel-direction" />
+          </div>
+          <RadioGroup
+            value={direction}
+            onChange={(v) => {
+              setDirection(v);
+              if (v) {
+                setError(false);
+                commitAndAdvance(() => onNext(v));
+              }
+            }}
+            options={['Plus', 'Minus', 'Neither plus nor minus lenses improve vision']}
+            err={error && !direction}
+          />
+          {error && !direction && <InlineError text="Choose the best lens before continuing." />}
+        </div>
+      </div>
+      <BottomBar onNext={handleNext} onBack={onBack} hideNext={!direction} />
+    </Shell>
+  );
+}

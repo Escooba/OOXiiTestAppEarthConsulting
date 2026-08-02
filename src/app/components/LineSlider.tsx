@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { motion } from 'motion/react';
 
 interface Props {
   /** '' when nothing selected, otherwise 'Line N' */
   value: string;
   onChange: (v: string) => void;
+  onChangeEnd?: (v: string) => void;
+  onDragStart?: () => void;
   error?: boolean;
   disabled?: boolean;
   max?: number;
@@ -16,12 +18,45 @@ interface Props {
  * the "can't continue without selecting" constraint is preserved — value stays
  * '' until the tester actually moves the slider onto a line.
  */
-export function LineSlider({ value, onChange, error, disabled, max = 11 }: Props) {
+export function LineSlider({ value, onChange, onChangeEnd, onDragStart, error, disabled, max = 11 }: Props) {
   const raw = value === '' ? -1 : parseInt(value.replace(/\D/g, ''), 10);
   const selected = raw >= 0;
+  const latestValueRef = useRef(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+  latestValueRef.current = value;
+
+  React.useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+
+    const handleChange = (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const val = target.value;
+      const n = parseInt(val, 10);
+      const strVal = n < 0 ? '' : `Line ${n}`;
+      if (strVal !== '' && onChangeEnd) {
+        onChangeEnd(strVal);
+      }
+    };
+
+    el.addEventListener('change', handleChange);
+    return () => {
+      el.removeEventListener('change', handleChange);
+    };
+  }, [onChangeEnd]);
 
   const handle = (n: number) => {
-    onChange(n < 0 ? '' : `Line ${n}`);
+    const val = n < 0 ? '' : `Line ${n}`;
+    latestValueRef.current = val;
+    onChange(val);
+    return val;
+  };
+
+  const handleRelease = () => {
+    const currentVal = latestValueRef.current;
+    if (currentVal !== '' && onChangeEnd) {
+      onChangeEnd(currentVal);
+    }
   };
 
   // Percentage position of the thumb across the -1..max span.
@@ -34,7 +69,7 @@ export function LineSlider({ value, onChange, error, disabled, max = 11 }: Props
       {/* Big readout */}
       <div
         className={`rounded-2xl border p-4 ${
-          error ? 'border-[#FF5C5C]/50 bg-[#FF5C5C]/5' : 'border-white/10 bg-[#150F26]'
+          error ? 'border-[#FF5C5C]/50 bg-[#FF5C5C]/5' : 'border-white/10 bg-[#2A0730]'
         }`}
       >
         <div className="text-xs text-[#9B93BA]">Selected line</div>
@@ -42,7 +77,7 @@ export function LineSlider({ value, onChange, error, disabled, max = 11 }: Props
           key={raw}
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`text-2xl font-semibold ${selected ? 'text-[#00D1C1]' : 'text-[#6A608A]'}`}
+          className={`text-2xl font-semibold ${selected ? 'text-[#A984FF]' : 'text-[#6A608A]'}`}
         >
           {selected ? `Line ${raw}` : 'Not selected'}
         </motion.div>
@@ -51,22 +86,29 @@ export function LineSlider({ value, onChange, error, disabled, max = 11 }: Props
       {/* Slider track */}
       <div className="px-1">
         <input
+          ref={inputRef}
           type="range"
           min={-1}
           max={max}
           step={1}
           value={raw}
           disabled={disabled}
-          onChange={(e) => handle(parseInt(e.target.value, 10))}
+          onChange={(e) => {
+            onDragStart?.();
+            handle(parseInt(e.target.value, 10));
+          }}
+          onKeyUp={() => {
+            handleRelease();
+          }}
           className={`w-full h-2 rounded-full appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-            error ? 'accent-[#FF5C5C]' : 'accent-[#00D1C1]'
+            error ? 'accent-[#FF5C5C]' : 'accent-[#A984FF]'
           }`}
           style={{
             background: selected
-              ? `linear-gradient(to right, ${error ? '#FF5C5C' : '#00D1C1'} ${pct}%, #3A3059 ${pct}%)`
+              ? `linear-gradient(to right, ${error ? '#FF5C5C' : '#A984FF'} ${pct}%, #3A3059 ${pct}%)`
               : '#3A3059',
           }}
-          aria-label="Smallest OOXii line number"
+          aria-label="Select the smallest OOXii line number"
         />
 
         {/* Interval ticks — one per line number */}
@@ -83,16 +125,22 @@ export function LineSlider({ value, onChange, error, disabled, max = 11 }: Props
                 key={n}
                 type="button"
                 disabled={disabled}
-                onClick={() => handle(n)}
+                onClick={() => {
+                  onDragStart?.();
+                  const val = handle(n);
+                  if (val && onChangeEnd) {
+                    onChangeEnd(val);
+                  }
+                }}
                 style={{ left: leftCalc }}
                 className="absolute -translate-x-1/2 flex flex-col items-center gap-1 top-0"
               >
                 <span
-                  className={`w-px h-2 ${active ? (error ? 'bg-[#FF5C5C]' : 'bg-[#00D1C1]') : 'bg-white/20'}`}
+                  className={`w-px h-2 ${active ? (error ? 'bg-[#FF5C5C]' : 'bg-[#A984FF]') : 'bg-white/20'}`}
                 />
                 <span
                   className={`text-[10px] leading-none ${
-                    active ? (error ? 'text-[#FF5C5C]' : 'text-[#00D1C1]') : 'text-[#6A608A]'
+                    active ? (error ? 'text-[#FF5C5C]' : 'text-[#A984FF]') : 'text-[#6A608A]'
                   }`}
                 >
                   {n}

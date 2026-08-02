@@ -3,6 +3,7 @@ import { Shell, BottomBar } from '../components/Shell';
 import { Field, inputCls } from './SignupEmail';
 import { SelectField } from './TesterInfo';
 import { RadioGroup } from './common';
+import { useTheme } from '../lib/ThemeContext';
 
 interface Props {
   onStart: (data: { ooxiiId: string; yearOfBirth: string; gender: string; cataract: string }) => void;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function ClientInfo({ onStart, onCancel }: Props) {
+  const { t } = useTheme();
   const [year, setYear] = useState('');
   const [gender, setGender] = useState('');
   const [cataract, setCataract] = useState('');
@@ -18,47 +20,47 @@ export function ClientInfo({ onStart, onCancel }: Props) {
 
   const submit = () => {
     const e: Record<string, string> = {};
-    if (!year || !/^\d{4}$/.test(year)) e.year = 'Enter a 4-digit year of birth.';
-    if (!gender) e.gender = 'Select a gender.';
-    if (!cataract) e.cataract = 'Select an answer.';
+    if (!year || !/^\d{4}$/.test(year)) e.year = t('error.required');
+    if (!gender) e.gender = t('error.select_option');
+    if (!cataract) e.cataract = t('error.select_option');
     setErrors(e);
     if (Object.keys(e).length === 0) onStart({ ooxiiId, yearOfBirth: year, gender, cataract });
   };
 
   return (
     <Shell progress={50}>
-      <div className="px-6 pt-2 pb-32 flex flex-col gap-5">
-        <h1 className="text-2xl font-light mt-4">Client information</h1>
+      <div className="px-6 pt-2 pb-48 flex flex-col gap-5">
+        <h1 className="text-2xl font-light mt-4">{t('clients.client_info_title')}</h1>
 
-        <div className="rounded-2xl bg-[#00D1C1]/10 border border-[#00D1C1]/30 p-4 flex justify-between items-center">
+        <div className="rounded-2xl bg-[#A984FF]/10 border border-[#A984FF]/30 p-4 flex justify-between items-center">
           <div>
-            <div className="text-xs uppercase text-[#00D1C1] font-semibold tracking-wider">OOXii ID</div>
-            <div className="text-xs text-[#9B93BA] mt-1">Anonymous — no personal data stored</div>
+            <div className="text-xs uppercase text-[#A984FF] font-semibold tracking-wider">OOXii ID</div>
+            <div className="text-xs text-[#9B93BA] mt-1">{t('clients.anonymous_notice')}</div>
           </div>
-          <div className="text-2xl font-bold text-[#00D1C1]">{ooxiiId}</div>
+          <div className="text-2xl font-bold text-[#A984FF]">{ooxiiId}</div>
         </div>
 
-        <Field label="Year of birth" error={errors.year}>
+        <Field label={t('clients.year_of_birth')} error={errors.year}>
           <input
             inputMode="numeric"
             maxLength={4}
             value={year}
             onChange={(e) => setYear(e.target.value.replace(/\D/g, ''))}
             className={inputCls(!!errors.year)}
-            placeholder="e.g. 1978"
+            placeholder={t('clients.year_placeholder')}
           />
         </Field>
-        <Field label="Gender" error={errors.gender}>
+        <Field label={t('clients.gender')} error={errors.gender}>
           <SelectField
             value={gender}
             onChange={setGender}
-            placeholder="Select gender"
+            placeholder={t('clients.select_gender')}
             options={['Female', 'Male', 'Non-binary', 'Prefer not to say']}
             err={!!errors.gender}
           />
         </Field>
 
-        <Field label="Have you had cataract surgery before?" error={errors.cataract}>
+        <Field label={t('clients.cataract_surgery_question')} error={errors.cataract}>
           <RadioGroup
             value={cataract}
             onChange={setCataract}
@@ -67,7 +69,13 @@ export function ClientInfo({ onStart, onCancel }: Props) {
           />
         </Field>
       </div>
-      <BottomBar onNext={submit} onBack={onCancel} nextLabel="Start test" backLabel="Cancel" />
+      <BottomBar 
+        onNext={submit} 
+        onBack={onCancel} 
+        nextLabel={t('clients.start_test')} 
+        backLabel={t('ui.cancel')}
+        nextDisabled={!year || year.length < 4 || !gender || !cataract}
+      />
     </Shell>
   );
 }

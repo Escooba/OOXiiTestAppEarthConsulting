@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS clients (
   FOREIGN KEY (created_by_tester_id) REFERENCES tester_profiles(local_id)
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_clients_ooxii_id ON clients(ooxii_client_id) WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_clients_tester_ooxii_id ON clients(created_by_tester_id, ooxii_client_id) WHERE deleted_at IS NULL;
 
 CREATE TABLE IF NOT EXISTS test_sessions (
   local_id TEXT PRIMARY KEY,

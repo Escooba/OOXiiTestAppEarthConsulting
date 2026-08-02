@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <rect width="500" height="500" fill="#0F172A" rx="16"/>
+  <!-- Wheel Frame Body -->
+  <path d="M50 220 C50 140, 450 140, 450 220 L420 340 C420 380, 80 380, 80 340 Z" fill="#1E293B" stroke="#334155" stroke-width="4"/>
+  
+  <!-- Left & Right Eye Apertures -->
+  <circle cx="160" cy="240" r="55" fill="#090D16" stroke="#475569" stroke-width="5"/>
+  <circle cx="340" cy="240" r="55" fill="#090D16" stroke="#475569" stroke-width="5"/>
+
+  <!-- Center PD Knob -->
+  <circle cx="250" cy="230" r="45" fill="#334155" stroke="#94A3B8" stroke-width="4"/>
+  <circle cx="250" cy="230" r="30" fill="#0F172A" stroke="#38BDF8" stroke-width="3"/>
+  <path d="M250 200 L250 260 M220 230 L280 230" stroke="#94A3B8" stroke-width="3"/>
+
+  <!-- BAKED-IN HIGHLIGHT: PD Scale Window -->
+  <rect x="170" y="130" width="160" height="68" fill="#EF4444" fill-opacity="0.15" stroke="#DC2626" stroke-width="3" rx="10"/>
+  <rect x="170" y="110" width="115" height="18" fill="#DC2626" rx="4"/>
+  <text x="176" y="123" font-family="sans-serif" font-size="11" font-weight="bold" fill="#FFFFFF">PD Scale Window</text>
+
+  <!-- PD Scale Window inner -->
+  <rect x="180" y="140" width="140" height="50" fill="#020617" stroke="#38BDF8" stroke-width="2" rx="8"/>
+  <text x="250" y="162" text-anchor="middle" font-family="monospace" font-size="12" fill="#94A3B8">PD SCALE (mm)</text>
+  <text x="250" y="182" text-anchor="middle" font-family="monospace" font-size="18" font-weight="bold" fill="#38BDF8">62 mm</text>
+
+  <!-- Scale Tick Marks -->
+  <line x1="195" y1="145" x2="195" y2="152" stroke="#FFFFFF" stroke-width="2"/>
+  <line x1="210" y1="145" x2="210" y2="155" stroke="#FFFFFF" stroke-width="2"/>
+  <line x1="225" y1="145" x2="225" y2="152" stroke="#FFFFFF" stroke-width="2"/>
+  <line x1="240" y1="145" x2="240" y2="155" stroke="#FFFFFF" stroke-width="2"/>
+  <line x1="250" y1="145" x2="250" y2="158" stroke="#EF4444" stroke-width="3"/>
+  <line x1="260" y1="145" x2="260" y2="155" stroke="#FFFFFF" stroke-width="2"/>
+  <line x1="275" y1="145" x2="275" y2="152" stroke="#FFFFFF" stroke-width="2"/>
+  <line x1="290" y1="145" x2="290" y2="155" stroke="#FFFFFF" stroke-width="2"/>
+  <line x1="305" y1="145" x2="305" y2="152" stroke="#FFFFFF" stroke-width="2"/>
+</svg>

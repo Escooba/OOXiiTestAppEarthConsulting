@@ -54,6 +54,10 @@ export class TestSessionRepository {
 
   async startTest(data: { clientId: string; testerId: string; clinicId?: string | null; displayTestNumber?: string }): Promise<TestSession> {
     const now = nowUtcMs();
+    await this.db.run(
+      `UPDATE test_sessions SET status = 'cancelled', updated_at = ? WHERE tester_id = ? AND status IN ('draft', 'in_progress')`,
+      [now, data.testerId]
+    );
     const localId = generateLocalId();
     const num = data.displayTestNumber || await this.nextTestNumber(data.testerId);
     await this.db.run(
@@ -88,23 +92,24 @@ export class TestSessionRepository {
     const now = nowUtcMs();
     const localId = generateLocalId();
     const payloadStr = JSON.stringify(payload);
-    // Upsert: INSERT OR REPLACE with unique constraint on (test_session_id, section_type)
-    // First check if exists
-    const existing = await this.db.query<SectionRow>(
-      `SELECT ${SECTION_COLS} FROM test_session_sections WHERE test_session_id = ? AND section_type = ?`,
-      [sessionId, sectionType]
+    
+    // Atomic SQLite UPSERT
+    await this.db.run(
+      `INSERT INTO test_session_sections (local_id, test_session_id, section_type, section_schema_version, payload, created_at, updated_at)
+       VALUES (?, ?, ?, 1, ?, ?, ?)
+       ON CONFLICT(test_session_id, section_type) DO UPDATE SET 
+         payload = excluded.payload, 
+         updated_at = excluded.updated_at,
+         section_schema_version = excluded.section_schema_version`,
+      [localId, sessionId, sectionType, payloadStr, now, now]
     );
-    if (existing.length > 0) {
-      await this.db.run(
-        'UPDATE test_session_sections SET payload = ?, updated_at = ?, section_schema_version = 1 WHERE test_session_id = ? AND section_type = ?',
-        [payloadStr, now, sessionId, sectionType]
-      );
-    } else {
-      await this.db.run(
-        'INSERT INTO test_session_sections (local_id, test_session_id, section_type, section_schema_version, payload, created_at, updated_at) VALUES (?, ?, ?, 1, ?, ?, ?)',
-        [localId, sessionId, sectionType, payloadStr, now, now]
-      );
-    }
+  }
+
+  async saveSectionPatch(sessionId: string, sectionType: SectionType, patch: Record<string, unknown>): Promise<void> {
+    const existingSection = await this.getSection(sessionId, sectionType);
+    const currentPayload = existingSection?.payload || {};
+    const mergedPayload = { ...currentPayload, ...patch };
+    await this.saveSection(sessionId, sectionType, mergedPayload);
   }
 
   async getSection(sessionId: string, sectionType: SectionType): Promise<TestSessionSection | null> {
@@ -131,13 +136,48 @@ export class TestSessionRepository {
     return rows.map(rowToSession);
   }
 
+  async getSessionPayload(sessionId: string): Promise<{ session: TestSession; payload: Record<string, any> } | null> {
+    const session = await this.getById(sessionId);
+    if (!session) return null;
+    const sections = await this.getAllSections(sessionId);
+    const payload: Record<string, any> = {};
+    for (const sec of sections) {
+      if (sec.payload && typeof sec.payload === 'object') {
+        Object.assign(payload, sec.payload);
+      }
+    }
+    return { session, payload };
+  }
+
+  async getLatestSessionPayloadForClient(clientId: string): Promise<{ session: TestSession; payload: Record<string, any> } | null> {
+    const history = await this.listClientHistory(clientId, 1);
+    if (history.length === 0) return null;
+    return this.getSessionPayload(history[0].localId);
+  }
+
+  async updateClientId(sessionId: string, clientId: string): Promise<void> {
+    const now = nowUtcMs();
+    await this.db.run(
+      'UPDATE test_sessions SET client_id = ?, updated_at = ? WHERE local_id = ?',
+      [clientId, now, sessionId]
+    );
+  }
+
   async setStatus(sessionId: string, status: SessionStatus): Promise<void> {
     const now = nowUtcMs();
-    const completedAt = status === 'completed' ? now : null;
+    const session = await this.getById(sessionId);
+    if (!session) return;
+    const completedAt = status === 'completed' ? (session.completedAt || now) : null;
     await this.db.run(
-      'UPDATE test_sessions SET status = ?, completed_at = COALESCE(completed_at, ?), updated_at = ?, record_version = record_version + 1 WHERE local_id = ?',
+      'UPDATE test_sessions SET status = ?, completed_at = ?, updated_at = ?, record_version = record_version + 1 WHERE local_id = ?',
       [status, completedAt, now, sessionId]
     );
+    if (status === 'completed') {
+      await this.db.run(
+        `UPDATE test_sessions SET status = 'cancelled', updated_at = ? WHERE tester_id = ? AND status IN ('draft', 'in_progress') AND local_id != ?`,
+        [now, session.testerId, sessionId]
+      );
+    }
   }
 
   async cancelDraft(sessionId: string): Promise<void> {
@@ -165,7 +205,7 @@ export class TestSessionRepository {
 
   async getDistinctClientCount(testerId: string): Promise<number> {
     const rows = await this.db.query<{ count: number }>(
-      'SELECT COUNT(*) AS count FROM clients WHERE created_by_tester_id = ? AND deleted_at IS NULL',
+      "SELECT COUNT(DISTINCT client_id) AS count FROM test_sessions WHERE tester_id = ? AND status = 'completed' AND deleted_at IS NULL",
       [testerId]
     );
     return rows.length > 0 ? Number(rows[0].count) : 0;

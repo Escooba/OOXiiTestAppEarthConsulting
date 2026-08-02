@@ -41,18 +41,33 @@ export class ClientRepository {
     return (await this.findByLocalId(localId))!;
   }
 
-  async findByLocalId(localId: string): Promise<Client | null> {
-    const rows = await this.db.query<ClientRow>(`SELECT ${SELECT_COLS} FROM clients WHERE local_id = ?`, [localId]);
+  async findByLocalId(localId: string, testerId?: string): Promise<Client | null> {
+    if (testerId) {
+      const rows = await this.db.query<ClientRow>(`SELECT ${SELECT_COLS} FROM clients WHERE local_id = ? AND created_by_tester_id = ? AND deleted_at IS NULL`, [localId, testerId]);
+      return rows.length > 0 ? rowToClient(rows[0]) : null;
+    }
+    const rows = await this.db.query<ClientRow>(`SELECT ${SELECT_COLS} FROM clients WHERE local_id = ? AND deleted_at IS NULL`, [localId]);
     return rows.length > 0 ? rowToClient(rows[0]) : null;
   }
 
-  async findByOoxiiId(ooxiiClientId: string): Promise<Client | null> {
+  async findByOoxiiId(ooxiiClientId: string, testerId?: string): Promise<Client | null> {
+    if (testerId) {
+      const rows = await this.db.query<ClientRow>(`SELECT ${SELECT_COLS} FROM clients WHERE ooxii_client_id = ? AND created_by_tester_id = ? AND deleted_at IS NULL`, [ooxiiClientId, testerId]);
+      return rows.length > 0 ? rowToClient(rows[0]) : null;
+    }
     const rows = await this.db.query<ClientRow>(`SELECT ${SELECT_COLS} FROM clients WHERE ooxii_client_id = ? AND deleted_at IS NULL`, [ooxiiClientId]);
     return rows.length > 0 ? rowToClient(rows[0]) : null;
   }
 
-  async search(query: string): Promise<Client[]> {
+  async search(query: string, testerId?: string): Promise<Client[]> {
     const q = `%${query}%`;
+    if (testerId) {
+      const rows = await this.db.query<ClientRow>(
+        `SELECT ${SELECT_COLS} FROM clients WHERE created_by_tester_id = ? AND deleted_at IS NULL AND (ooxii_client_id LIKE ? OR gender LIKE ? OR city LIKE ? OR cataract_surgery LIKE ?) ORDER BY updated_at DESC LIMIT 50`,
+        [testerId, q, q, q, q]
+      );
+      return rows.map(rowToClient);
+    }
     const rows = await this.db.query<ClientRow>(
       `SELECT ${SELECT_COLS} FROM clients WHERE deleted_at IS NULL AND (ooxii_client_id LIKE ? OR gender LIKE ? OR city LIKE ? OR cataract_surgery LIKE ?) ORDER BY updated_at DESC LIMIT 50`,
       [q, q, q, q]
@@ -60,10 +75,26 @@ export class ClientRepository {
     return rows.map(rowToClient);
   }
 
-  async listRecent(limit = 20): Promise<Client[]> {
+  async listRecent(testerId?: string | number, limit = 20): Promise<Client[]> {
+    let tId: string | undefined;
+    let lim = limit;
+    if (typeof testerId === 'number') {
+      lim = testerId;
+      tId = undefined;
+    } else {
+      tId = testerId;
+    }
+
+    if (tId) {
+      const rows = await this.db.query<ClientRow>(
+        `SELECT ${SELECT_COLS} FROM clients WHERE created_by_tester_id = ? AND deleted_at IS NULL ORDER BY updated_at DESC LIMIT ?`,
+        [tId, lim]
+      );
+      return rows.map(rowToClient);
+    }
     const rows = await this.db.query<ClientRow>(
       `SELECT ${SELECT_COLS} FROM clients WHERE deleted_at IS NULL ORDER BY updated_at DESC LIMIT ?`,
-      [limit]
+      [lim]
     );
     return rows.map(rowToClient);
   }

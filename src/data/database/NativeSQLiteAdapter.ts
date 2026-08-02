@@ -3,6 +3,7 @@
 // ============================================================================
 
 import { CapacitorSQLite, SQLiteConnection, SQLiteDBConnection } from '@capacitor-community/sqlite';
+import { Preferences } from '@capacitor/preferences';
 import type { DatabaseAdapter, QueryResult, RunResult } from './DatabaseAdapter';
 
 export class NativeSQLiteAdapter implements DatabaseAdapter {
@@ -15,6 +16,22 @@ export class NativeSQLiteAdapter implements DatabaseAdapter {
   }
 
   async open(dbName: string): Promise<void> {
+    // Manage encryption secret
+    const SECRET_KEY = 'ooxii_db_passphrase';
+    let secret = (await Preferences.get({ key: SECRET_KEY })).value;
+    if (!secret) {
+      const bytes = new Uint8Array(32);
+      crypto.getRandomValues(bytes);
+      secret = 'ooxii_sec_' + Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+      await Preferences.set({ key: SECRET_KEY, value: secret });
+    }
+
+    try {
+      await this.sqlite.setEncryptionSecret(secret);
+    } catch (e) {
+      console.warn('Failed to set encryption secret (may already be set):', e);
+    }
+
     // Check connection consistency
     const retCC = await this.sqlite.checkConnectionsConsistency();
     const isConn = (await this.sqlite.isConnection(dbName, false)).result;
@@ -24,8 +41,8 @@ export class NativeSQLiteAdapter implements DatabaseAdapter {
     } else {
       this.db = await this.sqlite.createConnection(
         dbName,
-        false, // encrypted
-        'no-encryption', // mode
+        true, // encrypted
+        'encryption', // mode
         1, // version
         false, // readonly
       );

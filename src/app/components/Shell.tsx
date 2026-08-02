@@ -1,21 +1,23 @@
-import React, { ReactNode, useState, createContext, useContext } from 'react';
+import React, { ReactNode, useState, createContext, useContext, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { Flag, Wifi, Battery, Signal, Home as HomeIcon, Settings as SettingsIcon } from 'lucide-react';
+import { Flag, Wifi, Battery, Signal, Home as HomeIcon, Settings as SettingsIcon, Sprout, User } from 'lucide-react';
 import { RabbitMascot } from './RabbitMascot';
 import { ScreenId } from '../lib/theme';
 import { useTheme } from '../lib/ThemeContext';
 import { SettingsModal } from './SettingsModal';
+import { useOnlineStatus } from '../lib/useOnlineStatus';
 
 interface NavCtx {
   onNav: (s: ScreenId) => void;
   hasInProgressTest?: boolean;
+  onCancelTest?: () => void;
 }
 
 export const ShellNavContext = createContext<NavCtx>({ onNav: () => {} });
 
-export function ShellNavProvider({ children, onNav, hasInProgressTest }: NavCtx & { children: ReactNode }) {
+export function ShellNavProvider({ children, onNav, hasInProgressTest, onCancelTest }: NavCtx & { children: ReactNode }) {
   return (
-    <ShellNavContext.Provider value={{ onNav, hasInProgressTest }}>{children}</ShellNavContext.Provider>
+    <ShellNavContext.Provider value={{ onNav, hasInProgressTest, onCancelTest }}>{children}</ShellNavContext.Provider>
   );
 }
 
@@ -24,17 +26,24 @@ interface ShellProps {
   progress?: number;
   showProgress?: boolean;
   onHome?: () => void;
+  isAdvancing?: boolean;
+  isFading?: boolean;
 }
 
-export function Shell({ children, progress = 0, showProgress = true, onHome }: ShellProps) {
-  const { tokens, mode } = useTheme();
+export function Shell({ children, progress = 0, showProgress = true, onHome, isAdvancing = false, isFading = false }: ShellProps) {
+  const { tokens, mode, t } = useTheme();
   const { onNav } = useContext(ShellNavContext);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const isOnline = useOnlineStatus();
+
+  const lastProgress = useRef(Number(sessionStorage.getItem('lastProgress') || 0));
+  useEffect(() => {
+    sessionStorage.setItem('lastProgress', String(progress));
+  }, [progress]);
 
   const goHome = () => (onHome ? onHome() : onNav('home'));
 
-  const isLight = mode === 'traditional_light';
-  const statusText = isLight ? 'text-gray-600' : 'text-gray-300';
+  const statusText = 'text-[var(--text-muted)]';
 
   const [time, setTime] = useState(() => {
     return new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
@@ -50,60 +59,64 @@ export function Shell({ children, progress = 0, showProgress = true, onHome }: S
   return (
     <div className={`min-h-screen ${tokens.bg} ${tokens.text} flex flex-col font-sans items-center overflow-x-hidden`}>
       <div className="w-full max-w-[430px] relative min-h-screen flex flex-col shadow-2xl bg-inherit">
-        <div className={`flex justify-between items-center px-6 py-3 text-xs font-medium ${statusText}`}>
+        <div className={`flex justify-between items-center px-6 py-3 text-xs sm:text-sm font-medium ${statusText}`}>
           <span>{time}</span>
           <div className="flex items-center gap-2">
-            <Signal size={14} />
-            <Wifi size={14} />
-            <Battery size={14} />
+            <Signal size={15} />
+            <Wifi size={15} />
+            <Battery size={15} />
           </div>
         </div>
 
         <div className="px-4 py-2 flex items-center justify-between z-20 gap-2">
-          <div className={`font-bold text-xl tracking-wide ${tokens.text}`}>OOXii</div>
+          <div className="font-bold text-xl tracking-wide text-[var(--text)]">OOXii</div>
           <div className="flex items-center gap-1.5">
             <button
+              type="button"
               onClick={goHome}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${tokens.navPillBg} ${tokens.text} border-[#00D1C1]/30 hover:border-[#00D1C1]`}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border transition-all bg-[var(--pill-bg)] hover:bg-[var(--pill-hover-bg)] text-[var(--pill-text)] border-[var(--pill-border)] shadow-xs"
             >
-              <HomeIcon size={13} />
-              Home
+              <HomeIcon size={14} />
+              {t('ui.home')}
             </button>
             <button
+              type="button"
               onClick={() => setSettingsOpen(true)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${tokens.navPillBg} ${tokens.text} border-[#00D1C1]/30 hover:border-[#00D1C1]`}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border transition-all bg-[var(--pill-bg)] hover:bg-[var(--pill-hover-bg)] text-[var(--pill-text)] border-[var(--pill-border)] shadow-xs"
             >
-              <SettingsIcon size={13} />
-              Settings
+              <SettingsIcon size={14} />
+              {t('ui.settings')}
             </button>
-            <div className={`hidden sm:flex items-center gap-2 px-3 py-1 rounded-full border ${tokens.navPillBg} border-[#3A3059]`}>
-              <div className="w-2 h-2 rounded-full bg-green-500" />
-              <span className="text-xs text-green-500 font-medium">Online</span>
+
+            <div className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs sm:text-sm font-semibold transition-all ${
+              isOnline
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500 dark:text-emerald-400'
+                : 'bg-amber-500/10 border-amber-500/30 text-amber-500 dark:text-amber-400'
+            }`}>
+              <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-500 dark:bg-emerald-400 animate-pulse' : 'bg-amber-500 dark:bg-amber-400'}`} />
+              <span>{isOnline ? t('ui.online') : t('ui.offline_mode')}</span>
             </div>
           </div>
         </div>
 
         {showProgress && (
-          <div className={`sticky top-0 z-30 pt-4 pb-6 px-6 bg-gradient-to-b ${
-            mode === 'ooxii_purple' ? 'from-[#150F26] via-[#150F26]' :
-            mode === 'traditional_light' ? 'from-[#F5F5F7] via-[#F5F5F7]' :
-            'from-[#111214] via-[#111214]'} to-transparent`}>
+          <div className={`sticky top-0 z-30 pt-4 pb-6 px-6 bg-gradient-to-b from-[var(--bg)] via-[var(--bg)] to-transparent`}>
             <div className="flex justify-between items-end mb-2 pr-8">
-              <span className={`text-xs ${tokens.textMuted} font-semibold uppercase tracking-wider`}>Overall Progress</span>
-              <span className="text-[#00D1C1] font-bold text-sm">{progress}%</span>
+              <span className="text-sm text-[var(--text-muted)] font-semibold uppercase tracking-wider">{t('ui.overall_progress')}</span>
+              <span className="text-[var(--primary)] font-bold text-base">{progress}%</span>
             </div>
             <div className="relative w-[calc(100%-32px)] mt-2">
-              <div className={`relative w-full h-3 rounded-full ${tokens.progressTrack} border border-white/5 overflow-hidden`}>
+              <div className="relative w-full h-3 rounded-full bg-[var(--progress-track)] border border-[var(--card-border)] overflow-hidden">
                 <motion.div
-                  className="absolute left-0 top-0 h-full rounded-full bg-[#00D1C1] shadow-[0_0_12px_rgba(0,209,193,0.4)]"
-                  initial={{ width: 0 }}
+                  className="absolute left-0 top-0 h-full rounded-full bg-[var(--primary)] shadow-[0_0_12px_rgba(126,34,206,0.4)]"
+                  initial={{ width: `${lastProgress.current}%` }}
                   animate={{ width: `${progress}%` }}
                   transition={{ type: 'spring', stiffness: 80, damping: 20 }}
                 />
               </div>
               <motion.div
                 className="absolute top-1/2 z-20"
-                initial={{ left: '3%' }}
+                initial={{ left: `${Math.max(3, lastProgress.current)}%` }}
                 animate={{ left: `${Math.max(3, progress)}%` }}
                 transition={{ type: 'spring', stiffness: 120, damping: 20 }}
                 style={{ transform: 'translate(-50%, -50%)' }}
@@ -111,19 +124,26 @@ export function Shell({ children, progress = 0, showProgress = true, onHome }: S
                 <motion.div
                   animate={{ y: [0, -5, 0] }}
                   transition={{ repeat: Infinity, duration: 0.8, ease: 'easeInOut' }}
-                  className={`bg-[#150F26] rounded-full shadow-[0_0_10px_rgba(0,209,193,0.6)] border border-[#00D1C1] flex items-center justify-center w-6 h-6`}
+                  className="bg-[var(--card)] rounded-full shadow-[0_0_10px_rgba(126,34,206,0.4)] border border-[var(--primary)] flex items-center justify-center w-6 h-6"
                 >
                   <RabbitMascot size={14} />
                 </motion.div>
               </motion.div>
               <div className="absolute right-[-32px] top-1/2 -translate-y-1/2 opacity-50">
-                <Flag size={16} className={progress >= 100 ? 'text-[#00D1C1] fill-[#00D1C1]' : ''} />
+                <Flag size={16} className={progress >= 100 ? 'text-[var(--primary)] fill-[var(--primary)]' : 'text-[var(--text-muted)]'} />
               </div>
             </div>
           </div>
         )}
 
-        <div className="flex-1 flex flex-col">{children}</div>
+        <motion.div
+          className="flex-1 flex flex-col"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isFading ? 0 : 1 }}
+          transition={{ duration: 0.15 }}
+        >
+          {children}
+        </motion.div>
 
         <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       </div>
@@ -134,10 +154,11 @@ export function Shell({ children, progress = 0, showProgress = true, onHome }: S
 export function BottomBar({
   onNext,
   onBack,
-  nextLabel = 'Next',
-  backLabel = 'Back',
+  nextLabel,
+  backLabel,
   nextDisabled = false,
   hideBack = false,
+  hideNext = false,
 }: {
   onNext?: () => void;
   onBack?: () => void;
@@ -145,38 +166,90 @@ export function BottomBar({
   backLabel?: string;
   nextDisabled?: boolean;
   hideBack?: boolean;
+  hideNext?: boolean;
 }) {
-  const { mode } = useTheme();
-  const grad =
-    mode === 'ooxii_purple'
-      ? 'from-[#150F26] via-[#150F26] to-[#150F26]/0'
-      : mode === 'traditional_light'
-      ? 'from-[#F5F5F7] via-[#F5F5F7] to-[#F5F5F7]/0'
-      : 'from-[#111214] via-[#111214] to-[#111214]/0';
-  const backCls = mode === 'traditional_light'
-    ? 'border-[#D0D2DE] text-[#1A1B3A] hover:bg-black/5'
-    : 'border-white/20 text-white hover:bg-white/5';
+  const { t } = useTheme();
+  const effectiveNextLabel = nextLabel || t('ui.next');
+  const effectiveBackLabel = backLabel || t('ui.back');
   return (
-    <div className={`fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t ${grad} z-40 flex justify-center pointer-events-none`}>
+    <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-[var(--bg)] via-[var(--bg)]/95 to-transparent z-40 flex justify-center pointer-events-none pb-safe">
       <div className="w-full max-w-[430px] flex gap-3 pointer-events-auto">
         {!hideBack && (
           <button
             onClick={onBack}
-            className={`flex-1 max-w-[110px] h-14 rounded-2xl border font-medium flex items-center justify-center gap-2 active:scale-95 transition-all ${backCls}`}
+            className="flex-1 max-w-[110px] min-h-[52px] rounded-2xl border border-[var(--card-border)] bg-[var(--card)] text-[var(--text)] font-semibold text-base flex items-center justify-center gap-2 active:scale-[0.98] hover:border-[var(--primary)] transition-all shadow-md"
           >
-            {backLabel}
+            {effectiveBackLabel}
           </button>
         )}
-        <button
-          onClick={onNext}
-          disabled={nextDisabled}
-          className={`flex-[2] h-14 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg ${
-            nextDisabled
-              ? 'bg-[#3A3059] text-[#6A608A] cursor-not-allowed'
-              : 'bg-[#00D1C1] text-[#150F26] hover:brightness-110 shadow-[#00D1C1]/20'
+        {!hideNext && (
+          <button
+            onClick={onNext}
+            disabled={nextDisabled}
+            className={`flex-[2] min-h-[52px] rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${
+              nextDisabled
+                ? 'bg-[var(--card)] text-[var(--text-muted)] opacity-50 border border-[var(--card-border)] cursor-not-allowed'
+                : 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] border border-[var(--primary)] hover:brightness-110 shadow-lg'
+            }`}
+          >
+            {effectiveNextLabel}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function BottomNavigation({ current, onNav }: { current: 'home' | 'community-garden' | 'tester-profile', onNav: (s: import('../lib/theme').ScreenId) => void }) {
+  const { t } = useTheme();
+  return (
+    <div className="fixed bottom-0 left-0 right-0 py-3 px-4 bg-[var(--nav-bg)]/95 backdrop-blur-md z-40 flex justify-center pb-safe border-t border-[var(--nav-border)] shadow-2xl">
+      <div className="w-full max-w-[430px] flex justify-between items-center gap-2.5">
+        <button 
+          type="button"
+          aria-current={current === 'home' ? 'page' : undefined}
+          onClick={() => onNav('home')}
+          style={current === 'home' ? { background: 'var(--nav-item-active-bg)' } : undefined}
+          className={`flex-1 flex flex-col items-center justify-center h-16 py-2 px-3 rounded-2xl border transition-all ${
+            current === 'home'
+              ? 'border-2 border-[var(--nav-item-active-border)] text-[var(--nav-item-active-text)] shadow-lg scale-[1.02]'
+              : 'bg-[var(--nav-item-bg)] border-[var(--card-border)] text-[var(--nav-item-text)] hover:opacity-90 shadow-xs'
           }`}
         >
-          {nextLabel}
+          <HomeIcon size={20} className={current === 'home' ? 'text-[var(--nav-item-active-text)]' : 'text-[var(--nav-item-text)]'} strokeWidth={2.5} />
+          <span className={`text-xs sm:text-sm font-bold mt-1 ${current === 'home' ? 'text-[var(--nav-item-active-text)]' : 'text-[var(--nav-item-text)]'}`}>{t('ui.home')}</span>
+        </button>
+
+        <button 
+          data-tour="nav-profile"
+          type="button"
+          aria-current={current === 'tester-profile' ? 'page' : undefined}
+          onClick={() => onNav('tester-profile')}
+          style={current === 'tester-profile' ? { background: 'var(--nav-item-active-bg)' } : undefined}
+          className={`flex-1 flex flex-col items-center justify-center h-16 py-2 px-3 rounded-2xl border transition-all ${
+            current === 'tester-profile'
+              ? 'border-2 border-[var(--nav-item-active-border)] text-[var(--nav-item-active-text)] shadow-lg scale-[1.02]'
+              : 'bg-[var(--nav-item-bg)] border-[var(--card-border)] text-[var(--nav-item-text)] hover:opacity-90 shadow-xs'
+          }`}
+        >
+          <User size={20} className={current === 'tester-profile' ? 'text-[var(--nav-item-active-text)]' : 'text-[var(--nav-item-text)]'} strokeWidth={2.5} />
+          <span className={`text-xs sm:text-sm font-bold mt-1 ${current === 'tester-profile' ? 'text-[var(--nav-item-active-text)]' : 'text-[var(--nav-item-text)]'}`}>{t('ui.profile')}</span>
+        </button>
+
+        <button 
+          data-tour="nav-garden"
+          type="button"
+          aria-current={current === 'community-garden' ? 'page' : undefined}
+          onClick={() => onNav('community-garden')}
+          style={current === 'community-garden' ? { background: 'var(--nav-item-active-bg)' } : undefined}
+          className={`flex-1 flex flex-col items-center justify-center h-16 py-2 px-3 rounded-2xl border transition-all ${
+            current === 'community-garden'
+              ? 'border-2 border-[var(--nav-item-active-border)] text-[var(--nav-item-active-text)] shadow-lg scale-[1.02]'
+              : 'bg-[var(--nav-item-bg)] border-[var(--card-border)] text-[var(--nav-item-text)] hover:opacity-90 shadow-xs'
+          }`}
+        >
+          <Flag size={20} className={current === 'community-garden' ? 'text-[var(--nav-item-active-text)]' : 'text-[var(--nav-item-text)]'} strokeWidth={2.5} />
+          <span className={`text-xs sm:text-sm font-bold mt-1 ${current === 'community-garden' ? 'text-[var(--nav-item-active-text)]' : 'text-[var(--nav-item-text)]'}`}>{t('ui.garden')}</span>
         </button>
       </div>
     </div>

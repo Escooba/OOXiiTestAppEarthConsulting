@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Check, Sun, Moon, Sparkles } from 'lucide-react';
-import { useTheme, DisplayMode, Language } from '../lib/ThemeContext';
+import { useTheme, DisplayMode } from '../lib/ThemeContext';
 import { SelectField } from '../screens/TesterInfo';
-
-const LANGUAGES: Language[] = [
-  'English', 'Tok Pisin', 'Bislama', 'French', 'Spanish',
-  'Portuguese', 'Bahasa Indonesia', 'Mongolian',
-];
+import { LanguageCode, LANGUAGES } from '../lib/i18n';
 
 interface Props {
   open: boolean;
@@ -15,9 +11,9 @@ interface Props {
 }
 
 export function SettingsModal({ open, onClose }: Props) {
-  const { mode, language, setMode, setLanguage } = useTheme();
+  const { mode, language, t, setMode, setLanguage } = useTheme();
   const [draftMode, setDraftMode] = useState<DisplayMode>(mode);
-  const [draftLang, setDraftLang] = useState<Language>(language);
+  const [draftLang, setDraftLang] = useState<LanguageCode>(language);
 
   React.useEffect(() => {
     if (open) {
@@ -50,73 +46,68 @@ export function SettingsModal({ open, onClose }: Props) {
             className="w-full max-w-[400px] bg-[#22193B] rounded-3xl border border-white/10 shadow-2xl overflow-hidden text-white"
           >
             <div className="flex justify-between items-center p-5 border-b border-white/5">
-              <h2 className="text-lg font-medium">Settings</h2>
-              <button onClick={onClose} className="p-2 bg-white/5 rounded-full hover:bg-white/10">
-                <X size={16} />
+              <h2 className="text-xl font-medium text-white">{t('ui.settings')}</h2>
+              <button onClick={onClose} className="p-2 -mr-2 rounded-full hover:bg-white/10 text-[#9B93BA] transition-colors">
+                <X size={24} />
               </button>
             </div>
 
             <div className="p-5 flex flex-col gap-5 max-h-[70vh] overflow-y-auto">
               <div>
-                <div className="text-xs uppercase tracking-wider text-[#00D1C1] font-semibold mb-2">Language</div>
+                <div className="text-xs uppercase tracking-wider text-[#A984FF] font-semibold mb-2">{t('ui.language')}</div>
                 <SelectField
-                  value={draftLang}
-                  onChange={(v) => setDraftLang(v as Language)}
-                  placeholder="Select language"
-                  options={LANGUAGES}
+                  value={LANGUAGES[draftLang]}
+                  onChange={(v) => {
+                    const code = Object.keys(LANGUAGES).find(k => LANGUAGES[k as LanguageCode] === v) as LanguageCode;
+                    if (code) setDraftLang(code);
+                  }}
+                  placeholder={t('ui.select_language')}
+                  options={Object.values(LANGUAGES)}
                 />
               </div>
 
-              <div>
-                <div className="text-xs uppercase tracking-wider text-[#00D1C1] font-semibold mb-2">Display mode</div>
-                <div className="flex flex-col gap-2">
-                  <ThemeOption
-                    id="ooxii_purple"
-                    title="OOXii sunlight purple"
-                    desc="Best for outdoor testing and bright sunlight."
-                    preview="from-[#150F26] to-[#2A2049]"
-                    accent="#00D1C1"
-                    icon={<Sparkles size={16} />}
-                    selected={draftMode === 'ooxii_purple'}
-                    onSelect={() => setDraftMode('ooxii_purple')}
-                  />
-                  <ThemeOption
-                    id="traditional_light"
-                    title="Traditional light mode"
-                    desc="Light background with dark text."
-                    preview="from-white to-[#F5F5F7]"
-                    accent="#00D1C1"
-                    icon={<Sun size={16} />}
-                    selected={draftMode === 'traditional_light'}
-                    onSelect={() => setDraftMode('traditional_light')}
-                    light
-                  />
-                  <ThemeOption
-                    id="traditional_dark"
-                    title="Traditional dark mode"
-                    desc="Dark neutral background with light text."
-                    preview="from-[#111214] to-[#26272C]"
-                    accent="#00D1C1"
-                    icon={<Moon size={16} />}
-                    selected={draftMode === 'traditional_dark'}
-                    onSelect={() => setDraftMode('traditional_dark')}
-                  />
+              {/* Theme Settings */}
+              <section className="flex flex-col gap-3">
+                <h3 className="text-sm font-semibold text-[#A984FF] uppercase tracking-wider">{t('ui.display_mode')}</h3>
+                <div className="flex gap-2 p-1 bg-[var(--card)] rounded-xl border border-[var(--card-border)] shadow-sm">
+                  <button
+                    onClick={() => setDraftMode('ooxii')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      draftMode === 'ooxii'
+                        ? 'bg-[var(--bg)] text-[var(--primary)] shadow-sm ring-1 ring-[var(--primary)]/30'
+                        : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg)]'
+                    }`}
+                  >
+                    <Sparkles size={16} />
+                    {t('ui.theme_ooxii')}
+                  </button>
+                  <button
+                    onClick={() => setDraftMode('light')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      draftMode === 'light'
+                        ? 'bg-[var(--bg)] text-[var(--text)] shadow-sm ring-1 ring-[var(--card-border)]'
+                        : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg)]'
+                    }`}
+                  >
+                    <Sun size={16} />
+                    {t('ui.theme_light')}
+                  </button>
                 </div>
-              </div>
+              </section>
             </div>
 
-            <div className="p-4 border-t border-white/5 flex gap-2">
+            <div className="p-6 border-t border-white/5 flex gap-4">
               <button
                 onClick={onClose}
-                className="flex-1 h-11 rounded-xl border border-white/15 font-medium"
+                className="flex-1 py-3.5 rounded-2xl border border-white/10 text-white font-medium hover:bg-white/5 transition-colors"
               >
-                Cancel
+                {t('ui.cancel')}
               </button>
               <button
                 onClick={apply}
-                className="flex-[2] h-11 rounded-xl bg-[#00D1C1] text-[#150F26] font-bold"
+                className="flex-1 py-3.5 rounded-2xl bg-[#A984FF] text-[#2A0730] font-bold shadow-[0_0_20px_rgba(169,132,255,0.3)] hover:bg-[#BBA0FF] transition-colors"
               >
-                Apply
+                {t('ui.save')}
               </button>
             </div>
           </motion.div>
@@ -137,7 +128,7 @@ function ThemeOption({
       type="button"
       onClick={onSelect}
       className={`text-left p-3 rounded-2xl border transition-all flex gap-3 items-center ${
-        selected ? 'border-[#00D1C1] bg-[#00D1C1]/10' : 'border-white/10 bg-[#150F26] hover:border-white/20'
+        selected ? 'border-[#A984FF] bg-[#A984FF]/10' : 'border-white/10 bg-[#2A0730] hover:border-white/20'
       }`}
     >
       <div
@@ -149,7 +140,7 @@ function ThemeOption({
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium flex items-center gap-2">
           {title}
-          {selected && <Check size={14} className="text-[#00D1C1]" />}
+          {selected && <Check size={14} className="text-[#A984FF]" />}
         </div>
         <div className="text-xs text-[#9B93BA] mt-0.5 leading-snug">{desc}</div>
       </div>

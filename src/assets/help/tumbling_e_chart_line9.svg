@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 580" width="100%" height="100%">
+  <!-- Background -->
+  <rect width="440" height="580" fill="#FFFFFF" rx="16"/>
+  <rect x="15" y="15" width="410" height="550" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2" rx="12"/>
+
+  <!-- Row 60 (60m) -->
+  <text x="42" y="76" font-family="monospace" font-size="13" font-weight="bold" fill="#64748B">60</text>
+  <g fill="#0F172A">
+    <path d="M140 45 h45 v12 h-33 v8 h25 v11 h-25 v8 h33 v12 h-45 z"/>
+    <path d="M245 45 h45 v48 h-12 v-33 h-8 v25 h-11 v-25 h-8 v33 h-12 z"/>
+  </g>
+
+  <!-- Row 36 (36m) -->
+  <text x="42" y="142" font-family="monospace" font-size="13" font-weight="bold" fill="#64748B">36</text>
+  <g fill="#0F172A">
+    <path d="M125 120 h36 v9 h-27 v7 h20 v8 h-20 v7 h27 v9 h-36 z"/>
+    <path d="M200 120 h36 v40 h-36 v-9 h27 v-7 h-20 v-8 h20 v-7 h-27 z"/>
+    <path d="M275 120 h36 v9 h-26 v7 h20 v8 h-20 v7 h26 v9 h-36 z"/>
+  </g>
+
+  <!-- Row 24 (24m) -->
+  <text x="42" y="202" font-family="monospace" font-size="13" font-weight="bold" fill="#64748B">24</text>
+  <g fill="#0F172A">
+    <path d="M115 186 h28 v7 h-21 v5 h16 v6 h-16 v5 h21 v7 h-28 z"/>
+    <path d="M175 186 h28 v30 h-28 v-7 h21 v-5 h-16 v-6 h16 v-5 h-21 z"/>
+    <path d="M235 186 h28 v30 h-7 v-21 h-5 v16 h-6 v-16 h-5 v21 h-7 z"/>
+    <path d="M295 186 h28 v7 h-21 v5 h16 v6 h-16 v5 h21 v7 h-28 z"/>
+  </g>
+
+  <!-- Row 18 (18m) -->
+  <text x="42" y="257" font-family="monospace" font-size="13" font-weight="bold" fill="#64748B">18</text>
+  <g fill="#0F172A">
+    <path d="M105 245 h22 v5 h-17 v4 h13 v5 h-13 v4 h17 v5 h-22 z"/>
+    <path d="M155 245 h22 v23 h-22 v-5 h17 v-4 h-13 v-5 h13 v-4 h-17 z"/>
+    <path d="M205 245 h22 v23 h-5 v-16 h-4 v12 h-5 v-12 h-4 v16 h-4 z"/>
+    <path d="M255 245 h22 v5 h-17 v4 h13 v5 h-13 v4 h17 v5 h-22 z"/>
+    <path d="M305 245 h22 v23 h-22 v-5 h17 v-4 h-13 v-5 h13 v-4 h-17 z"/>
+  </g>
+
+  <!-- Row 12 (12m / Line 7) -->
+  <text x="42" y="309" font-family="monospace" font-size="13" font-weight="bold" fill="#64748B">12</text>
+  <g fill="#0F172A">
+    <path d="M100 298 h17 v4 h-13 v3 h10 v4 h-10 v3 h13 v4 h-17 z"/>
+    <path d="M140 298 h17 v18 h-17 v-4 h13 v-3 h-10 v-4 h10 v-3 h-13 z"/>
+    <path d="M180 298 h17 v4 h-13 v3 h10 v4 h-10 v3 h13 v4 h-17 z"/>
+    <path d="M220 298 h17 v18 h-4 v-13 h-3 h10 h-3 v10 h-3 v-10 h-3 v13 h-4 z"/>
+    <path d="M260 298 h17 v18 h-17 v-4 h13 v-3 h-10 v-4 h10 v-3 h-13 z"/>
+    <path d="M300 298 h17 v4 h-13 v3 h10 v4 h-10 v3 h13 v4 h-17 z"/>
+  </g>
+
+  <!-- BAKED-IN HIGHLIGHT: Row 9 (9m / Line 8) -->
+  <rect x="75" y="340" width="265" height="24" fill="#EF4444" fill-opacity="0.14" stroke="#DC2626" stroke-width="3" rx="6"/>
+  <rect x="75" y="322" width="200" height="19" fill="#DC2626" rx="4"/>
+  <text x="83" y="335" font-family="sans-serif" font-size="11" font-weight="bold" fill="#FFFFFF">Next row below — count letters (6/9)</text>
+
+  <text x="42" y="356" font-family="monospace" font-size="13" font-weight="bold" fill="#DC2626">9</text>
+  <g fill="#0F172A">
+    <path d="M100 347 h14 v3 h-11 v2 h8 v3 h-8 v2 h11 v3 h-14 z"/>
+    <path d="M140 347 h14 v13 h-14 v-3 h11 v-2 h-8 v-3 h8 v-2 h-11 z"/>
+    <path d="M180 347 h14 v3 h-11 v2 h8 v3 h-8 v2 h11 v3 h-14 z"/>
+    <path d="M220 347 h14 v13 h-3 v-9 h-2 v7 h-3 v-7 h-2 v9 h-4 z"/>
+    <path d="M260 347 h14 v3 h-11 v2 h8 v3 h-8 v2 h11 v3 h-14 z"/>
+    <path d="M300 347 h14 v13 h-14 v-3 h11 v-2 h-8 v-3 h8 v-2 h-11 z"/>
+  </g>
+
+  <!-- Row 6 (6m / Line 9 - 6/6) -->
+  <text x="42" y="401" font-family="monospace" font-size="13" font-weight="bold" fill="#64748B">6</text>
+  <g fill="#0F172A">
+    <path d="M95 394 h11 v2 h-8 v2 h6 v2 h-6 v2 h8 v2 h-11 z"/>
+    <path d="M130 394 h11 v10 h-11 v-2 h8 v-2 h-6 v-2 h6 v-2 h-8 z"/>
+    <path d="M165 394 h11 v2 h-8 v2 h6 v2 h-6 v2 h8 v2 h-11 z"/>
+    <path d="M200 394 h11 v10 h-2 v-7 h-2 v5 h-2 v-5 h-2 v7 h-3 z"/>
+    <path d="M235 394 h11 v2 h-8 v2 h6 v2 h-6 v2 h8 v2 h-11 z"/>
+    <path d="M270 394 h11 v10 h-11 v-2 h8 v-2 h-6 v-2 h6 v-2 h-8 z"/>
+    <path d="M305 394 h11 v2 h-8 v2 h6 v2 h-6 v2 h8 v2 h-11 z"/>
+  </g>
+
+  <!-- Row 5 (5m) -->
+  <text x="42" y="441" font-family="monospace" font-size="13" font-weight="bold" fill="#94A3B8">5</text>
+  <g fill="#475569">
+    <path d="M95 435 h9 v2 h-7 v1 h5 v2 h-5 v1 h7 v2 h-9 z"/>
+    <path d="M130 435 h9 v8 h-9 v-2 h7 v-1 h-5 v-2 h5 v-1 h-7 z"/>
+    <path d="M165 435 h9 v2 h-7 v1 h5 v2 h-5 v1 h7 v2 h-9 z"/>
+    <path d="M200 435 h9 v8 h-2 v-5 h-2 v4 h-1 v-4 h-2 v5 h-2 z"/>
+    <path d="M235 435 h9 v2 h-7 v1 h5 v2 h-5 v1 h7 v2 h-9 z"/>
+    <path d="M270 435 h9 v8 h-9 v-2 h7 v-1 h-5 v-2 h5 v-1 h-7 z"/>
+    <path d="M305 435 h9 v2 h-7 v1 h5 v2 h-5 v1 h7 v2 h-9 z"/>
+  </g>
+
+  <!-- Row 4 (4m) -->
+  <text x="42" y="478" font-family="monospace" font-size="13" font-weight="bold" fill="#94A3B8">4</text>
+  <g fill="#475569">
+    <path d="M95 473 h7 v2 h-5 v1 h4 v1 h-4 v1 h5 v2 h-7 z"/>
+    <path d="M130 473 h7 v7 h-7 v-2 h5 v-1 h-4 v-1 h4 v-1 h-5 z"/>
+    <path d="M165 473 h7 v2 h-5 v1 h4 v1 h-4 v1 h5 v2 h-7 z"/>
+    <path d="M200 473 h7 v7 h-1 v-4 h-2 v3 h-1 v-3 h-1 v4 h-2 z"/>
+    <path d="M235 473 h7 v2 h-5 v1 h4 v1 h-4 v1 h5 v2 h-7 z"/>
+    <path d="M270 473 h7 v7 h-7 v-2 h5 v-1 h-4 v-1 h4 v-1 h-5 z"/>
+    <path d="M305 473 h7 v2 h-5 v1 h4 v1 h-4 v1 h5 v2 h-7 z"/>
+  </g>
+
+  <!-- Row 3 (3m) -->
+  <text x="42" y="512" font-family="monospace" font-size="13" font-weight="bold" fill="#CBD5E1">3</text>
+  <g fill="#94A3B8">
+    <path d="M95 508 h6 v1 h-4 v1 h3 v1 h-3 v1 h4 v1 h-6 z"/>
+    <path d="M130 508 h6 v5 h-6 v-1 h4 v-1 h-3 v-1 h3 v-1 h-4 z"/>
+    <path d="M165 508 h6 v1 h-4 v1 h3 v1 h-3 v1 h4 v1 h-6 z"/>
+    <path d="M200 508 h6 v5 h-1 v-3 h-1 v2 h-1 v-2 h-1 v3 h-2 z"/>
+    <path d="M235 508 h6 v1 h-4 v1 h3 v1 h-3 v1 h4 v1 h-6 z"/>
+    <path d="M270 508 h6 v5 h-6 v-1 h4 v-1 h-3 v-1 h3 v-1 h-4 z"/>
+    <path d="M305 508 h6 v1 h-4 v1 h3 v1 h-3 v1 h4 v1 h-6 z"/>
+  </g>
+</svg>

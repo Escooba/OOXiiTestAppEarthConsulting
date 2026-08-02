@@ -1,79 +1,88 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { HelpCircle, X, Play } from 'lucide-react';
+import { Hand } from 'lucide-react';
+import { ApparatusHelpDialog } from './ApparatusHelpDialog';
+import {
+  getApparatusHelpConfig,
+  type ApparatusHelpConfig,
+} from '../help/apparatusHelpConfig';
 
-interface HelpButtonProps {
-  title: string;
-  description: string;
+import { useTheme } from '../lib/ThemeContext';
+
+export interface HelpButtonProps {
+  configId?: string;
+  config?: ApparatusHelpConfig;
+  title?: string;
+  description?: string;
+  imageSrc?: string;
   pulse?: boolean;
+  contextLine?: string;
 }
 
-export function HelpButton({ title, description, pulse = false }: HelpButtonProps) {
+export function HelpButton({
+  configId,
+  config: providedConfig,
+  title,
+  description,
+  imageSrc,
+  pulse = false,
+  contextLine,
+}: HelpButtonProps) {
+  const { t } = useTheme();
   const [open, setOpen] = useState(false);
+
+  // Resolve config object
+  let resolvedConfig: ApparatusHelpConfig | null = null;
+
+  if (providedConfig) {
+    resolvedConfig = providedConfig;
+  } else if (configId) {
+    resolvedConfig = getApparatusHelpConfig(configId, contextLine);
+  }
+
+  // Fallback for custom title/description
+  if (!resolvedConfig && title && description) {
+    resolvedConfig = {
+      id: 'custom-help',
+      title,
+      instruction: description,
+      imageSrc: imageSrc || '',
+      imageAlt: title,
+      assetKind: 'illustration',
+      highlights: [],
+    };
+  }
+
+  if (!resolvedConfig) return null;
+
+  const titleKey = `help.${resolvedConfig.id}.title` as any;
+  const translatedTitle = t(titleKey) !== titleKey ? t(titleKey) : resolvedConfig.title;
+
   return (
     <>
       <button
         type="button"
+        aria-label={`Get help for ${translatedTitle}`}
         onClick={(e) => {
           e.stopPropagation();
           setOpen(true);
         }}
-        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#00D1C1]/15 border border-[#00D1C1]/40 text-[#00D1C1] text-xs font-semibold hover:bg-[#00D1C1]/25 transition-colors ${
+        className={`inline-flex items-center justify-center gap-2 min-h-[44px] px-3.5 py-2 rounded-full bg-[var(--card)] border border-[var(--primary)]/40 text-[var(--primary)] text-xs font-bold hover:bg-[var(--card-active)] active:scale-95 transition-all shadow-sm shrink-0 ${
           pulse ? 'animate-pulse' : ''
         }`}
       >
-        <HelpCircle size={12} />
-        Help
+        <div className="w-5 h-5 rounded-full border border-[var(--primary)]/60 flex items-center justify-center shrink-0 bg-[var(--primary)]/10">
+          <Hand size={11} strokeWidth={2.2} />
+        </div>
+        <span>{t('ui.help')}</span>
       </button>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#150F26]/90 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-[360px] bg-[#22193B] rounded-3xl overflow-hidden border border-white/10 shadow-2xl"
-            >
-              <div className="p-4 flex justify-between items-center border-b border-white/5">
-                <h3 className="font-semibold text-white text-sm">{title}</h3>
-                <button
-                  onClick={() => setOpen(false)}
-                  className="p-2 bg-white/5 rounded-full text-white hover:bg-white/10 transition-colors"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-              <div className="relative aspect-video bg-[#150F26] flex items-center justify-center">
-                <div className="bg-[#00D1C1]/90 rounded-full p-4 text-[#150F26] shadow-lg">
-                  <Play className="fill-current w-8 h-8 ml-1" />
-                </div>
-              </div>
-              <div className="p-5">
-                <p className="text-sm text-[#9B93BA] leading-relaxed">{description}</p>
-                <div className="flex gap-2 mt-4">
-                  <button
-                    onClick={() => setOpen(false)}
-                    className="flex-1 h-11 rounded-xl bg-[#00D1C1] text-[#150F26] font-semibold"
-                  >
-                    Got it
-                  </button>
-                  <button className="flex-1 h-11 rounded-xl border border-white/15 text-white font-medium">
-                    Watch again
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ApparatusHelpDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        config={resolvedConfig}
+      />
     </>
   );
 }
+
+export { HelpButton as ApparatusHelpButton };

@@ -18,7 +18,7 @@ import {
 
 export class TestWorkflowService {
   constructor(
-    private sessionRepo: TestSessionRepository,
+    public sessionRepo: TestSessionRepository,
     private clientRepo: ClientRepository,
     private testerRepo: TesterRepository
   ) {}
@@ -27,14 +27,21 @@ export class TestWorkflowService {
     const tester = await this.testerRepo.getById(testerId);
     if (!tester) throw new Error('Tester not found');
 
-    const client = await this.clientRepo.findByLocalId(clientId);
-    if (!client) throw new Error('Client not found');
-
     return this.sessionRepo.startTest({
-      clientId: client.localId,
+      clientId,
       testerId: tester.localId,
       clinicId,
     });
+  }
+
+  async completeTest(sessionId: string, sectionData?: Record<string, unknown>, newClientId?: string): Promise<void> {
+    if (newClientId) {
+      await this.sessionRepo.updateClientId(sessionId, newClientId);
+    }
+    if (sectionData) {
+      await this.sessionRepo.saveSectionPatch(sessionId, 'completion', sectionData);
+    }
+    await this.sessionRepo.setStatus(sessionId, 'completed');
   }
 
   async resumeActiveTest(testerId: string): Promise<TestSession | null> {
@@ -64,6 +71,13 @@ export class TestWorkflowService {
     }
 
     await this.sessionRepo.saveSection(sessionId, sectionType, payload);
+  }
+
+  async saveSectionPatch(sessionId: string, sectionType: SectionType, patch: Record<string, unknown>): Promise<void> {
+    if (typeof patch !== 'object' || patch === null) {
+      throw new Error(`Invalid patch payload for section type: ${sectionType}`);
+    }
+    await this.sessionRepo.saveSectionPatch(sessionId, sectionType, patch);
   }
 
   async cancelTest(sessionId: string): Promise<void> {

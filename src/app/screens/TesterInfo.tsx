@@ -32,6 +32,7 @@ interface Props {
 }
 
 export function TesterInfo({ onNext, onBack }: Props) {
+  const { t } = useTheme();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [gender, setGender] = useState('');
@@ -42,12 +43,12 @@ export function TesterInfo({ onNext, onBack }: Props) {
 
   const submit = () => {
     const e: Record<string, string> = {};
-    if (!firstName) e.firstName = 'Enter your first name.';
-    if (!lastName) e.lastName = 'Enter your last name.';
-    if (!gender) e.gender = 'Select a gender.';
-    if (!country) e.country = 'Select a country.';
-    if (!state) e.state = 'Select a state or province.';
-    if (!city) e.city = 'Select a city.';
+    if (!firstName) e.firstName = t('error.required');
+    if (!lastName) e.lastName = t('error.required');
+    if (!gender) e.gender = t('error.select_option');
+    if (!country) e.country = t('error.select_option');
+    if (!state) e.state = t('error.select_option');
+    if (!city) e.city = t('error.select_option');
     setErrors(e);
     if (Object.keys(e).length === 0) onNext({ firstName, lastName, gender, country, state, city });
   };
@@ -58,27 +59,27 @@ export function TesterInfo({ onNext, onBack }: Props) {
   return (
     <Shell progress={50}>
       <div className="px-6 pt-2 pb-32 flex flex-col gap-5">
-        <h1 className="text-2xl font-light mt-4">Tester information</h1>
+        <h1 className="text-2xl font-light mt-4">{t('auth.tester_info_title')}</h1>
 
-        <Field label="First name" error={errors.firstName}>
+        <Field label={t('auth.first_name')} error={errors.firstName}>
           <input value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputCls(!!errors.firstName)} />
         </Field>
-        <Field label="Last name" error={errors.lastName}>
+        <Field label={t('auth.last_name')} error={errors.lastName}>
           <input value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputCls(!!errors.lastName)} />
         </Field>
-        <Field label="Gender" error={errors.gender}>
+        <Field label={t('clients.gender')} error={errors.gender}>
           <SelectField
             value={gender}
             onChange={setGender}
-            placeholder="Select gender"
+            placeholder={t('clients.select_gender')}
             options={['Female', 'Male', 'Non-binary', 'Prefer not to say']}
             err={!!errors.gender}
           />
         </Field>
 
-        <h2 className="text-lg font-medium mt-2 text-[#00D1C1]">Clinic details</h2>
+        <h2 className="text-lg font-medium mt-2 text-[#A984FF]">{t('auth.clinic_details')}</h2>
 
-        <Field label="Country" error={errors.country}>
+        <Field label={t('auth.country')} error={errors.country}>
           <SelectField
             value={country}
             onChange={(v) => {
@@ -86,39 +87,41 @@ export function TesterInfo({ onNext, onBack }: Props) {
               setState('');
               setCity('');
             }}
-            placeholder="Select country"
+            placeholder={t('auth.select_country')}
             options={Object.keys(COUNTRIES)}
             err={!!errors.country}
           />
         </Field>
-        <Field label="State / Province" error={errors.state}>
+        <Field label={t('auth.state')} error={errors.state}>
           <SelectField
             value={state}
             onChange={(v) => {
               setState(v);
               setCity('');
             }}
-            placeholder="Select state / province"
+            placeholder={t('auth.select_state')}
             options={stateOptions}
             err={!!errors.state}
             disabled={!country}
           />
         </Field>
-        <Field label="City" error={errors.city}>
+        <Field label={t('auth.city')} error={errors.city}>
           <SelectField
             value={city}
             onChange={setCity}
-            placeholder="Select city"
+            placeholder={t('auth.select_city')}
             options={cityOptions}
             err={!!errors.city}
             disabled={!state}
           />
         </Field>
       </div>
-      <BottomBar onNext={submit} onBack={onBack} />
+      <BottomBar onNext={submit} onBack={onBack} nextLabel={t('ui.next')} backLabel={t('ui.back')} />
     </Shell>
   );
 }
+
+import { useTheme } from '../lib/ThemeContext';
 
 export function SelectField({
   value,
@@ -135,6 +138,29 @@ export function SelectField({
   err?: boolean;
   disabled?: boolean;
 }) {
+  const { language, t } = useTheme();
+
+  const getDisplayLabel = (opt: string) => {
+    if (opt === 'Female') return t('ui.female');
+    if (opt === 'Male') return t('ui.male');
+    if (opt === 'Non-binary') return t('ui.non_binary');
+    if (opt === 'Prefer not to say') return t('ui.prefer_not_to_say');
+    if (language === 'es') {
+      if (opt === 'Community Health Worker') return 'Trabajador de Salud Comunitaria';
+      if (opt === 'Eye Nurse') return 'Enfermero(a) Oftalmológico(a)';
+      if (opt === 'Refractionist') return 'Refractopeda';
+      if (opt === 'Optometrist') return 'Optometrista';
+      if (opt === 'Ophthalmologist') return 'Oftalmólogo(a)';
+      if (opt === 'Other Doctor') return 'Otro Médico';
+      if (opt === 'Other Allied Health Worker') return 'Otro Profesional de Salud';
+      if (opt === 'New tester') return 'Nuevo examinador';
+      if (opt === 'Some experience') return 'Alguna experiencia';
+      if (opt === 'Experienced tester') return 'Examinador experimentado';
+      if (opt === 'Trainer / supervisor') return 'Capacitador / Supervisor';
+    }
+    return opt;
+  };
+
   return (
     <div className="relative">
       <select
@@ -150,7 +176,7 @@ export function SelectField({
         <option value="">{placeholder}</option>
         {options.map((o) => (
           <option key={o} value={o}>
-            {o}
+            {getDisplayLabel(o)}
           </option>
         ))}
       </select>

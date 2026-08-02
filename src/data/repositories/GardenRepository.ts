@@ -43,18 +43,18 @@ export class GardenRepository {
   }
 
   async getLocalCarrots(testerId: string): Promise<number> {
-    const rows = await this.db.query<{ total: number }>(
-      'SELECT COALESCE(SUM(quantity), 0) AS total FROM carrot_ledger WHERE tester_id = ?',
+    const rows = await this.db.query<{ total: number | null }>(
+      'SELECT SUM(quantity) AS total FROM carrot_ledger WHERE tester_id = ?',
       [testerId]
     );
-    return rows.length > 0 ? Number(rows[0].total) : 0;
+    return rows.length > 0 ? (Number(rows[0].total) || 0) : 0;
   }
 
   async getUnsyncedCarrots(testerId: string): Promise<number> {
-    const rows = await this.db.query<{ total: number }>(
-      "SELECT COALESCE(SUM(quantity), 0) AS total FROM carrot_ledger WHERE tester_id = ? AND sync_state != 'synced'",
+    const rows = await this.db.query<{ total: number | null }>(
+      "SELECT SUM(quantity) AS total FROM carrot_ledger WHERE tester_id = ? AND sync_state != 'synced'",
       [testerId]
     );
-    return rows.length > 0 ? Number(rows[0].total) : 0;
+    return rows.length > 0 ? (Number(rows[0].total) || 0) : 0;
   }
 }

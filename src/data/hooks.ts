@@ -6,14 +6,16 @@ import { useState, useEffect } from 'react';
 import { useData } from './DataProvider';
 import type { TesterProfile, Client, TestSession, TesterProgress, CommunityGardenCache, TesterBadge, BadgeDefinition } from './models';
 
+import { useAuthContext } from '../app/lib/AuthProvider';
+
+export function useAuth() {
+  const { authService } = useData();
+  return authService;
+}
+
 export function useTester() {
-  const { testerRepo } = useData();
-  const [tester, setTester] = useState<TesterProfile | null>(null);
-
-  const load = async () => setTester(await testerRepo.getCurrentTester());
-  useEffect(() => { load(); }, []);
-
-  return { tester, refresh: load };
+  const { tester } = useAuthContext();
+  return { tester, refresh: async () => {} };
 }
 
 export function useProgress() {
@@ -61,10 +63,17 @@ export function useBadges() {
 
 export function useClients() {
   const { clientRepo } = useData();
+  const { tester } = useTester();
   const [clients, setClients] = useState<Client[]>([]);
 
-  const load = async () => setClients(await clientRepo.listRecent(20));
-  useEffect(() => { load(); }, []);
+  const load = async () => {
+    if (tester) {
+      setClients(await clientRepo.listRecent(tester.localId, 20));
+    } else {
+      setClients([]);
+    }
+  };
+  useEffect(() => { load(); }, [tester?.localId]);
 
   return { clients, refresh: load };
 }

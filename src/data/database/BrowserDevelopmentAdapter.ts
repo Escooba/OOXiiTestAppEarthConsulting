@@ -245,6 +245,30 @@ export class BrowserDevelopmentAdapter implements DatabaseAdapter {
     return parts.every(cond => {
       const trimmed = cond.trim();
 
+      // IN (...) comparison
+      const inMatch = trimmed.match(/^(\w+)\s+IN\s*\(([^)]+)\)$/i);
+      if (inMatch) {
+        const col = inMatch[1];
+        const items = inMatch[2].split(',').map(s => {
+          let v = s.trim();
+          if (v.startsWith("'") && v.endsWith("'")) v = v.slice(1, -1);
+          return v;
+        });
+        return items.includes(String(row[col] ?? ''));
+      }
+
+      // NOT IN (...) comparison
+      const notInMatch = trimmed.match(/^(\w+)\s+NOT\s+IN\s*\(([^)]+)\)$/i);
+      if (notInMatch) {
+        const col = notInMatch[1];
+        const items = notInMatch[2].split(',').map(s => {
+          let v = s.trim();
+          if (v.startsWith("'") && v.endsWith("'")) v = v.slice(1, -1);
+          return v;
+        });
+        return !items.includes(String(row[col] ?? ''));
+      }
+
       // IS NULL
       const isNullMatch = trimmed.match(/^(\w+)\s+IS\s+NULL$/i);
       if (isNullMatch) return row[isNullMatch[1]] === null || row[isNullMatch[1]] === undefined;
