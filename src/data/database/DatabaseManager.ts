@@ -3,13 +3,13 @@
 // ============================================================================
 
 import type { DatabaseAdapter, QueryResult, RunResult } from './DatabaseAdapter';
-import { migration001, migration002, migration003, migration004, migration005, migration006, migration007, migration008, migration009 } from './migrations';
+import { migration001, migration002, migration003, migration004, migration005, migration006, migration007 } from './migrations';
 import type { Migration } from './migrations';
 import { generateLocalId, nowUtcMs } from '../models';
 
 const DB_NAME = 'ooxii_vision';
 
-const ALL_MIGRATIONS: Migration[] = [migration001, migration002, migration003, migration004, migration005, migration006, migration007, migration008, migration009];
+const ALL_MIGRATIONS: Migration[] = [migration001, migration002, migration003, migration004, migration005, migration006, migration007];
 
 export type DatabaseState = 'uninitialised' | 'initialising' | 'ready' | 'error';
 

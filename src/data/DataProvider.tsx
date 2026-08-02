@@ -91,6 +91,66 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         
         const csvImporter = new CsvImporter(db, testerRepo, clientRepo, sessionRepo);
 
+        // Expose seed helper for dev console
+        if (typeof window !== 'undefined') {
+          (window as any).seedCompletedTests = async (count = 300) => {
+            const activeAccountId = await accountRepo.getPreference('active_account_id');
+            let testerId = 'tester_default';
+            if (activeAccountId) {
+              const acc = await accountRepo.getById(activeAccountId);
+              if (acc) testerId = acc.testerId;
+            } else {
+              const testers = await testerRepo.listAll();
+              if (testers.length > 0) testerId = testers[0].localId;
+            }
+
+            let client = await clientRepo.findByOoxiiId('CLI-SEED-001');
+            if (!client) {
+              client = await clientRepo.create({
+                ooxiiClientId: 'CLI-SEED-001',
+                yearOfBirth: 1990,
+                gender: 'Other',
+                cataractSurgery: 'no',
+                country: 'Australia',
+                stateProvince: 'NSW',
+                city: 'Sydney',
+                createdByTesterId: testerId,
+              });
+            }
+
+            const now = Date.now();
+            await db.transaction(async () => {
+              for (let i = 0; i < count; i++) {
+                const ooxiiId = `CLI-SEED-${String(i + 1).padStart(4, '0')}`;
+                const clientRes = await db.run(
+                  `INSERT OR IGNORE INTO clients (local_id, ooxii_client_id, year_of_birth, gender, cataract_surgery, country, state_province, city, created_by_tester_id, created_at, updated_at, record_version, sync_state)
+                   VALUES (?, ?, 1990, 'Other', 'no', 'Australia', 'NSW', 'Sydney', ?, ?, ?, 1, 'local')`,
+                  [`client_bulk_${now}_${i}`, ooxiiId, testerId, now, now]
+                );
+                
+                const clientRows = await db.query<{ local_id: string }>('SELECT local_id FROM clients WHERE ooxii_client_id = ?', [ooxiiId]);
+                const clientId = clientRows.length > 0 ? clientRows[0].local_id : `client_bulk_${now}_${i}`;
+
+                const sessionId = `session_bulk_${now}_${i}`;
+                await db.run(
+                  `INSERT INTO test_sessions (local_id, client_id, tester_id, display_test_number, status, started_at, completed_at, created_at, updated_at, record_version, sync_state)
+                   VALUES (?, ?, ?, ?, 'completed', ?, ?, ?, ?, 1, 'local')`,
+                  [sessionId, clientId, testerId, String(i + 1).padStart(4, '0'), now - i * 3600000, now - i * 3600000 + 300000, now, now]
+                );
+                await db.run(
+                  `INSERT INTO carrot_ledger (local_id, tester_id, event_type, quantity, source_entity_type, source_entity_id, reason, earned_at, created_at, sync_state)
+                   VALUES (?, ?, 'reward', 1, 'test_session', ?, 'Completed vision test', ?, ?, 'local')`,
+                  [`carrot_bulk_${now}_${i}`, testerId, sessionId, now, now]
+                );
+              }
+            });
+
+            await gamification.evaluateBadges(testerId);
+            console.log(`✅ Successfully added ${count} completed tests for tester ${testerId}! Reloading page...`);
+            window.location.reload();
+          };
+        }
+
 
 
         if (mounted) {

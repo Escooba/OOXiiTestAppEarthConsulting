@@ -1,10 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Shell, BottomBar } from '../components/Shell';
-import { Search, RotateCw, ChevronRight, Edit3, MapPin, ChevronLeft } from 'lucide-react';
-import { ScreenId } from '../lib/theme';
+import { Search, RotateCw, ChevronRight, Edit3, MapPin } from 'lucide-react';
 import { useTheme } from '../lib/ThemeContext';
+import { useClients } from '../../data/hooks';
+import { useData } from '../../data/DataProvider';
+import { useAuthContext } from '../lib/AuthProvider';
 
 export interface ClientRecord {
+  localId?: string;
   clientId: string;
   testerName: string;
   gender: string;
@@ -14,43 +17,30 @@ export interface ClientRecord {
   latestSessionId: string;
 }
 
-export const MOCK_CLIENTS: ClientRecord[] = [
-  { clientId: '82016', testerName: 'John Smith', gender: 'Female', yearOfBirth: 1966, cataractSurgery: 'No', region: 'Albion Park, NSW, AU', latestSessionId: '#182' },
-  { clientId: '82017', testerName: 'John Smith', gender: 'Male', yearOfBirth: 1974, cataractSurgery: 'Yes, right eye', region: 'Wollongong, NSW, AU', latestSessionId: '#183' },
-  { clientId: '82018', testerName: 'John Smith', gender: 'Female', yearOfBirth: 1958, cataractSurgery: 'No', region: 'Sydney, NSW, AU', latestSessionId: '#184' },
-  { clientId: '82019', testerName: 'John Smith', gender: 'Male', yearOfBirth: 1989, cataractSurgery: 'No', region: 'Newcastle, NSW, AU', latestSessionId: '#185' },
-  { clientId: '82020', testerName: 'John Smith', gender: 'Female', yearOfBirth: 1972, cataractSurgery: 'Yes, both eyes', region: 'Sydney, NSW, AU', latestSessionId: '#186' },
-  { clientId: '82021', testerName: 'John Smith', gender: 'Male', yearOfBirth: 1963, cataractSurgery: 'No', region: 'Wollongong, NSW, AU', latestSessionId: '#187' },
-  { clientId: '82022', testerName: 'John Smith', gender: 'Female', yearOfBirth: 1981, cataractSurgery: 'No', region: 'Sydney, NSW, AU', latestSessionId: '#188' },
-  { clientId: '82023', testerName: 'John Smith', gender: 'Female', yearOfBirth: 1950, cataractSurgery: 'Yes, left eye', region: 'Albion Park, NSW, AU', latestSessionId: '#189' },
-  { clientId: '82024', testerName: 'John Smith', gender: 'Male', yearOfBirth: 1995, cataractSurgery: 'No', region: 'Sydney, NSW, AU', latestSessionId: '#190' },
-  { clientId: '82025', testerName: 'John Smith', gender: 'Female', yearOfBirth: 1968, cataractSurgery: 'No', region: 'Newcastle, NSW, AU', latestSessionId: '#191' },
-];
-
 // ============================================================================
 // FIND A CLIENT
 // ============================================================================
-import { useClients } from '../../data/hooks';
-
 export function FindClient({
   onBack, onOpenProfile,
 }: {
   onBack: () => void;
-  onOpenProfile: (c: any) => void;
+  onOpenProfile: (c: ClientRecord) => void;
 }) {
   const { t } = useTheme();
+  const { tester } = useAuthContext();
   const [query, setQuery] = useState('');
   const { clients, refresh } = useClients();
 
   const mappedClients = useMemo(() => clients.map(c => ({
+    localId: c.localId,
     clientId: c.ooxiiClientId,
-    testerName: 'Current Tester', // Would ideally fetch tester name or join it
+    testerName: tester ? `${tester.firstName} ${tester.lastName}`.trim() : 'Community Tester',
     gender: c.gender,
     yearOfBirth: c.yearOfBirth,
     cataractSurgery: c.cataractSurgery,
-    region: `${c.city}, ${c.stateProvince}, ${c.country}`,
-    latestSessionId: 'Recent',
-  })), [clients]);
+    region: [c.city, c.stateProvince, c.country].filter(Boolean).join(', ') || 'N/A',
+    latestSessionId: `Client #${c.ooxiiClientId}`,
+  })), [clients, tester]);
 
   const filtered = useMemo(() => {
     if (!query) return mappedClients;
@@ -78,6 +68,7 @@ export function FindClient({
             />
           </div>
           <button
+            type="button"
             aria-label="Refresh client list"
             onClick={refresh}
             className="w-12 h-12 rounded-2xl bg-[#140047] border border-white/15 flex items-center justify-center text-[#3BE0D4] hover:border-[#3BE0D4]/60 transition-colors"
@@ -94,6 +85,7 @@ export function FindClient({
           {filtered.map((c) => (
             <button
               key={c.clientId}
+              type="button"
               onClick={() => onOpenProfile(c)}
               className="text-left bg-[#140047]/90 border border-white/10 rounded-2xl p-4 hover:border-[#3BE0D4]/50 transition-colors"
             >
@@ -129,6 +121,31 @@ export function ClientProfileScreen({
   onOpenVisionReview: () => void;
   onOpenPrescription: () => void;
 }) {
+  const { sessionRepo } = useData();
+  const [sessionData, setSessionData] = useState<{ session: any; payload: Record<string, any> } | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (sessionRepo && client.localId) {
+      sessionRepo.getLatestSessionPayloadForClient(client.localId).then(res => {
+        if (isMounted) setSessionData(res);
+      });
+    }
+    return () => { isMounted = false; };
+  }, [sessionRepo, client.localId]);
+
+  const displayNum = sessionData?.session?.displayTestNumber
+    ? `Test #${sessionData.session.displayTestNumber}`
+    : `Client #${client.clientId}`;
+
+  const createdStr = sessionData?.session?.createdAt
+    ? new Date(sessionData.session.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    : 'N/A';
+
+  const completedStr = sessionData?.session?.completedAt
+    ? new Date(sessionData.session.completedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    : (sessionData?.session?.status ? `Status: ${sessionData.session.status}` : 'In progress');
+
   return (
     <Shell showProgress={false}>
       <div className="px-5 pt-2 pb-32 flex flex-col gap-4">
@@ -138,7 +155,7 @@ export function ClientProfileScreen({
         <div className="bg-[#22193B] border border-white/10 rounded-3xl p-5 flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div className="text-xs text-[#9B93BA] uppercase tracking-wider">Tester : {client.testerName}</div>
-            <button className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#A984FF]/15 border border-[#A984FF]/40 text-[#A984FF] text-xs font-semibold">
+            <button type="button" className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#A984FF]/15 border border-[#A984FF]/40 text-[#A984FF] text-xs font-semibold">
               <Edit3 size={12} /> Edit
             </button>
           </div>
@@ -158,16 +175,16 @@ export function ClientProfileScreen({
         <h2 className="text-sm uppercase tracking-wider text-[#A984FF] font-semibold mt-2">Test sessions</h2>
 
         <div className="bg-[#22193B] border border-white/10 rounded-3xl p-5 flex flex-col gap-3">
-          <div className="text-lg font-medium">{client.latestSessionId}</div>
+          <div className="text-lg font-medium">{displayNum}</div>
           <div className="text-xs text-[#9B93BA] flex flex-col gap-1">
-            <span>Created: 31 May 2026 01:56 pm</span>
-            <span>Completed: 31 May 2026 02:00 pm</span>
+            <span>Created: {createdStr}</span>
+            <span>Completed: {completedStr}</span>
           </div>
           <div className="flex gap-2 mt-2">
-            <button onClick={onOpenVisionReview} className="flex-1 h-11 rounded-xl bg-[#A984FF] text-[#2A0730] font-semibold text-sm">
+            <button type="button" onClick={onOpenVisionReview} className="flex-1 h-11 rounded-xl bg-[#A984FF] text-[#2A0730] font-semibold text-sm">
               Vision testing
             </button>
-            <button onClick={onOpenPrescription} className="flex-1 h-11 rounded-xl border border-white/20 text-white font-medium text-sm">
+            <button type="button" onClick={onOpenPrescription} className="flex-1 h-11 rounded-xl border border-white/20 text-white font-medium text-sm">
               Glasses prescription
             </button>
           </div>
@@ -188,6 +205,69 @@ export function VisionTestingReview({
   onBack: () => void;
   onStartNewTest: () => void;
 }) {
+  const { sessionRepo } = useData();
+  const [sessionData, setSessionData] = useState<{ session: any; payload: Record<string, any> } | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (sessionRepo && client.localId) {
+      sessionRepo.getLatestSessionPayloadForClient(client.localId).then(res => {
+        if (isMounted) setSessionData(res);
+      });
+    }
+    return () => { isMounted = false; };
+  }, [sessionRepo, client.localId]);
+
+  const payload = sessionData?.payload || {};
+
+  const distanceDispensed = !!(payload.distanceGlassesDispensed || payload.distanceGlassesFrameType);
+  const readingDispensed = !!(payload.readingGlassesDispensed || payload.hasReadingGlasses === 'Yes');
+  const sunglassesDispensed = !!(payload.sunglassesDispensed === true || payload.sunglassesDispensed === 'Yes');
+
+  const totalPaid = payload.totalPaid || payload.price || payload.amountPaid || '0';
+
+  const displayNum = sessionData?.session?.displayTestNumber
+    ? `Test #${sessionData.session.displayTestNumber}`
+    : `Client #${client.clientId}`;
+
+  const createdStr = sessionData?.session?.createdAt
+    ? new Date(sessionData.session.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    : 'N/A';
+
+  const completedStr = sessionData?.session?.completedAt
+    ? new Date(sessionData.session.completedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    : (sessionData?.session?.status ? `Status: ${sessionData.session.status}` : 'In progress');
+
+  const distanceRows: [string, string][] = distanceDispensed ? [
+    ['Right lens', payload.wheelRightEye || payload.wheelRightPower || payload.rightDistanceNoGlasses || 'Plano (+0.00)'],
+    ['Left lens', payload.wheelLeftEye || payload.wheelLeftPower || payload.leftDistanceNoGlasses || 'Plano (+0.00)'],
+    ['Frame type', payload.distanceGlassesFrameType || 'Plastic'],
+    ['Front colour', payload.distanceGlassesFrontColour || 'N/A'],
+    ['Right arm', payload.distanceGlassesRightArmColour || 'N/A'],
+    ['Left arm', payload.distanceGlassesLeftArmColour || 'N/A'],
+    ['Frame size', payload.distanceGlassesFrameSize || 'Medium'],
+  ] : [
+    ['Status', 'Not dispensed'],
+  ];
+
+  const readingRows: [string, string][] = readingDispensed ? [
+    ['Right lens', payload.nearNoGlasses || payload.nearWithGlasses || 'Plano (+1.00)'],
+    ['Left lens', payload.nearNoGlasses || payload.nearWithGlasses || 'Plano (+1.00)'],
+    ['Frame type', payload.readingGlassesFrameType || 'Plastic'],
+    ['Front colour', payload.readingGlassesFrontColour || 'N/A'],
+    ['Right arm', payload.readingGlassesRightArmColour || 'N/A'],
+    ['Left arm', payload.readingGlassesLeftArmColour || 'N/A'],
+    ['Frame size', payload.readingGlassesFrameSize || 'Medium'],
+  ] : [
+    ['Status', 'Not dispensed'],
+  ];
+
+  const sunglassesRows: [string, string][] = sunglassesDispensed ? [
+    ['Frame type', payload.sunglassesModel || payload.sunglassesType || 'OOXii UV Sunglasses'],
+  ] : [
+    ['Status', 'Not dispensed'],
+  ];
+
   return (
     <Shell showProgress={false}>
       <div className="px-5 pt-2 pb-32 flex flex-col gap-4">
@@ -197,41 +277,18 @@ export function VisionTestingReview({
           Completed vision testing runs for this client. Review the dispensed products for each saved session.
         </p>
 
-        <SessionHeader session={client.latestSessionId} />
+        <SessionHeader session={displayNum} created={createdStr} completed={completedStr} />
 
-        <ReviewCard
-          title="Distance Glasses Dispensed"
-          rows={[
-            ['Right lens', '-1.5'],
-            ['Left lens', '-2.5'],
-            ['Frame type', 'Plastic'],
-            ['Front colour', 'Red'],
-            ['Right arm', 'Black'],
-            ['Left arm', 'Black'],
-            ['Frame size', 'Medium'],
-          ]}
-        />
-
-        <ReviewCard
-          title="Reading Glasses Dispensed"
-          rows={[
-            ['Right lens', '-1.0'],
-            ['Left lens', '+1.0'],
-            ['Frame type', 'Plastic'],
-            ['Front colour', 'Black'],
-            ['Right arm', 'Yellow'],
-            ['Left arm', 'Yellow'],
-            ['Frame size', 'Medium'],
-          ]}
-        />
-
+        <ReviewCard title="Distance Glasses Dispensed" rows={distanceRows} complete={distanceDispensed} />
+        <ReviewCard title="Reading Glasses Dispensed" rows={readingRows} complete={readingDispensed} />
         <ReviewCard
           title="Sunglasses Dispensed"
-          rows={[['Frame type', 'OOXii metal frame mirrored']]}
+          rows={sunglassesRows}
+          complete={sunglassesDispensed}
           footer={
             <div className="flex justify-between items-center mt-2 pt-3 border-t border-white/5">
-              <span className="text-xs uppercase tracking-wider text-[#9B93BA] font-semibold">Total</span>
-              <span className="text-lg font-bold text-[#A984FF]">A$ 1000</span>
+              <span className="text-xs uppercase tracking-wider text-[#9B93BA] font-semibold">Total Paid</span>
+              <span className="text-lg font-bold text-[#A984FF]">A$ {totalPaid}</span>
             </div>
           }
         />
@@ -250,7 +307,38 @@ export function ClientGlassesPrescription({
   client: ClientRecord;
   onBack: () => void;
 }) {
+  const { sessionRepo } = useData();
+  const [sessionData, setSessionData] = useState<{ session: any; payload: Record<string, any> } | null>(null);
   const [view, setView] = useState<'Ophthalmologist' | 'Paediatrician'>('Ophthalmologist');
+
+  useEffect(() => {
+    let isMounted = true;
+    if (sessionRepo && client.localId) {
+      sessionRepo.getLatestSessionPayloadForClient(client.localId).then(res => {
+        if (isMounted) setSessionData(res);
+      });
+    }
+    return () => { isMounted = false; };
+  }, [sessionRepo, client.localId]);
+
+  const payload = sessionData?.payload || {};
+
+  const displayNum = sessionData?.session?.displayTestNumber
+    ? `Test #${sessionData.session.displayTestNumber}`
+    : `Client #${client.clientId}`;
+
+  const createdStr = sessionData?.session?.createdAt
+    ? new Date(sessionData.session.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    : 'N/A';
+
+  const completedStr = sessionData?.session?.completedAt
+    ? new Date(sessionData.session.completedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    : (sessionData?.session?.status ? `Status: ${sessionData.session.status}` : 'In progress');
+
+  const rightSph = payload.wheelRightPower || payload.wheelRightDirection || payload.rightDistanceNoGlasses || 'Plano';
+  const leftSph = payload.wheelLeftPower || payload.wheelLeftDirection || payload.leftDistanceNoGlasses || 'Plano';
+
+  const nearPower = payload.nearNoGlasses || payload.nearWithGlasses || 'N/A';
 
   return (
     <Shell showProgress={false}>
@@ -261,7 +349,7 @@ export function ClientGlassesPrescription({
           Distance and near vision prescriptions derived from completed test sessions.
         </p>
 
-        <SessionHeader session={client.latestSessionId} />
+        <SessionHeader session={displayNum} created={createdStr} completed={completedStr} />
 
         <div className="bg-[#22193B] border border-white/10 rounded-3xl p-5 flex flex-col gap-4">
           <div className="flex items-center justify-between">
@@ -275,6 +363,7 @@ export function ClientGlassesPrescription({
             {(['Ophthalmologist', 'Paediatrician'] as const).map((v) => (
               <button
                 key={v}
+                type="button"
                 onClick={() => setView(v)}
                 className={`flex-1 h-9 rounded-full text-xs font-semibold transition-colors ${
                   view === v ? 'bg-white text-[#2A0730]' : 'text-white/60'
@@ -287,24 +376,24 @@ export function ClientGlassesPrescription({
 
           {view === 'Ophthalmologist' ? (
             <PrescriptionGrid
-              rightEye={[['Sphere', '-2.5'], ['Cylinder', '0.00']]}
-              leftEye={[['Sphere', '-2.5'], ['Cylinder', '0.00']]}
+              rightEye={[['Sphere', rightSph], ['Cylinder', '0.00']]}
+              leftEye={[['Sphere', leftSph], ['Cylinder', '0.00']]}
             />
           ) : (
             <PrescriptionGrid
-              rightEye={[['SPH', '-2.5'], ['CYL', '0.00'], ['Axis', '—']]}
-              leftEye={[['SPH', '-2.5'], ['CYL', '0.00'], ['Axis', '—']]}
+              rightEye={[['SPH', rightSph], ['CYL', '0.00'], ['Axis', '—']]}
+              leftEye={[['SPH', leftSph], ['CYL', '0.00'], ['Axis', '—']]}
             />
           )}
 
           <div>
             <div className="text-xs uppercase text-[#A984FF] tracking-wider font-semibold mb-2">Frames</div>
             <dl className="text-sm flex flex-col gap-1.5">
-              <Row label="Type" value="Plastic" />
-              <Row label="Front" value="Red" />
-              <Row label="Right arm" value="Black" />
-              <Row label="Left arm" value="Black" />
-              <Row label="Size" value="Medium" />
+              <Row label="Type" value={payload.distanceGlassesFrameType || 'Plastic'} />
+              <Row label="Front" value={payload.distanceGlassesFrontColour || 'N/A'} />
+              <Row label="Right arm" value={payload.distanceGlassesRightArmColour || 'N/A'} />
+              <Row label="Left arm" value={payload.distanceGlassesLeftArmColour || 'N/A'} />
+              <Row label="Size" value={payload.distanceGlassesFrameSize || 'Medium'} />
             </dl>
           </div>
         </div>
@@ -312,14 +401,14 @@ export function ClientGlassesPrescription({
         <ReviewCard
           title="Near vision (reading addition)"
           statusPill="Paddle Test"
-          rows={[['Right eye', '-1.0'], ['Left eye', '+1.0']]}
+          rows={[['Right eye', nearPower], ['Left eye', nearPower]]}
           footer={<p className="text-xs text-[#9B93BA] mt-2">Reading lens power — no cylinder conversion required.</p>}
         />
 
         <ReviewCard
           title="Sunglasses Dispensed"
           statusPill="Dispensed"
-          rows={[['Frame type', 'OOXii metal frame mirrored']]}
+          rows={[['Frame type', payload.sunglassesModel || payload.sunglassesType || (payload.sunglassesDispensed ? 'OOXii UV Sunglasses' : 'Not dispensed')]]}
           footer={<p className="text-xs text-[#9B93BA] mt-2">Sunglasses do not carry prescription values.</p>}
         />
       </div>
@@ -333,11 +422,11 @@ export function ClientGlassesPrescription({
 // ============================================================================
 function Breadcrumb({ path }: { path: string[] }) {
   return (
-    <div className="text-xs text-[#9B93BA] flex items-center gap-1.5 flex-wrap">
+    <div className="text-sm text-[#E2D4F2] flex items-center gap-1.5 flex-wrap">
       {path.map((p, i) => (
         <React.Fragment key={p}>
-          {i > 0 && <ChevronRight size={11} />}
-          <span className={i === path.length - 1 ? 'text-white' : ''}>{p}</span>
+          {i > 0 && <ChevronRight size={13} />}
+          <span className={i === path.length - 1 ? 'text-white font-semibold' : ''}>{p}</span>
         </React.Fragment>
       ))}
     </div>
@@ -346,42 +435,47 @@ function Breadcrumb({ path }: { path: string[] }) {
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between gap-2">
-      <dt className="text-[#9B93BA]">{label}</dt>
-      <dd className="text-white font-medium text-right">{value}</dd>
+    <div className="flex justify-between gap-2 text-base">
+      <dt className="text-[#E2D4F2]">{label}</dt>
+      <dd className="text-white font-semibold text-right capitalize">{value}</dd>
     </div>
   );
 }
 
-function SessionHeader({ session }: { session: string }) {
+function SessionHeader({ session, created, completed }: { session: string; created?: string; completed?: string }) {
   return (
     <div className="bg-[#2A0730] border border-white/10 rounded-2xl p-4">
-      <div className="text-lg font-medium">{session}</div>
-      <div className="text-xs text-[#9B93BA] flex flex-col gap-0.5 mt-1">
-        <span>Created: 31 May 2026 01:56 pm</span>
-        <span>Completed: 31 May 2026 02:00 pm</span>
+      <div className="text-xl font-bold">{session}</div>
+      <div className="text-sm text-[#E2D4F2] flex flex-col gap-0.5 mt-1 font-medium">
+        <span>Created: {created || 'N/A'}</span>
+        <span>Completed: {completed || 'N/A'}</span>
       </div>
     </div>
   );
 }
 
 function ReviewCard({
-  title, statusPill = 'Dispensed', rows, footer,
+  title, statusPill = 'Dispensed', rows, footer, complete = true,
 }: {
   title: string;
   statusPill?: string;
   rows: [string, string][];
   footer?: React.ReactNode;
+  complete?: boolean;
 }) {
   return (
     <div className="bg-[#22193B] border border-white/10 rounded-3xl p-5 flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <div className="text-lg font-medium">{title}</div>
-        <span className="text-[10px] uppercase tracking-wider bg-[#A984FF]/15 text-[#A984FF] px-2 py-1 rounded-full border border-[#A984FF]/40 font-semibold">
-          {statusPill}
+        <div className="text-xl font-bold">{title}</div>
+        <span className={`text-xs uppercase tracking-wider px-2.5 py-1 rounded-full border font-bold ${
+          complete
+            ? 'bg-[#A984FF]/15 text-[#A984FF] border-[#A984FF]/40'
+            : 'bg-white/5 text-[#9B93BA] border-white/10'
+        }`}>
+          {complete ? statusPill : 'Not Dispensed'}
         </span>
       </div>
-      <dl className="text-sm flex flex-col gap-1.5">
+      <dl className="text-base flex flex-col gap-1.5">
         {rows.map(([l, v]) => <Row key={l} label={l} value={v} />)}
       </dl>
       {footer}
@@ -394,15 +488,15 @@ function PrescriptionGrid({
 }: { rightEye: [string, string][]; leftEye: [string, string][] }) {
   return (
     <div className="grid grid-cols-2 gap-3">
-      <div className="bg-[#2A0730] border border-white/10 rounded-2xl p-3">
-        <div className="text-[10px] uppercase tracking-wider text-[#9B93BA] font-semibold mb-2">Right eye</div>
-        <dl className="text-xs flex flex-col gap-1">
+      <div className="bg-[#2A0730] border border-white/10 rounded-2xl p-3.5">
+        <div className="text-xs uppercase tracking-wider text-[#A984FF] font-bold mb-2">Right eye</div>
+        <dl className="text-sm flex flex-col gap-1.5">
           {rightEye.map(([l, v]) => <Row key={l} label={l} value={v} />)}
         </dl>
       </div>
-      <div className="bg-[#2A0730] border border-white/10 rounded-2xl p-3">
-        <div className="text-[10px] uppercase tracking-wider text-[#9B93BA] font-semibold mb-2">Left eye</div>
-        <dl className="text-xs flex flex-col gap-1">
+      <div className="bg-[#2A0730] border border-white/10 rounded-2xl p-3.5">
+        <div className="text-xs uppercase tracking-wider text-[#A984FF] font-bold mb-2">Left eye</div>
+        <dl className="text-sm flex flex-col gap-1.5">
           {leftEye.map(([l, v]) => <Row key={l} label={l} value={v} />)}
         </dl>
       </div>

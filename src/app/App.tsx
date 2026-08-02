@@ -7,7 +7,6 @@ import { Login } from './screens/Login';
 import { SignupEmail } from './screens/SignupEmail';
 import { TesterInfo } from './screens/TesterInfo';
 import { AdditionalInfo } from './screens/AdditionalInfo';
-import { FirstLoginGuide } from './screens/FirstLoginGuide';
 import { Home } from './screens/Home';
 import { ClientInfo } from './screens/ClientInfo';
 import { QuestionScreen } from './screens/QuestionScreen';
@@ -28,6 +27,7 @@ import { Profile } from './screens/Profile';
 import { Garden } from './screens/Garden';
 import { Tutorial } from './screens/Tutorial';
 import { SunglassesSelection } from './screens/SunglassesScreens';
+import { DistanceGlassesDispensedScreen } from './screens/DistanceGlassesDispensedScreen';
 import {
   GlassesDispensedReview,
   FinalChecklist,
@@ -56,7 +56,7 @@ const CLINICAL_SCREENS: ScreenId[] = [
   'wheel-right-result', 'wheel-right-distance-improved', 'wheel-right-distance-line',
   'wheel-right-distance-letters', 'wheel-right-distance-result', 'wheel-left-direction',
   'wheel-left-power', 'wheel-left-two-colour', 'wheel-left-line-nine', 'wheel-left-result',
-  'sunglasses-question', 'sunglasses-selection', 'dispensed-review', 'final-checklist', 'additional-details',
+  'distance-glasses-dispensed', 'sunglasses-question', 'sunglasses-selection', 'dispensed-review', 'final-checklist', 'additional-details',
 ];
 
 function screenStepLabel(s: ScreenId): string {
@@ -94,11 +94,10 @@ export default function App() {
 function AppInner() {
   const { t } = useTheme();
   const { testerRepo, clientRepo, workflowService, completionService } = useData();
-  const { account, tester, isLoading: isAuthLoading, signup, linkAccount } = useAuthContext();
+  const { account, tester, isLoading: isAuthLoading, signup, linkAccount, refreshAuth } = useAuthContext();
   const { session: activeSession, refresh: refreshSession } = useActiveSession();
 
   const [screen, setScreen] = useState<ScreenId>('login');
-  const [showGuide, setShowGuide] = useState(false);
   const [showRegionModal, setShowRegionModal] = useState(() => {
     return !sessionStorage.getItem('region_modal_shown');
   });
@@ -121,6 +120,13 @@ function AppInner() {
   const [pendingClientDraft, setPendingClientDraft] = useState<any>(null);
   const [signupState, setSignupState] = useState<any>({});
   const [showOnboardingGuide, setShowOnboardingGuide] = useState(false);
+
+  // Auto-trigger onboarding guide on account creation / first run
+  useEffect(() => {
+    if (tester && tester.firstLoginGuideCompleted === false) {
+      setShowOnboardingGuide(true);
+    }
+  }, [tester?.localId, tester?.firstLoginGuideCompleted]);
 
   // Route protection & auth synchronization
   useEffect(() => {
@@ -322,6 +328,7 @@ function AppInner() {
             setShowOnboardingGuide(false);
             if (testerRepo && tester) {
               await testerRepo.updateGuideCompleted(tester.localId, true);
+              await refreshAuth();
             }
             setScreen('home');
           }}
@@ -333,7 +340,16 @@ function AppInner() {
   function renderScreen() {
     switch (screen) {
       case 'login':
-        return <Login onLoginSuccess={() => setScreen('home')} onCreateAccount={() => setScreen('signup-email')} />;
+        return (
+          <Login
+            onLoginSuccess={() => {
+              sessionStorage.removeItem('region_modal_shown');
+              setShowRegionModal(true);
+              setScreen('home');
+            }}
+            onCreateAccount={() => setScreen('signup-email')}
+          />
+        );
 
       case 'signup-email':
         return (
@@ -376,6 +392,8 @@ function AppInner() {
                   firstLoginGuideCompleted: false,
                   remoteId: null
                 });
+                sessionStorage.setItem('region_modal_shown', 'true');
+                setShowRegionModal(false);
                 setShowOnboardingGuide(true);
                 setScreen('home');
               } catch (e: any) {
@@ -387,27 +405,21 @@ function AppInner() {
 
       case 'home':
         return (
-          <>
-            <Home
-              onNav={nav}
-              testerName={tester ? `${tester.firstName} ${tester.lastName}` : 'Tester'}
-              showRegionModal={showRegionModal}
-              onRegionSaved={async (r) => {
-                setActiveRegion(r);
-                sessionStorage.setItem('active_region', r);
-                sessionStorage.setItem('region_modal_shown', 'true');
-                setShowRegionModal(false);
-              }}
-              region={activeRegion || (tester ? `${tester.city}, ${tester.stateProvince}, ${tester.country}` : '')}
-              inProgressTest={inProgressCard}
-              onResumeTest={resumeTest}
-              onCancelTest={cancelActiveTest}
-            />
-            {showGuide && <FirstLoginGuide onDone={async () => {
-              setShowGuide(false);
-              if (tester && testerRepo) await testerRepo.updateGuideCompleted(tester.localId, true);
-            }} />}
-          </>
+          <Home
+            onNav={nav}
+            testerName={tester ? `${tester.firstName} ${tester.lastName}` : 'Tester'}
+            showRegionModal={showRegionModal}
+            onRegionSaved={async (r) => {
+              setActiveRegion(r);
+              sessionStorage.setItem('active_region', r);
+              sessionStorage.setItem('region_modal_shown', 'true');
+              setShowRegionModal(false);
+            }}
+            region={activeRegion || (tester ? `${tester.city}, ${tester.stateProvince}, ${tester.country}` : '')}
+            inProgressTest={inProgressCard}
+            onResumeTest={resumeTest}
+            onCancelTest={cancelActiveTest}
+          />
         );
 
       case 'client-info':
@@ -417,19 +429,28 @@ function AppInner() {
             onStart={async (d) => {
               if (!tester || !clientRepo || !workflowService) return;
               try {
-                const newClient = await clientRepo.create({
-                  ooxiiClientId: d.ooxiiId,
-                  yearOfBirth: parseInt(d.yearOfBirth) || 0,
-                  gender: d.gender,
-                  cataractSurgery: d.cataract,
-                  country: tester.country,
-                  stateProvince: tester.stateProvince,
-                  city: tester.city,
-                  createdByTesterId: tester.localId,
-                });
-                
-                await workflowService.startNewTest(tester.localId, newClient.localId);
-                setClient({ localId: newClient.localId, ooxiiId: d.ooxiiId, yearOfBirth: d.yearOfBirth, gender: d.gender, cataract: d.cataract });
+                const existing = await clientRepo.findByOoxiiId(d.ooxiiId, tester.localId);
+                let targetClientId: string;
+
+                if (existing) {
+                  targetClientId = existing.localId;
+                  setPendingClientDraft(null);
+                } else {
+                  targetClientId = `draft_${d.ooxiiId}_${Date.now()}`;
+                  setPendingClientDraft({
+                    ooxiiClientId: d.ooxiiId,
+                    yearOfBirth: parseInt(d.yearOfBirth) || 0,
+                    gender: d.gender,
+                    cataractSurgery: d.cataract,
+                    country: tester.country,
+                    stateProvince: tester.stateProvince,
+                    city: tester.city,
+                    createdByTesterId: tester.localId,
+                  });
+                }
+
+                await workflowService.startNewTest(tester.localId, targetClientId);
+                setClient({ localId: targetClientId, ooxiiId: d.ooxiiId, yearOfBirth: d.yearOfBirth, gender: d.gender, cataract: d.cataract });
                 setResults({});
                 await refreshSession();
                 nav('glasses-question');
@@ -996,6 +1017,35 @@ function AppInner() {
           />
         );
 
+      case 'distance-glasses-dispensed':
+        return (
+          <DistanceGlassesDispensedScreen
+            progress={getProgressForRoute(screen)}
+            initialValues={{
+              frameType: results.distanceGlassesFrameType,
+              frontColour: results.distanceGlassesFrontColour,
+              rightArmColour: results.distanceGlassesRightArmColour,
+              leftArmColour: results.distanceGlassesLeftArmColour,
+              frameSize: results.distanceGlassesFrameSize,
+            }}
+            onBack={handleClinicalBack}
+            onNext={(d) => {
+              saveResultPatchAndNavigate({
+                sectionType: 'dispensing',
+                patch: {
+                  distanceGlassesDispensed: true,
+                  distanceGlassesFrameType: d.frameType,
+                  distanceGlassesFrontColour: d.frontColour,
+                  distanceGlassesRightArmColour: d.rightArmColour,
+                  distanceGlassesLeftArmColour: d.leftArmColour,
+                  distanceGlassesFrameSize: d.frameSize,
+                },
+                nextScreen: getNextClinicalRoute(screen, resultsRef.current),
+              });
+            }}
+          />
+        );
+
       case 'sunglasses-question':
         return (
           <QuestionScreen
@@ -1169,16 +1219,32 @@ function AppInner() {
             onStartNewTest={async () => {
               if (!tester || !clientRepo || !workflowService) return;
               try {
-                const newClient = await clientRepo.create({
-                  ooxiiClientId: viewingClient.clientId,
-                  yearOfBirth: Number(viewingClient.yearOfBirth) || 0,
-                  gender: viewingClient.gender,
-                  cataractSurgery: viewingClient.cataractSurgery,
-                  country: tester.country, stateProvince: tester.stateProvince, city: tester.city,
-                  createdByTesterId: tester.localId,
-                });
-                await workflowService.startNewTest(tester.localId, newClient.localId);
-                setClient({ localId: newClient.localId, ooxiiId: viewingClient.clientId, yearOfBirth: String(viewingClient.yearOfBirth), gender: viewingClient.gender, cataract: viewingClient.cataractSurgery });
+                let targetClientId = viewingClient.localId;
+                if (!targetClientId && clientRepo) {
+                  const existing = await clientRepo.findByOoxiiId(viewingClient.clientId);
+                  if (existing) {
+                    targetClientId = existing.localId;
+                  }
+                }
+
+                if (!targetClientId) {
+                  targetClientId = `draft_${viewingClient.clientId}_${Date.now()}`;
+                  setPendingClientDraft({
+                    ooxiiClientId: viewingClient.clientId,
+                    yearOfBirth: Number(viewingClient.yearOfBirth) || 0,
+                    gender: viewingClient.gender,
+                    cataractSurgery: viewingClient.cataractSurgery,
+                    country: tester.country,
+                    stateProvince: tester.stateProvince,
+                    city: tester.city,
+                    createdByTesterId: tester.localId,
+                  });
+                } else {
+                  setPendingClientDraft(null);
+                }
+
+                await workflowService.startNewTest(tester.localId, targetClientId);
+                setClient({ localId: targetClientId, ooxiiId: viewingClient.clientId, yearOfBirth: String(viewingClient.yearOfBirth), gender: viewingClient.gender, cataract: viewingClient.cataractSurgery });
                 setResults({});
                 await refreshSession();
                 nav('glasses-question');

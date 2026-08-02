@@ -89,7 +89,7 @@ export function Garden({ onNav }: { onNav: (s: ScreenId) => void }) {
         </div>
 
         {/* Isometric Garden Viewport */}
-        <div className="rounded-3xl overflow-hidden border border-[var(--card-border)] bg-[var(--card)] p-4 flex flex-col items-center shadow-lg">
+        <div data-tour="garden-viewport" className="rounded-3xl overflow-hidden border border-[var(--card-border)] bg-[var(--card)] p-4 flex flex-col items-center shadow-lg">
           <div className="text-xs font-semibold uppercase tracking-wider text-[var(--primary)] mb-2">
             Your Plot ({size}x{size} Grid)
           </div>

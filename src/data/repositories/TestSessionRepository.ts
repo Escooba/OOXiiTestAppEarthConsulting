@@ -136,6 +136,25 @@ export class TestSessionRepository {
     return rows.map(rowToSession);
   }
 
+  async getSessionPayload(sessionId: string): Promise<{ session: TestSession; payload: Record<string, any> } | null> {
+    const session = await this.getById(sessionId);
+    if (!session) return null;
+    const sections = await this.getAllSections(sessionId);
+    const payload: Record<string, any> = {};
+    for (const sec of sections) {
+      if (sec.payload && typeof sec.payload === 'object') {
+        Object.assign(payload, sec.payload);
+      }
+    }
+    return { session, payload };
+  }
+
+  async getLatestSessionPayloadForClient(clientId: string): Promise<{ session: TestSession; payload: Record<string, any> } | null> {
+    const history = await this.listClientHistory(clientId, 1);
+    if (history.length === 0) return null;
+    return this.getSessionPayload(history[0].localId);
+  }
+
   async updateClientId(sessionId: string, clientId: string): Promise<void> {
     const now = nowUtcMs();
     await this.db.run(

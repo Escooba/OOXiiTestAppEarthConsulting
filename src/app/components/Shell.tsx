@@ -59,12 +59,12 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
   return (
     <div className={`min-h-screen ${tokens.bg} ${tokens.text} flex flex-col font-sans items-center overflow-x-hidden`}>
       <div className="w-full max-w-[430px] relative min-h-screen flex flex-col shadow-2xl bg-inherit">
-        <div className={`flex justify-between items-center px-6 py-3 text-xs font-medium ${statusText}`}>
+        <div className={`flex justify-between items-center px-6 py-3 text-xs sm:text-sm font-medium ${statusText}`}>
           <span>{time}</span>
           <div className="flex items-center gap-2">
-            <Signal size={14} />
-            <Wifi size={14} />
-            <Battery size={14} />
+            <Signal size={15} />
+            <Wifi size={15} />
+            <Battery size={15} />
           </div>
         </div>
 
@@ -72,21 +72,23 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
           <div className="font-bold text-xl tracking-wide text-[var(--text)]">OOXii</div>
           <div className="flex items-center gap-1.5">
             <button
+              type="button"
               onClick={goHome}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all bg-[var(--pill-bg)] hover:bg-[var(--pill-hover-bg)] text-[var(--pill-text)] border-[var(--pill-border)] shadow-xs"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border transition-all bg-[var(--pill-bg)] hover:bg-[var(--pill-hover-bg)] text-[var(--pill-text)] border-[var(--pill-border)] shadow-xs"
             >
-              <HomeIcon size={13} />
+              <HomeIcon size={14} />
               {t('ui.home')}
             </button>
             <button
+              type="button"
               onClick={() => setSettingsOpen(true)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all bg-[var(--pill-bg)] hover:bg-[var(--pill-hover-bg)] text-[var(--pill-text)] border-[var(--pill-border)] shadow-xs"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border transition-all bg-[var(--pill-bg)] hover:bg-[var(--pill-hover-bg)] text-[var(--pill-text)] border-[var(--pill-border)] shadow-xs"
             >
-              <SettingsIcon size={13} />
+              <SettingsIcon size={14} />
               {t('ui.settings')}
             </button>
 
-            <div className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${
+            <div className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs sm:text-sm font-semibold transition-all ${
               isOnline
                 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500 dark:text-emerald-400'
                 : 'bg-amber-500/10 border-amber-500/30 text-amber-500 dark:text-amber-400'
@@ -100,8 +102,8 @@ export function Shell({ children, progress = 0, showProgress = true, onHome, isA
         {showProgress && (
           <div className={`sticky top-0 z-30 pt-4 pb-6 px-6 bg-gradient-to-b from-[var(--bg)] via-[var(--bg)] to-transparent`}>
             <div className="flex justify-between items-end mb-2 pr-8">
-              <span className="text-xs text-[var(--text-muted)] font-semibold uppercase tracking-wider">{t('ui.overall_progress')}</span>
-              <span className="text-[var(--primary)] font-bold text-sm">{progress}%</span>
+              <span className="text-sm text-[var(--text-muted)] font-semibold uppercase tracking-wider">{t('ui.overall_progress')}</span>
+              <span className="text-[var(--primary)] font-bold text-base">{progress}%</span>
             </div>
             <div className="relative w-[calc(100%-32px)] mt-2">
               <div className="relative w-full h-3 rounded-full bg-[var(--progress-track)] border border-[var(--card-border)] overflow-hidden">
@@ -207,42 +209,47 @@ export function BottomNavigation({ current, onNav }: { current: 'home' | 'commun
           type="button"
           aria-current={current === 'home' ? 'page' : undefined}
           onClick={() => onNav('home')}
+          style={current === 'home' ? { background: 'var(--nav-item-active-bg)' } : undefined}
           className={`flex-1 flex flex-col items-center justify-center h-16 py-2 px-3 rounded-2xl border transition-all ${
             current === 'home'
-              ? 'bg-[var(--nav-item-active-bg)] border-2 border-[var(--nav-item-active-border)] text-[var(--nav-item-active-text)] shadow-lg scale-[1.02]'
+              ? 'border-2 border-[var(--nav-item-active-border)] text-[var(--nav-item-active-text)] shadow-lg scale-[1.02]'
               : 'bg-[var(--nav-item-bg)] border-[var(--card-border)] text-[var(--nav-item-text)] hover:opacity-90 shadow-xs'
           }`}
         >
           <HomeIcon size={20} className={current === 'home' ? 'text-[var(--nav-item-active-text)]' : 'text-[var(--nav-item-text)]'} strokeWidth={2.5} />
-          <span className="text-xs font-semibold mt-1">{t('ui.home')}</span>
+          <span className={`text-xs sm:text-sm font-bold mt-1 ${current === 'home' ? 'text-[var(--nav-item-active-text)]' : 'text-[var(--nav-item-text)]'}`}>{t('ui.home')}</span>
         </button>
 
         <button 
+          data-tour="nav-profile"
           type="button"
           aria-current={current === 'tester-profile' ? 'page' : undefined}
           onClick={() => onNav('tester-profile')}
+          style={current === 'tester-profile' ? { background: 'var(--nav-item-active-bg)' } : undefined}
           className={`flex-1 flex flex-col items-center justify-center h-16 py-2 px-3 rounded-2xl border transition-all ${
             current === 'tester-profile'
-              ? 'bg-[var(--nav-item-active-bg)] border-2 border-[var(--nav-item-active-border)] text-[var(--nav-item-active-text)] shadow-lg scale-[1.02]'
+              ? 'border-2 border-[var(--nav-item-active-border)] text-[var(--nav-item-active-text)] shadow-lg scale-[1.02]'
               : 'bg-[var(--nav-item-bg)] border-[var(--card-border)] text-[var(--nav-item-text)] hover:opacity-90 shadow-xs'
           }`}
         >
           <User size={20} className={current === 'tester-profile' ? 'text-[var(--nav-item-active-text)]' : 'text-[var(--nav-item-text)]'} strokeWidth={2.5} />
-          <span className="text-xs font-semibold mt-1">{t('ui.profile')}</span>
+          <span className={`text-xs sm:text-sm font-bold mt-1 ${current === 'tester-profile' ? 'text-[var(--nav-item-active-text)]' : 'text-[var(--nav-item-text)]'}`}>{t('ui.profile')}</span>
         </button>
 
         <button 
+          data-tour="nav-garden"
           type="button"
           aria-current={current === 'community-garden' ? 'page' : undefined}
           onClick={() => onNav('community-garden')}
+          style={current === 'community-garden' ? { background: 'var(--nav-item-active-bg)' } : undefined}
           className={`flex-1 flex flex-col items-center justify-center h-16 py-2 px-3 rounded-2xl border transition-all ${
             current === 'community-garden'
-              ? 'bg-[var(--nav-item-active-bg)] border-2 border-[var(--nav-item-active-border)] text-[var(--nav-item-active-text)] shadow-lg scale-[1.02]'
+              ? 'border-2 border-[var(--nav-item-active-border)] text-[var(--nav-item-active-text)] shadow-lg scale-[1.02]'
               : 'bg-[var(--nav-item-bg)] border-[var(--card-border)] text-[var(--nav-item-text)] hover:opacity-90 shadow-xs'
           }`}
         >
           <Flag size={20} className={current === 'community-garden' ? 'text-[var(--nav-item-active-text)]' : 'text-[var(--nav-item-text)]'} strokeWidth={2.5} />
-          <span className="text-xs font-semibold mt-1">{t('ui.garden')}</span>
+          <span className={`text-xs sm:text-sm font-bold mt-1 ${current === 'community-garden' ? 'text-[var(--nav-item-active-text)]' : 'text-[var(--nav-item-text)]'}`}>{t('ui.garden')}</span>
         </button>
       </div>
     </div>

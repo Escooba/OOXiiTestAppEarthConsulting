@@ -330,6 +330,17 @@ export const APPARATUS_HELP_CONFIGS: Record<string, ApparatusHelpConfig> = {
     assetNotice: 'Illustration only',
     highlightRegions: [],
   },
+
+  'distance-glasses-dispensed': {
+    id: 'distance-glasses-dispensed',
+    title: 'Distance Glasses Dispensed',
+    instruction: 'Select frame type (Plastic/Metal), frame colors for front, right arm, and left arm, and frame size for the distance glasses provided to the client.',
+    imageSrc: distanceGlasses,
+    imageAlt: 'Distance glasses dispensed illustration',
+    assetKind: 'illustration',
+    assetNotice: 'Illustration only',
+    highlightRegions: [],
+  },
 };
 
 export function getApparatusHelpConfig(id: string, contextLine?: string): ApparatusHelpConfig | null {

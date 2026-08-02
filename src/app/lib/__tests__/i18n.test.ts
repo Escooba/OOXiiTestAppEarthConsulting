@@ -40,7 +40,7 @@ describe('i18n Module Tests', () => {
 
   it('should translate onboarding guide keys accurately in Spanish', () => {
     expect(translate('es', 'guide.skip')).toBe('Omitir guía');
-    expect(translate('es', 'guide.lets_go')).toBe('¡Vamos!');
+    expect(translate('es', 'guide.lets_go')).toBe('¡Entendido! Vamos');
     expect(translate('es', 'guide.step1.title')).toBe('¡Hola! Soy Bun');
     expect(translate('es', 'guide.step2.title')).toBe('Comience las pruebas aquí');
     expect(translate('es', 'guide.step_counter', { step: 2, total: 5 })).toBe('2 de 5');

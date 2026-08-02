@@ -318,12 +318,15 @@ export type TranslationKey =
   | 'help.sunglasses-selection.instruction'
   | 'help.dispensed-review.title'
   | 'help.dispensed-review.instruction'
+  | 'help.distance-glasses-dispensed.title'
+  | 'help.distance-glasses-dispensed.instruction'
 
   // User Onboarding Guide
   | 'guide.step_counter'
   | 'guide.skip'
   | 'guide.lets_go'
   | 'guide.step1.title'
+  | 'guide.step1.sub'
   | 'guide.step1.body'
   | 'guide.step2.title'
   | 'guide.step2.sub'
@@ -335,6 +338,7 @@ export type TranslationKey =
   | 'guide.step4.sub'
   | 'guide.step4.body'
   | 'guide.step5.title'
+  | 'guide.step5.sub'
   | 'guide.step5.body';
 
 type Dictionary = Record<TranslationKey, string>;
@@ -667,23 +671,28 @@ const en: Dictionary = {
   'help.dispensed-review.title': 'Eyewear Dispensed Review',
   'help.dispensed-review.instruction': 'Verify distance glasses, reading glasses, and sunglasses dispensed before entering the total amount paid.',
 
+  'help.distance-glasses-dispensed.title': 'Distance Glasses Dispensed',
+  'help.distance-glasses-dispensed.instruction': 'Select frame type (Plastic/Metal), frame colors for front, right arm, and left arm, and frame size for the distance glasses provided to the client.',
+
   // User Onboarding Guide
   'guide.step_counter': '{step} of {total}',
   'guide.skip': 'Skip guide',
-  'guide.lets_go': "Let's go!",
+  'guide.lets_go': "Got it! Let's go",
   'guide.step1.title': "Hi! I'm Bun",
-  'guide.step1.body': "I'll show you around the app so you can start helping clients see better. It only takes a minute!",
-  'guide.step2.title': 'Start Tests Here',
-  'guide.step2.sub': 'See the Home tab below',
-  'guide.step2.body': 'Tap "Start Vision Test" to run a simulation with a client. Complete the steps and log their results.',
-  'guide.step3.title': 'Track Your Progress',
-  'guide.step3.sub': 'See the Profile tab below',
-  'guide.step3.body': "Your Profile shows how many clients you've helped, carrots collected, and badges earned along the way.",
+  'guide.step1.sub': 'Welcome to OOXii',
+  'guide.step1.body': "I will show you around the app step by step. Look for the green highlight to see active features!",
+  'guide.step2.title': 'Start Vision Test',
+  'guide.step2.sub': 'Home Screen Feature',
+  'guide.step2.body': 'Tap "Start new test" to begin a guided vision assessment for a new client and set up their profile.',
+  'guide.step3.title': 'Track Profile & Badges',
+  'guide.step3.sub': 'Profile Screen',
+  'guide.step3.body': 'Check your Profile tab anytime to see total clients tested, carrots collected, and earned achievement badges.',
   'guide.step4.title': 'Grow the Community Garden',
-  'guide.step4.sub': 'See the Garden tab below',
-  'guide.step4.body': 'Every test you complete adds carrots to the global garden. See how your work joins the worldwide effort.',
+  'guide.step4.sub': 'Garden Screen',
+  'guide.step4.body': 'Every completed test adds carrots to the global garden. Tap the Garden tab to see your contribution to the worldwide effort.',
   'guide.step5.title': 'Follow the Rabbit!',
-  'guide.step5.body': "During tests, the rabbit points to what you should do next. Look for it when you're unsure.",
+  'guide.step5.sub': 'Final tip',
+  'guide.step5.body': 'During tests I appear beside the next required action. Follow me and you will never get lost.',
 };
 
 const es: Dictionary = {
@@ -1014,23 +1023,28 @@ const es: Dictionary = {
   'help.dispensed-review.title': 'Revisión de gafas entregadas',
   'help.dispensed-review.instruction': 'Verifique las gafas para lejos, gafas de lectura y gafas de sol entregadas antes de ingresar el monto total pagado.',
 
+  'help.distance-glasses-dispensed.title': 'Entrega de gafas para lejos',
+  'help.distance-glasses-dispensed.instruction': 'Seleccione el tipo de montura (Plástico/Metal), los colores de la parte frontal y de las varillas derecha e izquierda, y el tamaño de la montura.',
+
   // User Onboarding Guide
   'guide.step_counter': '{step} de {total}',
   'guide.skip': 'Omitir guía',
-  'guide.lets_go': '¡Vamos!',
+  'guide.lets_go': '¡Entendido! Vamos',
   'guide.step1.title': '¡Hola! Soy Bun',
-  'guide.step1.body': 'Le mostraré la aplicación para que pueda comenzar a ayudar a los pacientes a ver mejor. ¡Solo toma un minuto!',
+  'guide.step1.sub': 'Bienvenido a OOXii',
+  'guide.step1.body': 'Le mostraré la aplicación paso a paso. ¡Busque el resalte verde para ver las funciones activas!',
   'guide.step2.title': 'Comience las pruebas aquí',
-  'guide.step2.sub': 'Vea la pestaña Inicio abajo',
-  'guide.step2.body': 'Toque "Comenzar Prueba de Visión" para realizar una simulación con un paciente. Complete los pasos y registre sus resultados.',
-  'guide.step3.title': 'Siga su progreso',
-  'guide.step3.sub': 'Vea la pestaña Perfil abajo',
-  'guide.step3.body': 'Su Perfil muestra a cuántos pacientes ha ayudado, las zanahorias recolectadas y las insignias ganadas en el camino.',
+  'guide.step2.sub': 'Función de Pantalla Principal',
+  'guide.step2.body': 'Toque "Iniciar nueva prueba" para realizar una evaluación visual guiada para un nuevo paciente y configurar su perfil.',
+  'guide.step3.title': 'Siga su Perfil e Insignias',
+  'guide.step3.sub': 'Pantalla de Perfil',
+  'guide.step3.body': 'Consulte la pestaña Perfil en cualquier momento para ver pacientes evaluados, zanahorias recolectadas e insignias obtenidas.',
   'guide.step4.title': 'Haga crecer el Jardín Comunitario',
-  'guide.step4.sub': 'Vea la pestaña Jardín abajo',
-  'guide.step4.body': 'Cada prueba que completa agrega zanahorias al jardín global. Vea cómo su trabajo se une al esfuerzo mundial.',
+  'guide.step4.sub': 'Pantalla de Jardín',
+  'guide.step4.body': 'Cada prueba completada agrega zanahorias al jardín global. Toque la pestaña Jardín para ver su contribución al esfuerzo mundial.',
   'guide.step5.title': '¡Siga al conejo!',
-  'guide.step5.body': 'Durante las pruebas, el conejo le indica lo que debe hacer a continuación. Búsquelo cuando tenga dudas.',
+  'guide.step5.sub': 'Consejo final',
+  'guide.step5.body': 'Durante las pruebas aparezco junto a la siguiente acción requerida. Sígame y nunca se perderá.',
 };
 
 const DICTIONARIES: Record<LanguageCode, Dictionary> = {

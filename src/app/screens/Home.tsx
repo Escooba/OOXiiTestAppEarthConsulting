@@ -27,9 +27,9 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
       <div className={`px-6 pt-4 pb-32 flex flex-col gap-5 ${showRegionModal ? 'blur-sm pointer-events-none select-none' : ''}`}>
         {/* welcome + region */}
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-light text-[var(--text)]">{t('home.welcome', { name: testerName })}</h1>
-          <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] font-medium">
-            <MapPin size={12} /> {region}
+          <h1 className="text-xl font-medium text-[var(--text)]">{t('home.welcome', { name: testerName })}</h1>
+          <div className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] font-semibold">
+            <MapPin size={14} /> {region}
           </div>
         </div>
 
@@ -52,13 +52,13 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
             <h2 className="text-3xl font-bold text-[var(--text)] leading-tight">{t('home.hero_title_1')}</h2>
             <h2 className="text-3xl font-bold text-[var(--card-hero-title)] leading-tight">{t('home.hero_title_2')}</h2>
           </div>
-          <p className="text-sm text-[var(--text-muted)] leading-relaxed max-w-[300px]">
+          <p className="text-base text-[var(--text-muted)] leading-relaxed max-w-[320px]">
             {t('home.hero_subtitle')}
           </p>
         </div>
 
         {/* Bun guide card */}
-        <div className="rounded-3xl border border-[var(--card-border)] bg-[var(--card)] p-5 flex items-start gap-3 shadow-md">
+        <div data-tour="welcome-hero" className="rounded-3xl border border-[var(--card-border)] bg-[var(--card)] p-5 flex items-start gap-3 shadow-md">
           <motion.div
             animate={{ y: [0, -5, 0] }}
             transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
@@ -67,8 +67,8 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
             <RabbitMascot size={24} />
           </motion.div>
           <div>
-            <div className="text-sm font-semibold text-[var(--text)]">{t('home.bun_intro_title')}</div>
-            <div className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">
+            <div className="text-base font-bold text-[var(--text)]">{t('home.bun_intro_title')}</div>
+            <div className="text-sm text-[var(--text-muted)] mt-1 leading-relaxed">
               {t('home.bun_intro_body')}
             </div>
           </div>
@@ -114,6 +114,7 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
 
         {/* Info boxes */}
         <HomeCard
+          dataTour="new-client"
           icon={<UserPlus size={22} />}
           title={t('home.new_client_title')}
           body={t('home.new_client_body')}
@@ -121,6 +122,7 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
           onClick={() => onNav('client-info')}
         />
         <HomeCard
+          dataTour="search-client"
           icon={<Search size={22} />}
           title={t('home.search_client_title')}
           body={t('home.search_client_body')}
@@ -168,12 +170,13 @@ export function Home({ onNav, testerName, showRegionModal, onRegionSaved, region
 }
 
 function HomeCard({
-  icon, title, body, cta, onClick,
+  icon, title, body, cta, onClick, dataTour,
 }: {
-  icon: React.ReactNode; title: string; body: string; cta: string; onClick: () => void;
+  icon: React.ReactNode; title: string; body: string; cta: string; onClick: () => void; dataTour?: string;
 }) {
   return (
     <motion.div
+      data-tour={dataTour}
       whileHover={{ scale: 1.01 }}
       className="bg-[var(--card)] border border-[var(--card-border)] rounded-3xl p-5 flex flex-col gap-3 shadow-md"
     >
@@ -181,7 +184,7 @@ function HomeCard({
         <div className="bg-[var(--primary)]/15 text-[var(--primary)] p-2.5 rounded-full">{icon}</div>
         <h3 className="text-lg font-bold text-[var(--text)]">{title}</h3>
       </div>
-      <p className="text-sm text-[var(--text-muted)] leading-relaxed">{body}</p>
+      <p className="text-base text-[var(--text-muted)] leading-relaxed">{body}</p>
       <motion.button
         whileTap={{ scale: 0.98 }}
         onClick={onClick}
@@ -251,7 +254,7 @@ function RegionModal({ onSaved, defaultRegion }: { onSaved: (r: string) => void;
             onSaved(defaultRegion);
           } else {
             const parts = [village, city, state, country].filter(Boolean);
-            onSaved(parts.join(', '));
+            onSaved(parts.join(', ') || defaultRegion);
           }
         }} className="mt-2 h-12 rounded-2xl bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] font-bold shadow-md hover:brightness-110 transition-all">
           {t('ui.save')}

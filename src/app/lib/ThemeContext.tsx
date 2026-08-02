@@ -67,6 +67,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   // Load preferences from SQLite on init
   React.useEffect(() => {
+    document.documentElement.setAttribute('data-theme', mode);
     if (!isInitialized || !accountRepo) return;
     accountRepo.getPreference('selected_theme').then((savedTheme) => {
       if (savedTheme) {

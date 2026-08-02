@@ -30,6 +30,11 @@ describe('Clinical Flow Routing', () => {
       expect(getNextClinicalRoute('wheel-right-distance-improved', { wheelRightDistanceImproved: 'No' })).toBe('wheel-right-distance-result');
     });
 
+    it('progresses from wheel-left-result through distance glasses dispensing to sunglasses', () => {
+      expect(getNextClinicalRoute('wheel-left-result', {})).toBe('distance-glasses-dispensed');
+      expect(getNextClinicalRoute('distance-glasses-dispensed', {})).toBe('sunglasses-question');
+    });
+
     it('skips sunglasses selection when not dispensed', () => {
       expect(getNextClinicalRoute('sunglasses-question', { sunglassesDispensed: 'Yes' })).toBe('sunglasses-selection');
       expect(getNextClinicalRoute('sunglasses-question', { sunglassesDispensed: 'No' })).toBe('dispensed-review');

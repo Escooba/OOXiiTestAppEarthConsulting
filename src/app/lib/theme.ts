@@ -67,6 +67,7 @@ export type ScreenId =
   | 'wheel-left-two-colour'
   | 'wheel-left-line-nine'
   | 'wheel-left-result'
+  | 'distance-glasses-dispensed'
   | 'sunglasses-question'
   | 'sunglasses-selection'
   | 'dispensed-review'

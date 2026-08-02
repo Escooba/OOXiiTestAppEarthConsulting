@@ -108,7 +108,7 @@ export function Profile({ onNav }: { onNav: (s: ScreenId) => void }) {
         </div>
 
         {/* Balanced two-column statistics section */}
-        <div className="grid grid-cols-2 gap-3">
+        <div data-tour="profile-card" className="grid grid-cols-2 gap-3">
           <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-3xl p-4 flex flex-col items-center gap-1 text-center">
             <Users size={20} className="text-[var(--primary)]" />
             <div className="text-2xl font-bold text-[var(--text)] leading-none mt-1">{CLIENTS}</div>

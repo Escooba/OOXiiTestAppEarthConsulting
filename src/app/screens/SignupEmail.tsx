@@ -115,11 +115,11 @@ export function Field({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-xs text-[#9B93BA] font-medium">{label}</label>
+      <label className="text-sm text-[#E2D4F2] font-semibold">{label}</label>
       {children}
       {error && (
-        <div className="text-[#FF5C5C] text-xs flex items-start gap-1.5 mt-1">
-          <AlertCircle size={14} className="shrink-0 mt-0.5" />
+        <div className="text-[#FF5C5C] text-sm font-medium flex items-start gap-1.5 mt-1">
+          <AlertCircle size={15} className="shrink-0 mt-0.5" />
           <span>{error}</span>
         </div>
       )}

@@ -5,6 +5,4 @@ export { migration004 } from './004_seed_global_carrots';
 export { migration005 } from './005_seed_global_carrots_fix';
 export { migration006 } from './006_seed_global_carrots_update';
 export { migration007 } from './007_accounts';
-export { migration008 } from './008_seed_john_pork';
-export { migration009 } from './009_ensure_john_pork_260_carrots';
 export type { Migration } from './types';

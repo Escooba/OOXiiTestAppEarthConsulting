@@ -63,10 +63,17 @@ export function useBadges() {
 
 export function useClients() {
   const { clientRepo } = useData();
+  const { tester } = useTester();
   const [clients, setClients] = useState<Client[]>([]);
 
-  const load = async () => setClients(await clientRepo.listRecent(20));
-  useEffect(() => { load(); }, []);
+  const load = async () => {
+    if (tester) {
+      setClients(await clientRepo.listRecent(tester.localId, 20));
+    } else {
+      setClients([]);
+    }
+  };
+  useEffect(() => { load(); }, [tester?.localId]);
 
   return { clients, refresh: load };
 }

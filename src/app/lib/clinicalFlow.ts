@@ -81,6 +81,8 @@ export function getNextClinicalRoute(current: ScreenId, results: Record<string, 
     case 'wheel-left-line-nine':
       return 'wheel-left-result';
     case 'wheel-left-result':
+      return 'distance-glasses-dispensed';
+    case 'distance-glasses-dispensed':
       return 'sunglasses-question';
 
     // End flow
@@ -180,9 +182,11 @@ export function getPreviousClinicalRoute(current: ScreenId, results: Record<stri
     case 'wheel-left-result':
       return 'wheel-left-line-nine';
 
-    // End flow
-    case 'sunglasses-question':
+    // Dispensing & End flow
+    case 'distance-glasses-dispensed':
       return 'wheel-left-result';
+    case 'sunglasses-question':
+      return 'distance-glasses-dispensed';
     case 'sunglasses-selection':
       return 'sunglasses-question';
     case 'dispensed-review':
@@ -231,6 +235,7 @@ export function getProgressForRoute(route: ScreenId): number {
     'wheel-left-two-colour': 80,
     'wheel-left-line-nine': 82,
     'wheel-left-result': 85,
+    'distance-glasses-dispensed': 88,
     'sunglasses-question': 90,
     'sunglasses-selection': 92,
     'dispensed-review': 95,
