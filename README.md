@@ -39,9 +39,9 @@ Before running the application, ensure the following software is installed on yo
 
 After downloading and extracting the app zip file, follow these steps to set up the repository on your local machine:
 
-1. **Open your Terminal / Command Prompt** and navigate to the project directory:
+1. **Open your Terminal / Command Prompt** and navigate to the project directory, e.g.:
    ```bash
-   cd e:\OOXii
+   cd e:downloads\OOXii
    ```
 
 2. **Install Project Dependencies**:
