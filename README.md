@@ -8,11 +8,11 @@ Welcome to the **OOXii Field Vision Assessment App**, a guided, step-by-step too
 1. [Required Software & Prerequisites](#1-required-software--prerequisites)
 2. [Installation & Setup](#2-installation--setup)
 3. [Running the Application](#3-running-the-application)
-4. [Available Scripts & Commands](#4-available-scripts--commands)
-5. [Application Architecture & Storage](#5-application-architecture--storage)
-6. [User Guide & Core Workflows](#6-user-guide--core-workflows)
-7. [Developer Console & Utilities](#7-developer-console--utilities)
-8. [Troubleshooting](#8-troubleshooting)
+4. [User Guide & Core Workflows](#6-user-guide--core-workflows)
+5. [Available Scripts & Commands](#4-available-scripts--commands)
+6. [Application Architecture & Storage](#5-application-architecture--storage)
+8. [Developer Console & Utilities](#7-developer-console--utilities)
+9. [Troubleshooting](#8-troubleshooting)
 
 ---
 
