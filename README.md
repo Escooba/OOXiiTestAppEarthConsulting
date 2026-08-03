@@ -37,7 +37,7 @@ Before running the application, ensure the following software is installed on yo
 
 ## 2. Installation & Setup
 
-Follow these steps to set up the repository on your local machine:
+After downloading and extracting the app zip file, follow these steps to set up the repository on your local machine:
 
 1. **Open your Terminal / Command Prompt** and navigate to the project directory:
    ```bash
