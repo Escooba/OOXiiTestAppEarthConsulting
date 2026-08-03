@@ -64,32 +64,9 @@ npm run dev
 * The terminal will output a local URL (typically `http://localhost:5173/` or `http://localhost:5174/`).
 * Open your browser and navigate to `http://localhost:5173/`.
 
-
-## 4. Available Scripts & Commands
-
-| Command | Description |
-| :--- | :--- |
-| `npm run dev` | Launches Vite local development server with hot module replacement (HMR). |
-| `npm run build` | Compiles optimized HTML, CSS, JavaScript, and WebAssembly bundles to `dist/`. |
-| `npm test` | Runs the full Vitest automated test suite once. |
-| `npm run test:watch` | Runs Vitest unit tests in interactive watch mode. |
-| `npm run typecheck` | Runs TypeScript compiler check (`tsc --noEmit`) to verify zero type errors. |
-
 ---
 
-## 5. Application Architecture & Storage
-
-* **Frontend Framework**: React 18 + TypeScript + Vite 6 + Tailwind CSS + Motion (AnimatePresence / motion).
-* **Offline-First Database Layer**:
-  * Runs a real WebAssembly-compiled SQLite database engine in-browser via `sql.js`.
-  * Persists database binary snapshots into browser **IndexedDB** under database name `OOXii_SQLite_Store`.
-  * Automatically executes migrations (`001` through `007`) on startup.
-* **Account Isolation**:
-  * Client records, test sessions, carrot rewards, and badges are isolated per tester account (`created_by_tester_id`).
-
----
-
-## 6. User Guide & Core Workflows
+## 4. User Guide & Core Workflows
 
 ### A. Account Sign-Up & Login
 1. **New Account**: Tap **Create an account** on the login screen.
@@ -120,6 +97,30 @@ npm run dev
 
 ---
 
+## 5. Available Scripts & Commands
+
+| Command | Description |
+| :--- | :--- |
+| `npm run dev` | Launches Vite local development server with hot module replacement (HMR). |
+| `npm run build` | Compiles optimized HTML, CSS, JavaScript, and WebAssembly bundles to `dist/`. |
+| `npm test` | Runs the full Vitest automated test suite once. |
+| `npm run test:watch` | Runs Vitest unit tests in interactive watch mode. |
+| `npm run typecheck` | Runs TypeScript compiler check (`tsc --noEmit`) to verify zero type errors. |
+
+---
+
+## 6. Application Architecture & Storage
+
+* **Frontend Framework**: React 18 + TypeScript + Vite 6 + Tailwind CSS + Motion (AnimatePresence / motion).
+* **Offline-First Database Layer**:
+  * Runs a real WebAssembly-compiled SQLite database engine in-browser via `sql.js`.
+  * Persists database binary snapshots into browser **IndexedDB** under database name `OOXii_SQLite_Store`.
+  * Automatically executes migrations (`001` through `007`) on startup.
+* **Account Isolation**:
+  * Client records, test sessions, carrot rewards, and badges are isolated per tester account (`created_by_tester_id`).
+
+---
+
 ## 7. Developer Console & Utilities
 
 Open Browser DevTools (`F12` or `Ctrl+Shift+I` -> **Console** tab) for useful commands to test the app:
@@ -129,6 +130,7 @@ Open Browser DevTools (`F12` or `Ctrl+Shift+I` -> **Console** tab) for useful co
 await window.seedCompletedTests(300);
 ```
 * Generates 300 completed test sessions with distinct client records, awards carrots, evaluates badges, and reloads the screen.
+* Test the badge, garden and completed test tracker functionality with this command.
 
 ### Clear Local SQLite Database & Storage
 ```javascript
